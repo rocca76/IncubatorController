@@ -33,6 +33,8 @@
   </PropertyGroup>
   <Import Project="$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets" />
   <ItemGroup>
+    <Compile Include="I2CBus.cs" />
+    <Compile Include="K30Device.cs" />
     <Compile Include="SHT11\ISHT11_IOProvider.cs" />
     <Compile Include="NetworkCommunication.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

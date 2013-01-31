@@ -274,7 +274,7 @@ namespace NetduinoPlus.Controler
             {
                 using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
                 {
-                    IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse("192.168.250.103"), 250);
+                    IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse("192.168.250.100"), 250);
 
                     Debug.Print("Connecting to: " + endpoint.ToString());
                     socket.Connect(endpoint);

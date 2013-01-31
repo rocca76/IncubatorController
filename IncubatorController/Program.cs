@@ -17,6 +17,8 @@ namespace NetduinoPlus.Controler
         private OutputPort _led = new OutputPort(Pins.ONBOARD_LED, false);
         private bool _toggle = true;
         private Timer _SHT11SensorTimer = null;
+        private Timer _CO2SensorTimer = null;
+        private K30Device MyK30 = new K30Device(0x7F);
         #endregion
 
         #region Public Properties
@@ -41,7 +43,22 @@ namespace NetduinoPlus.Controler
             NetworkCommunication.InitInstance();
 
             SHT11Sensor.InitInstance();
-            _SHT11SensorTimer = new Timer(new TimerCallback(OnReadSHT11Sensor), null, 0, 2000);
+            _SHT11SensorTimer = new Timer(new TimerCallback(OnReadSHT11Sensor), null, 0, 1000);
+
+            
+            _CO2SensorTimer = new Timer(new TimerCallback(OnReadCO2), null, 0, 5000);                
+        }
+
+        private void OnReadCO2(object state)
+        {
+            try
+            {
+                MyK30.Read();
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.ToString());
+            }
         }
 
         private void OnReadSHT11Sensor(object state)
