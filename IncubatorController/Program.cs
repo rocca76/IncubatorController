@@ -47,30 +47,30 @@ namespace NetduinoPlus.Controler
 
         private void OnReadSensor(object state)
         {
-            try
-            {
-                StringBuilder xmlBuilder = new StringBuilder();
+          try
+          {
+              StringBuilder xmlBuilder = new StringBuilder();
 
-                xmlBuilder.Append("<netduino>");
-                xmlBuilder.Append("<data timestamp='2013-02-01'>");
-                xmlBuilder.Append("<temperature>");
-                xmlBuilder.Append(SHT11Sensor.ReadTemperature().ToString("F2"));
-                xmlBuilder.Append("</temperature>");
-                xmlBuilder.Append("<relativehumidity>");
-                xmlBuilder.Append(SHT11Sensor.ReadRelativeHumidity().ToString("F2"));
-                xmlBuilder.Append("</relativehumidity>");
-                xmlBuilder.Append("<co2>");
-                xmlBuilder.Append(K30Sensor.ReadCO2().ToString());
-                xmlBuilder.Append("</co2>");
-                xmlBuilder.Append("</data>");
-                xmlBuilder.Append("</netduino>");
+              xmlBuilder.Append("<netduino>");
+              xmlBuilder.Append("<data timestamp='2013-02-01'>");
+              xmlBuilder.Append("<temperature>");
+              xmlBuilder.Append(SHT11Sensor.ReadTemperature().ToString("F2"));
+              xmlBuilder.Append("</temperature>");
+              xmlBuilder.Append("<relativehumidity>");
+              xmlBuilder.Append(SHT11Sensor.ReadRelativeHumidity().ToString("F2"));
+              xmlBuilder.Append("</relativehumidity>");
+              xmlBuilder.Append("<co2>");
+              xmlBuilder.Append(ReadCO2().ToString());
+              xmlBuilder.Append("</co2>");
+              xmlBuilder.Append("</data>");
+              xmlBuilder.Append("</netduino>");
 
-                NetworkCommunication.Send(xmlBuilder.ToString());
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.ToString());
-            }
+              NetworkCommunication.Send(xmlBuilder.ToString());
+          }
+          catch (Exception ex)
+          {
+              Debug.Print(ex.ToString());
+          }
         }
         
         private void OnMessageReceived(String message)
@@ -87,6 +87,35 @@ namespace NetduinoPlus.Controler
         {
             DateTime presentTime = new DateTime(year, month, day, hour, minute, second, millisecond);
             Microsoft.SPOT.Hardware.Utility.SetLocalTime(presentTime);
+        }
+
+        private int ReadCO2()
+        {
+          int co2 = 0;
+
+          for (byte retry = 0; retry < 10; retry++)
+          {
+            try
+            {
+              co2 = K30Sensor.ReadCO2();
+            }
+            catch (Exception ex)
+            {
+              Debug.Print(ex.ToString() + " - CO2 = " + co2.ToString());
+              co2 = 0;
+            }
+
+            if (co2 == 0)
+            {
+              Thread.Sleep(100);
+            }
+            else
+            {
+              break;
+            }
+          }
+
+          return co2;
         }
 
         private void button_OnInterrupt(uint data1, uint data2, DateTime time)

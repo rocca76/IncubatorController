@@ -54,16 +54,14 @@ namespace NetduinoPlus.Controler
             co2Value = co2Value << 8;
             co2Value |= dataRead[2] & 0xFF;
 
-            int sum = 0;
-            sum = dataRead[0] + dataRead[1] + dataRead[2];
-            sum = sum % 256;
+            int sum = (dataRead[0] + dataRead[1] + dataRead[2]) % 256;
 
-            if (sum == dataRead[3])
+            if ( sum != dataRead[3] )
             {
-                return co2Value;
+              co2Value = 0;
             }
 
-            return 0;
+            return co2Value;
         }
 
         #endregion
