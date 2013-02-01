@@ -8,7 +8,6 @@ namespace Sensirion.SHT11
     class SHT11Sensor
     {
         #region Private Variables
-        private static Thread _readingThread = null;
         private static SHT11Sensor _sensirion = null;
         private static SHT11_GPIO_IOProvider SHT11_IO = new SHT11_GPIO_IOProvider(Pins.GPIO_PIN_D1, Pins.GPIO_PIN_D2);
         private static SHT11 SHT11 = new SHT11(SHT11_IO);
@@ -21,7 +20,6 @@ namespace Sensirion.SHT11
 
 
         #region Events
-        //public static event ReceivedEventHandler EventHandlerMessageReceived;
         #endregion
 
 
@@ -47,8 +45,6 @@ namespace Sensirion.SHT11
                     Debug.Print("Error while writing status register SHT11");
                 }
             }
-
-            //_sensirion.ReadingThread();
         }
 
         public static double ReadTemperature()
@@ -64,30 +60,6 @@ namespace Sensirion.SHT11
 
 
         #region Private Methods
-        private void ReadingThread()
-        {
-            _readingThread = new Thread(new ThreadStart(ReadindSHT11Thread));
-            _readingThread.Start();
-        }
-
-        private void ReadindSHT11Thread()
-        {
-            try
-            {
-                while (true)
-                {
-                    double temperature = SHT11.ReadTemperature(SHT11.SHT11VDD_Voltages.VDD_3_5V, SHT11.SHT11TemperatureUnits.Celcius);
-                    double humidity = SHT11.ReadRelativeHumidity(SHT11.SHT11VDD_Voltages.VDD_3_5V);
-                    Debug.Print("T:" + temperature.ToString("F2") + "  RH:" + humidity.ToString("F2"));
-
-                    Thread.Sleep(5000);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.ToString());
-            }
-        }
         #endregion
     }
 }

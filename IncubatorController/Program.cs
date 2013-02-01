@@ -18,7 +18,6 @@ namespace NetduinoPlus.Controler
         private bool _toggle = true;
         private Timer _SHT11SensorTimer = null;
         private Timer _CO2SensorTimer = null;
-        private K30Device MyK30 = new K30Device(0x7F);
         #endregion
 
         #region Public Properties
@@ -45,15 +44,25 @@ namespace NetduinoPlus.Controler
             SHT11Sensor.InitInstance();
             _SHT11SensorTimer = new Timer(new TimerCallback(OnReadSHT11Sensor), null, 0, 1000);
 
-            
-            _CO2SensorTimer = new Timer(new TimerCallback(OnReadCO2), null, 0, 5000);                
+            K30Sensor.InitInstance();
+            _CO2SensorTimer = new Timer(new TimerCallback(OnReadK30Sensor), null, 0, 2000);                
         }
 
-        private void OnReadCO2(object state)
+        private void OnReadK30Sensor(object state)
         {
             try
             {
-                MyK30.Read();
+                StringBuilder xmlBuilder = new StringBuilder();
+
+                xmlBuilder.Append("<netduino>");
+                xmlBuilder.Append("<data timestamp='2013-01-31'>");
+                xmlBuilder.Append("<co2>");
+                xmlBuilder.Append(K30Sensor.ReadCO2().ToString());
+                xmlBuilder.Append("</co2>");
+                xmlBuilder.Append("</data>");
+                xmlBuilder.Append("</netduino>");
+
+                NetworkCommunication.Send(xmlBuilder.ToString());
             }
             catch (Exception ex)
             {
