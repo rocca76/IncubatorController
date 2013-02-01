@@ -16,8 +16,7 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private OutputPort _led = new OutputPort(Pins.ONBOARD_LED, false);
         private bool _toggle = true;
-        private Timer _SHT11SensorTimer = null;
-        private Timer _CO2SensorTimer = null;
+        private Timer _SensorTimer = null;
         #endregion
 
         #region Public Properties
@@ -42,48 +41,27 @@ namespace NetduinoPlus.Controler
             NetworkCommunication.InitInstance();
 
             SHT11Sensor.InitInstance();
-            _SHT11SensorTimer = new Timer(new TimerCallback(OnReadSHT11Sensor), null, 0, 1000);
-
             K30Sensor.InitInstance();
-            _CO2SensorTimer = new Timer(new TimerCallback(OnReadK30Sensor), null, 0, 2000);                
+            _SensorTimer = new Timer(new TimerCallback(OnReadSensor), null, 0, 2000);
         }
 
-        private void OnReadK30Sensor(object state)
+        private void OnReadSensor(object state)
         {
             try
             {
                 StringBuilder xmlBuilder = new StringBuilder();
 
                 xmlBuilder.Append("<netduino>");
-                xmlBuilder.Append("<data timestamp='2013-01-31'>");
-                xmlBuilder.Append("<co2>");
-                xmlBuilder.Append(K30Sensor.ReadCO2().ToString());
-                xmlBuilder.Append("</co2>");
-                xmlBuilder.Append("</data>");
-                xmlBuilder.Append("</netduino>");
-
-                NetworkCommunication.Send(xmlBuilder.ToString());
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.ToString());
-            }
-        }
-
-        private void OnReadSHT11Sensor(object state)
-        {
-            try
-            {
-                StringBuilder xmlBuilder = new StringBuilder();
-
-                xmlBuilder.Append("<netduino>");
-                xmlBuilder.Append("<data timestamp='2013-01-12'>");
+                xmlBuilder.Append("<data timestamp='2013-02-01'>");
                 xmlBuilder.Append("<temperature>");
                 xmlBuilder.Append(SHT11Sensor.ReadTemperature().ToString("F2"));
                 xmlBuilder.Append("</temperature>");
                 xmlBuilder.Append("<relativehumidity>");
                 xmlBuilder.Append(SHT11Sensor.ReadRelativeHumidity().ToString("F2"));
                 xmlBuilder.Append("</relativehumidity>");
+                xmlBuilder.Append("<co2>");
+                xmlBuilder.Append(K30Sensor.ReadCO2().ToString());
+                xmlBuilder.Append("</co2>");
                 xmlBuilder.Append("</data>");
                 xmlBuilder.Append("</netduino>");
 
