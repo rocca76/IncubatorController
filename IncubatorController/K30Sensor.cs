@@ -39,35 +39,62 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        public static int ReadCO2()
+        public static int ReadCO2(byte maxRetry)
         {
-            byte[] dataWrite = new byte[4] { 0x22, 0x00, 0x08, 0x2A };
-            I2CBus.GetInstance().Write(_slaveConfig, dataWrite, TransactionTimeout);
+          int co2 = 0;
 
-            Thread.Sleep(10);
-
-            byte[] dataRead = new byte[4] { 0x00, 0x00, 0x00, 0x00 };
-            I2CBus.GetInstance().Read(_slaveConfig, dataRead, TransactionTimeout);
-
-            int co2Value = 0;
-            co2Value |= dataRead[1] & 0xFF;
-            co2Value = co2Value << 8;
-            co2Value |= dataRead[2] & 0xFF;
-
-            int sum = (dataRead[0] + dataRead[1] + dataRead[2]) % 256;
-
-            if ( sum != dataRead[3] )
+          for (byte retry = 0; retry < maxRetry; retry++)
+          {
+            try
             {
-              co2Value = 0;
+              co2 = ReadSensor();
+            }
+            catch (Exception ex)
+            {
+              Debug.Print(ex.ToString() + " - CO2 = " + co2.ToString());
+              co2 = 0;
             }
 
-            return co2Value;
-        }
+            if (co2 == 0)
+            {
+              Thread.Sleep(100);
+            }
+            else
+            {
+              break;
+            }
+          }
 
+          return co2;
+        }
         #endregion
 
 
         #region Private Methods
+        private static int ReadSensor()
+        {
+          byte[] dataWrite = new byte[4] { 0x22, 0x00, 0x08, 0x2A };
+          I2CBus.GetInstance().Write(_slaveConfig, dataWrite, TransactionTimeout);
+
+          Thread.Sleep(10);
+
+          byte[] dataRead = new byte[4] { 0x00, 0x00, 0x00, 0x00 };
+          I2CBus.GetInstance().Read(_slaveConfig, dataRead, TransactionTimeout);
+
+          int co2Value = 0;
+          co2Value |= dataRead[1] & 0xFF;
+          co2Value = co2Value << 8;
+          co2Value |= dataRead[2] & 0xFF;
+
+          int sum = (dataRead[0] + dataRead[1] + dataRead[2]) % 256;
+
+          if (sum != dataRead[3])
+          {
+            co2Value = 0;
+          }
+
+          return co2Value;
+        }
         #endregion
     }
 }

@@ -60,7 +60,7 @@ namespace NetduinoPlus.Controler
               xmlBuilder.Append(SHT11Sensor.ReadRelativeHumidity().ToString("F2"));
               xmlBuilder.Append("</relativehumidity>");
               xmlBuilder.Append("<co2>");
-              xmlBuilder.Append(ReadCO2().ToString());
+              xmlBuilder.Append(K30Sensor.ReadCO2(10).ToString());
               xmlBuilder.Append("</co2>");
               xmlBuilder.Append("</data>");
               xmlBuilder.Append("</netduino>");
@@ -81,41 +81,16 @@ namespace NetduinoPlus.Controler
             {
                 SetTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
             }
+            else if (parts[0] == "TEMPERATURE_TARGET")
+            {
+              ProcessTemperature.GetInstance().Control(double.Parse(parts[1]));
+            }
         }
 
         private static void SetTime(int year, int month, int day, int hour, int minute, int second, int millisecond)
         {
             DateTime presentTime = new DateTime(year, month, day, hour, minute, second, millisecond);
             Microsoft.SPOT.Hardware.Utility.SetLocalTime(presentTime);
-        }
-
-        private int ReadCO2()
-        {
-          int co2 = 0;
-
-          for (byte retry = 0; retry < 10; retry++)
-          {
-            try
-            {
-              co2 = K30Sensor.ReadCO2();
-            }
-            catch (Exception ex)
-            {
-              Debug.Print(ex.ToString() + " - CO2 = " + co2.ToString());
-              co2 = 0;
-            }
-
-            if (co2 == 0)
-            {
-              Thread.Sleep(100);
-            }
-            else
-            {
-              break;
-            }
-          }
-
-          return co2;
         }
 
         private void button_OnInterrupt(uint data1, uint data2, DateTime time)
