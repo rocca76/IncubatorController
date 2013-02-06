@@ -2,6 +2,8 @@ using System;
 using Microsoft.SPOT;
 using System.Threading;
 using Sensirion.SHT11;
+using Microsoft.SPOT.Hardware;
+using SecretLabs.NETMF.Hardware.NetduinoPlus;
 
 namespace NetduinoPlus.Controler
 {
@@ -16,6 +18,12 @@ namespace NetduinoPlus.Controler
         private double _currentRelativeHumidity = 0.0;
         private int _currentCO2 = 0;
         private int _heatPower = 0;
+
+        private OutputPort out3 = new OutputPort(Pins.GPIO_PIN_D3, false);
+        private OutputPort out4 = new OutputPort(Pins.GPIO_PIN_D4, false);
+        private OutputPort out5 = new OutputPort(Pins.GPIO_PIN_D5, false);
+        private OutputPort out6 = new OutputPort(Pins.GPIO_PIN_D6, false);
+
         #endregion
 
         #region Public Properties
@@ -41,6 +49,12 @@ namespace NetduinoPlus.Controler
         {
             get { return _currentCO2; }
             set { _currentCO2 = value; }
+        }
+
+        public int HeatPower
+        {
+            get { return _heatPower; }
+            set { _heatPower = value; }
         }
         #endregion
 
@@ -71,31 +85,36 @@ namespace NetduinoPlus.Controler
         {
             CurrentTemperature = SHT11Sensor.ReadTemperature();
 
-            if ( CurrentTemperature < 20 )
+            if (CurrentTemperature < (TargetTemperature - 5))
             {
-                _heatPower = 1500;
+                HeatPower = 1500;
             }
-            else if (CurrentTemperature >= 20 && CurrentTemperature < 22)
+            else if (CurrentTemperature >= (TargetTemperature - 5) && CurrentTemperature < (TargetTemperature - 4))
             {
-                _heatPower = 1250;
+                HeatPower = 1250;
             }
-            else if (CurrentTemperature >= 22 && CurrentTemperature < 24)
+            else if (CurrentTemperature >= (TargetTemperature - 4) && CurrentTemperature < (TargetTemperature - 3))
             {
-                _heatPower = 1000;
+                HeatPower = 1000;
             }
-            else if (CurrentTemperature >= 24 && CurrentTemperature < 26)
+            else if (CurrentTemperature >= (TargetTemperature - 3) && CurrentTemperature < (TargetTemperature - 2))
             {
-                _heatPower = 750;
+                HeatPower = 750;
             }
-            else if (CurrentTemperature >= 26 && CurrentTemperature < 28)
+            else if (CurrentTemperature >= (TargetTemperature - 2) && CurrentTemperature < (TargetTemperature - 1))
             {
-                _heatPower = 500;
+                HeatPower = 500;
             }
-            else if (CurrentTemperature >= 28 && CurrentTemperature < 30)
+            else if (CurrentTemperature >= (TargetTemperature - 1) && CurrentTemperature < TargetTemperature)
             {
-                _heatPower = 250;
+                HeatPower = 250;
+            }
+            else if (CurrentTemperature >= TargetTemperature)
+            {
+                HeatPower = 0;
             }
 
+            SetHeatPowerOutputPin();
         }
 
         public void ReadRelativeHumidity()
@@ -110,6 +129,69 @@ namespace NetduinoPlus.Controler
         #endregion
 
         #region Private Methods
+        private void SetHeatPowerOutputPin()
+        {
+            switch(HeatPower)
+            {
+                case 0:
+                {
+                    out3.Write(false);
+                    out4.Write(false);
+                    out5.Write(false);
+                    out6.Write(false);
+                }
+                break;
+                case 250:
+                {
+                    out3.Write(true);
+                    out4.Write(false);
+                    out5.Write(false);
+                    out6.Write(false);
+                }
+                break;
+                case 500:
+                {
+                    out3.Write(false);
+                    out4.Write(false);
+                    out5.Write(true);
+                    out6.Write(false);
+                }
+                break;
+                case 750:
+                {
+                    out3.Write(true);
+                    out4.Write(false);
+                    out5.Write(true);
+                    out6.Write(false);
+                }
+                break;
+                case 1000:
+                {
+                    out3.Write(false);
+                    out4.Write(false);
+                    out5.Write(true);
+                    out6.Write(true);
+                }
+                break;
+                case 1250:
+                {
+                    out3.Write(false);
+                    out4.Write(true);
+                    out5.Write(true);
+                    out6.Write(true);
+                }
+                break;
+                case 1500:
+                {
+                    out3.Write(true);
+                    out4.Write(true);
+                    out5.Write(true);
+                    out6.Write(true);
+                }
+                break;
+            }
+
+        }
         #endregion
     }
 }
