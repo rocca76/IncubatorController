@@ -35,7 +35,7 @@
   <ItemGroup>
     <Compile Include="I2CBus.cs" />
     <Compile Include="K30Sensor.cs" />
-    <Compile Include="ProcessTemperature.cs" />
+    <Compile Include="ProcessControl.cs" />
     <Compile Include="SHT11\ISHT11_IOProvider.cs" />
     <Compile Include="NetworkCommunication.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -4,7 +4,6 @@ using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using Microsoft.SPOT;
 using Microsoft.SPOT.Net.NetworkInformation;
-using Sensirion.SHT11;
 using System.Text;
 
 //Smart Personal Object Technology
@@ -40,8 +39,6 @@ namespace NetduinoPlus.Controler
             NetworkCommunication.EventHandlerMessageReceived += new ReceivedEventHandler(OnMessageReceived);
             NetworkCommunication.InitInstance();
 
-            SHT11Sensor.InitInstance();
-            K30Sensor.InitInstance();
             _SensorTimer = new Timer(new TimerCallback(OnReadSensor), null, 0, 2000);
         }
 
@@ -49,18 +46,24 @@ namespace NetduinoPlus.Controler
         {
           try
           {
+              ProcessControl.GetInstance().ReadTemperature();
+
+              ProcessControl.GetInstance().ReadRelativeHumidity();
+
+              ProcessControl.GetInstance().ReadCO2();
+
               StringBuilder xmlBuilder = new StringBuilder();
 
               xmlBuilder.Append("<netduino>");
               xmlBuilder.Append("<data timestamp='2013-02-01'>");
               xmlBuilder.Append("<temperature>");
-              xmlBuilder.Append(SHT11Sensor.ReadTemperature().ToString("F2"));
+              xmlBuilder.Append(ProcessControl.GetInstance().CurrentTemperature.ToString("F2"));
               xmlBuilder.Append("</temperature>");
               xmlBuilder.Append("<relativehumidity>");
-              xmlBuilder.Append(SHT11Sensor.ReadRelativeHumidity().ToString("F2"));
+              xmlBuilder.Append(ProcessControl.GetInstance().CurrentRelativeHumidity.ToString("F2"));
               xmlBuilder.Append("</relativehumidity>");
               xmlBuilder.Append("<co2>");
-              xmlBuilder.Append(K30Sensor.ReadCO2(10).ToString());
+              xmlBuilder.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
               xmlBuilder.Append("</co2>");
               xmlBuilder.Append("</data>");
               xmlBuilder.Append("</netduino>");
@@ -83,7 +86,7 @@ namespace NetduinoPlus.Controler
             }
             else if (parts[0] == "TEMPERATURE_TARGET")
             {
-              ProcessTemperature.GetInstance().Control(double.Parse(parts[1]));
+                ProcessControl.GetInstance().TargetTemperature = double.Parse(parts[1]);
             }
         }
 

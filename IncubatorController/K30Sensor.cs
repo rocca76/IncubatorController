@@ -9,9 +9,8 @@ namespace NetduinoPlus.Controler
     class K30Sensor
     {
         #region Private Variables
-        private static K30Sensor _k30 = null;
-        private static I2CDevice.Configuration _slaveConfig = new I2CDevice.Configuration(0x7F, 100);
-        private static int TransactionTimeout = 3000;
+        private static K30Sensor _instance = null;
+        private static readonly object LockObject = new object();
         #endregion
 
 
@@ -29,21 +28,23 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Static Methods
-        public static void InitInstance()
+        public static K30Sensor GetInstance()
         {
-            if (_k30 == null)
+            lock (LockObject)
             {
-                _k30 = new K30Sensor();
-
-                //Init Parameters here
+                if (_instance == null)
+                {
+                    _instance = new K30Sensor();
+                }
+                return _instance;
             }
         }
 
-        public static int ReadCO2(byte maxRetry)
+        public static int ReadCO2()
         {
           int co2 = 0;
 
-          for (byte retry = 0; retry < maxRetry; retry++)
+          for (byte retry = 0; retry < 10; retry++)
           {
             try
             {
@@ -73,13 +74,15 @@ namespace NetduinoPlus.Controler
         #region Private Methods
         private static int ReadSensor()
         {
+          I2CDevice.Configuration slaveConfig = new I2CDevice.Configuration(0x7F, 100);
+
           byte[] dataWrite = new byte[4] { 0x22, 0x00, 0x08, 0x2A };
-          I2CBus.GetInstance().Write(_slaveConfig, dataWrite, TransactionTimeout);
+          I2CBus.GetInstance().Write(slaveConfig, dataWrite, 3000);
 
           Thread.Sleep(10);
 
           byte[] dataRead = new byte[4] { 0x00, 0x00, 0x00, 0x00 };
-          I2CBus.GetInstance().Read(_slaveConfig, dataRead, TransactionTimeout);
+          I2CBus.GetInstance().Read(slaveConfig, dataRead, 3000);
 
           int co2Value = 0;
           co2Value |= dataRead[1] & 0xFF;
