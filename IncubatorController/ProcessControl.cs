@@ -15,11 +15,13 @@ namespace NetduinoPlus.Controler
         private double _currentTemperature = 0.0;
         private double _currentRelativeHumidity = 0.0;
         private int _currentCO2 = 0;
+        private int _heatPower = 0;
         #endregion
 
         #region Public Properties
         public double TargetTemperature
         {
+            get { return _targetTemperature; }
             set { _targetTemperature = value; }
         }
 
@@ -68,6 +70,32 @@ namespace NetduinoPlus.Controler
         public void ReadTemperature()
         {
             CurrentTemperature = SHT11Sensor.ReadTemperature();
+
+            if ( CurrentTemperature < 20 )
+            {
+                _heatPower = 1500;
+            }
+            else if (CurrentTemperature >= 20 && CurrentTemperature < 22)
+            {
+                _heatPower = 1250;
+            }
+            else if (CurrentTemperature >= 22 && CurrentTemperature < 24)
+            {
+                _heatPower = 1000;
+            }
+            else if (CurrentTemperature >= 24 && CurrentTemperature < 26)
+            {
+                _heatPower = 750;
+            }
+            else if (CurrentTemperature >= 26 && CurrentTemperature < 28)
+            {
+                _heatPower = 500;
+            }
+            else if (CurrentTemperature >= 28 && CurrentTemperature < 30)
+            {
+                _heatPower = 250;
+            }
+
         }
 
         public void ReadRelativeHumidity()

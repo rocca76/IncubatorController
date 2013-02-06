@@ -47,28 +47,10 @@ namespace NetduinoPlus.Controler
           try
           {
               ProcessControl.GetInstance().ReadTemperature();
-
               ProcessControl.GetInstance().ReadRelativeHumidity();
-
               ProcessControl.GetInstance().ReadCO2();
 
-              StringBuilder xmlBuilder = new StringBuilder();
-
-              xmlBuilder.Append("<netduino>");
-              xmlBuilder.Append("<data timestamp='2013-02-01'>");
-              xmlBuilder.Append("<temperature>");
-              xmlBuilder.Append(ProcessControl.GetInstance().CurrentTemperature.ToString("F2"));
-              xmlBuilder.Append("</temperature>");
-              xmlBuilder.Append("<relativehumidity>");
-              xmlBuilder.Append(ProcessControl.GetInstance().CurrentRelativeHumidity.ToString("F2"));
-              xmlBuilder.Append("</relativehumidity>");
-              xmlBuilder.Append("<co2>");
-              xmlBuilder.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
-              xmlBuilder.Append("</co2>");
-              xmlBuilder.Append("</data>");
-              xmlBuilder.Append("</netduino>");
-
-              NetworkCommunication.Send(xmlBuilder.ToString());
+              SendData();
           }
           catch (Exception ex)
           {
@@ -82,18 +64,37 @@ namespace NetduinoPlus.Controler
 
             if (parts[0] == "TIME")
             {
-                SetTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
+                DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
+                Microsoft.SPOT.Hardware.Utility.SetLocalTime(presentTime);
             }
-            else if (parts[0] == "TEMPERATURE_TARGET")
+            else if (parts[0] == "TARGET_TEMPERATURE")
             {
                 ProcessControl.GetInstance().TargetTemperature = double.Parse(parts[1]);
             }
         }
 
-        private static void SetTime(int year, int month, int day, int hour, int minute, int second, int millisecond)
+        private void SendData()
         {
-            DateTime presentTime = new DateTime(year, month, day, hour, minute, second, millisecond);
-            Microsoft.SPOT.Hardware.Utility.SetLocalTime(presentTime);
+            StringBuilder xmlBuilder = new StringBuilder();
+            xmlBuilder.Append("<netduino>");
+            xmlBuilder.Append("<data timestamp='2013-02-01'>");
+            xmlBuilder.Append("<temperature>");
+            xmlBuilder.Append("<current>");
+            xmlBuilder.Append(ProcessControl.GetInstance().CurrentTemperature.ToString("F2"));
+            xmlBuilder.Append("</current>");
+            xmlBuilder.Append("<target>");
+            xmlBuilder.Append(ProcessControl.GetInstance().TargetTemperature.ToString("F2"));
+            xmlBuilder.Append("</target>");
+            xmlBuilder.Append("</temperature>");
+            xmlBuilder.Append("<relativehumidity>");
+            xmlBuilder.Append(ProcessControl.GetInstance().CurrentRelativeHumidity.ToString("F2"));
+            xmlBuilder.Append("</relativehumidity>");
+            xmlBuilder.Append("<co2>");
+            xmlBuilder.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
+            xmlBuilder.Append("</co2>");
+            xmlBuilder.Append("</data>");
+            xmlBuilder.Append("</netduino>");
+            NetworkCommunication.Send(xmlBuilder.ToString());
         }
 
         private void button_OnInterrupt(uint data1, uint data2, DateTime time)
