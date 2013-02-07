@@ -43,6 +43,7 @@
     <Compile Include="SHT11\SHT11Sensor.cs" />
     <Compile Include="SHT11\SHT11.cs" />
     <Compile Include="SHT11\SHT11_GPIO_IOProvider.cs" />
+    <Compile Include="WriteFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.SPOT.Hardware" />
@@ -53,5 +54,6 @@
     <Reference Include="SecretLabs.NETMF.Hardware" />
     <Reference Include="SecretLabs.NETMF.Hardware.NetduinoPlus" />
     <Reference Include="System" />
+    <Reference Include="System.IO" />
   </ItemGroup>
 </Project>

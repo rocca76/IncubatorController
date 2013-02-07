@@ -39,7 +39,7 @@ namespace NetduinoPlus.Controler
             NetworkCommunication.EventHandlerMessageReceived += new ReceivedEventHandler(OnMessageReceived);
             NetworkCommunication.InitInstance();
 
-            _SensorTimer = new Timer(new TimerCallback(OnReadSensor), null, 0, 1000);
+            _SensorTimer = new Timer(new TimerCallback(OnReadSensor), null, 0, 2000);
         }
 
         private void OnReadSensor(object state)
@@ -50,7 +50,8 @@ namespace NetduinoPlus.Controler
               ProcessControl.GetInstance().ReadRelativeHumidity();
               ProcessControl.GetInstance().ReadCO2();
 
-              SendData();
+              ProcessData();
+              WriteFile();
           }
           catch (Exception ex)
           {
@@ -65,7 +66,7 @@ namespace NetduinoPlus.Controler
             if (parts[0] == "TIME")
             {
                 DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
-                Microsoft.SPOT.Hardware.Utility.SetLocalTime(presentTime);
+                Utility.SetLocalTime(presentTime);
             }
             else if (parts[0] == "TARGET_TEMPERATURE")
             {
@@ -73,11 +74,26 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        private void SendData()
+        private void WriteFile()
+        {
+            StringBuilder data = new StringBuilder();
+            data.Append(DateTime.Now.ToString());
+            data.Append(";");
+            data.Append(ProcessControl.GetInstance().CurrentTemperature.ToString("F2"));
+            data.Append(";");
+            data.Append(ProcessControl.GetInstance().CurrentRelativeHumidity.ToString("F2"));
+            data.Append(";");
+            data.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
+
+            WriteFile writeFile = new WriteFile(data.ToString());
+            writeFile.Start();
+        }
+
+        private void ProcessData()
         {
             StringBuilder xmlBuilder = new StringBuilder();
             xmlBuilder.Append("<netduino>");
-            xmlBuilder.Append("<data timestamp='2013-02-01'>");
+            xmlBuilder.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
             xmlBuilder.Append("<temperature>");
             xmlBuilder.Append(ProcessControl.GetInstance().CurrentTemperature.ToString("F2"));
             xmlBuilder.Append("</temperature>");
@@ -95,6 +111,7 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("</co2>");
             xmlBuilder.Append("</data>");
             xmlBuilder.Append("</netduino>");
+
             NetworkCommunication.Send(xmlBuilder.ToString());
         }
 
