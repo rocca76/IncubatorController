@@ -21,6 +21,7 @@ namespace NetduinoPlus.Controler
         private static int _messageSentCount = 1;
         private static int _messageReceivedCount = 1;
         private bool _patchFirmware42 = false;
+        private static Socket _socket = null;
         #endregion
 
 
@@ -88,6 +89,9 @@ namespace NetduinoPlus.Controler
 
                 ShutdownSender();
                 ShutdownListener();
+
+                _socket.Close();
+                _socket = null;
             }
         }
         #endregion
@@ -106,7 +110,7 @@ namespace NetduinoPlus.Controler
             {
                 ShutdownSender();
 
-                _senderThread = new SenderThread(SentEventHandler, message);
+                _senderThread = new SenderThread(SentEventHandler, _socket, message);
                 _senderThread.Start();
             }
         }
@@ -163,6 +167,8 @@ namespace NetduinoPlus.Controler
             {
                 ShutdownSender();
                 _patchFirmware42 = false;
+                _socket.Close();
+                _socket = null;
             }
 
             if (EventHandlerMessageReceived != null)
@@ -223,13 +229,15 @@ namespace NetduinoPlus.Controler
         private Thread currentThread = null;
         private SentEventHandler _senderEventHandler = null;
         private String _message;
+        private Socket _socket;
         #endregion
 
 
         #region Constructors
-        public SenderThread(SentEventHandler sendEventHandler, String message)
+        public SenderThread(SentEventHandler sendEventHandler, Socket socket, String message)
         {
             _senderEventHandler = sendEventHandler;
+            _socket = socket;
             _message = message;
         }
         #endregion
@@ -243,6 +251,11 @@ namespace NetduinoPlus.Controler
         public String Message
         {
             get { return _message; }
+        }
+
+        public Socket Socket
+        {
+            get { return _socket; }
         }
 
         public bool IsAlive
@@ -272,16 +285,9 @@ namespace NetduinoPlus.Controler
         {
             try
             {
-                using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-                {
-                    IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse("192.168.250.100"), 250);
-
-                    Debug.Print("Connecting to: " + endpoint.ToString());
-                    socket.Connect(endpoint);
-                    socket.Send(Encoding.UTF8.GetBytes(Message));
-                    socket.Close();
-                }
-
+                Debug.Print("Connecting to: " + Socket.RemoteEndPoint.ToString());
+                Socket.Send(Encoding.UTF8.GetBytes(Message));
+                
                 _senderEventHandler(this);
             }
             catch (SocketException se)
