@@ -119,6 +119,16 @@ namespace NetduinoPlus.Controler
         {
             try
             {
+                NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()[0];
+                Debug.Print("IP address: " + networkInterface.IPAddress.ToString());
+
+                while (networkInterface.IPAddress.ToString() == "0.0.0.0")
+                {
+                    Thread.Sleep(1000);
+                }
+
+                Debug.Print("IP address: " + networkInterface.IPAddress.ToString());
+
                 using (Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
                 {
                     listener.Bind(new IPEndPoint(IPAddress.Any, 250));

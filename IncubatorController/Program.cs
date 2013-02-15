@@ -51,7 +51,7 @@ namespace NetduinoPlus.Controler
               ProcessControl.GetInstance().ReadCO2();
 
               ProcessData();
-              WriteFile();
+              //WriteFile();
           }
           catch (Exception ex)
           {
