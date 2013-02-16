@@ -39,7 +39,7 @@ namespace NetduinoPlus.Controler
             NetworkCommunication.EventHandlerMessageReceived += new ReceivedEventHandler(OnMessageReceived);
             NetworkCommunication.InitInstance();
 
-            _SensorTimer = new Timer(new TimerCallback(OnReadSensor), null, 0, 2000);
+            _SensorTimer = new Timer(new TimerCallback(OnReadSensor), null, 0, 1000);
         }
 
         private void OnReadSensor(object state)

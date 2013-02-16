@@ -21,7 +21,7 @@ namespace NetduinoPlus.Controler
         private static int _messageSentCount = 1;
         private static int _messageReceivedCount = 1;
         private bool _patchFirmware42 = false;
-        private static Socket _socket = null;
+        private static String _remoteIP;
         #endregion
 
 
@@ -89,9 +89,6 @@ namespace NetduinoPlus.Controler
 
                 ShutdownSender();
                 ShutdownListener();
-
-                _socket.Close();
-                _socket = null;
             }
         }
         #endregion
@@ -110,7 +107,7 @@ namespace NetduinoPlus.Controler
             {
                 ShutdownSender();
 
-                _senderThread = new SenderThread(SentEventHandler, _socket, message);
+                _senderThread = new SenderThread(SentEventHandler, _remoteIP, message);
                 _senderThread.Start();
             }
         }
@@ -119,8 +116,9 @@ namespace NetduinoPlus.Controler
         {
             try
             {
+                Debug.Print("Waiting for valid IP address...");
+
                 NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()[0];
-                Debug.Print("IP address: " + networkInterface.IPAddress.ToString());
 
                 while (networkInterface.IPAddress.ToString() == "0.0.0.0")
                 {
@@ -142,6 +140,9 @@ namespace NetduinoPlus.Controler
                         {
                             if (SocketConnected(socket))
                             {
+                                string[] remoteEndPoint = socket.RemoteEndPoint.ToString().Split(':');
+                                _remoteIP = remoteEndPoint[0];
+
                                 byte[] buffer = new byte[socket.Available];
 
                                 socket.Receive(buffer);
@@ -177,8 +178,6 @@ namespace NetduinoPlus.Controler
             {
                 ShutdownSender();
                 _patchFirmware42 = false;
-                _socket.Close();
-                _socket = null;
             }
 
             if (EventHandlerMessageReceived != null)
@@ -219,6 +218,7 @@ namespace NetduinoPlus.Controler
                     }
 
                     _listeningThread = null;
+                    _remoteIP = null;
                 }
             }
             catch (Exception ex)
@@ -239,15 +239,15 @@ namespace NetduinoPlus.Controler
         private Thread currentThread = null;
         private SentEventHandler _senderEventHandler = null;
         private String _message;
-        private Socket _socket;
+        private String _remoteIP = null;
         #endregion
 
 
         #region Constructors
-        public SenderThread(SentEventHandler sendEventHandler, Socket socket, String message)
+        public SenderThread(SentEventHandler sendEventHandler, String remoteIP, String message)
         {
             _senderEventHandler = sendEventHandler;
-            _socket = socket;
+            _remoteIP = remoteIP;
             _message = message;
         }
         #endregion
@@ -261,11 +261,6 @@ namespace NetduinoPlus.Controler
         public String Message
         {
             get { return _message; }
-        }
-
-        public Socket Socket
-        {
-            get { return _socket; }
         }
 
         public bool IsAlive
@@ -295,8 +290,15 @@ namespace NetduinoPlus.Controler
         {
             try
             {
-                Debug.Print("Connecting to: " + Socket.RemoteEndPoint.ToString());
-                Socket.Send(Encoding.UTF8.GetBytes(Message));
+                using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+                {
+                    IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse(_remoteIP), 250);
+
+                    Debug.Print("Connecting to: " + endpoint.ToString());
+                    socket.Connect(endpoint);
+                    socket.Send(Encoding.UTF8.GetBytes(Message));
+                    socket.Close();
+                }
                 
                 _senderEventHandler(this);
             }
