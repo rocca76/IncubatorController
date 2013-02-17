@@ -125,12 +125,12 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<co2>");
             xmlBuilder.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
             xmlBuilder.Append("</co2>");
-            xmlBuilder.Append("<tiltmode>");
-            xmlBuilder.Append(ProcessControl.GetInstance().TiltMode.ToString());
-            xmlBuilder.Append("</tiltmode>");
-            xmlBuilder.Append("<tiltstate>");
-            xmlBuilder.Append(ProcessControl.GetInstance().TiltState.ToString());
-            xmlBuilder.Append("</tiltstate>");
+            xmlBuilder.Append("<actuatormode>");
+            xmlBuilder.Append(ProcessControl.GetInstance().ActuatorMode.ToString());
+            xmlBuilder.Append("</actuatormode>");
+            xmlBuilder.Append("<actuatorstate>");
+            xmlBuilder.Append(ProcessControl.GetInstance().ActuatorState.ToString());
+            xmlBuilder.Append("</actuatorstate>");
             xmlBuilder.Append("</data>");
             xmlBuilder.Append("</netduino>");
 

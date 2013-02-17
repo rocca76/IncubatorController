@@ -57,12 +57,12 @@ namespace NetduinoPlus.Controler
             set { _heatPower = value; }
         }
 
-        public ActuatorControl.TiltMode TiltMode
+        public ActuatorControl.ActuatorMode ActuatorMode
         {
             get { return ActuatorControl.GetInstance().Mode; }
         }
 
-        public ActuatorControl.TiltState TiltState
+        public ActuatorControl.ActuatorState ActuatorState
         {
             get { return ActuatorControl.GetInstance().State; }
         }

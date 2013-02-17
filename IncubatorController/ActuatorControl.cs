@@ -11,20 +11,20 @@ namespace NetduinoPlus.Controler
         private bool _autoModeReady = false;
         private bool _autoModeInitializing = false;
         private TimeSpan _duration = TimeSpan.Zero;
-        private TiltMode _tiltMode = TiltMode.Manual;
-        private TiltState _tiltState = TiltState.Stopped;
+        private ActuatorMode _actuatorMode = ActuatorMode.Manual;
+        private ActuatorState _actuatorState = ActuatorState.Stopped;
         private static ActuatorControl _actuatorControl = null;
 
         private OutputPort out7 = new OutputPort(Pins.GPIO_PIN_D7, false);
         private OutputPort out8 = new OutputPort(Pins.GPIO_PIN_D8, false);
 
-        public enum TiltMode
+        public enum ActuatorMode
         {
             Manual,
             Auto
         }
 
-        public enum TiltState
+        public enum ActuatorState
         {
             Open,
             Close,
@@ -34,12 +34,12 @@ namespace NetduinoPlus.Controler
         }
 
         #region Public Properties
-        public ActuatorControl.TiltMode Mode
+        public ActuatorControl.ActuatorMode Mode
         {
-            get { return _tiltMode; }
+            get { return _actuatorMode; }
         }
 
-        public ActuatorControl.TiltState State
+        public ActuatorControl.ActuatorState State
         {
             get { return ManageState(); }
         }
@@ -57,34 +57,34 @@ namespace NetduinoPlus.Controler
 
         public void Open()
         {
-            if (_tiltMode == TiltMode.Manual)
+            if (_actuatorMode == ActuatorMode.Manual)
             {
                 out7.Write(true);
                 out8.Write(false);
 
-                _tiltState = TiltState.Opening;
+                _actuatorState = ActuatorState.Opening;
             }
         }
 
         public void Close()
         {
-            if (_tiltMode == TiltMode.Manual)
+            if (_actuatorMode == ActuatorMode.Manual)
             {
                 out7.Write(false);
                 out8.Write(true);
 
-                _tiltState = TiltState.Closing;
+                _actuatorState = ActuatorState.Closing;
             }
         }
 
         public void Stop()
         {
-            if (_tiltMode == TiltMode.Manual)
+            if (_actuatorMode == ActuatorMode.Manual)
             {
                 out7.Write(false);
                 out8.Write(false);
 
-                _tiltState = TiltState.Stopped;
+                _actuatorState = ActuatorState.Stopped;
             }
         }
 
@@ -98,65 +98,65 @@ namespace NetduinoPlus.Controler
                 _autoModeReady = false;
                 _autoModeInitializing = false;
                 _duration = TimeSpan.Zero;
-                _tiltMode = TiltMode.Manual;
-                _tiltState = TiltState.Stopped;
+                _actuatorMode = ActuatorMode.Manual;
+                _actuatorState = ActuatorState.Stopped;
             }
             else if (mode == "AUTO")
             {
-                _tiltMode = TiltMode.Auto;
+                _actuatorMode = ActuatorMode.Auto;
             }
         }
 
-        private ActuatorControl.TiltState ManageState()
+        private ActuatorControl.ActuatorState ManageState()
         {
             if (_duration > TimeSpan.Zero)
             {
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
-            if (_tiltMode == TiltMode.Auto)
+            if (_actuatorMode == ActuatorMode.Auto)
             {
                 if (_autoModeReady)
                 {
-                    if (_tiltState == TiltState.Closing)
+                    if (_actuatorState == ActuatorState.Closing)
                     {
                         if (_duration == TimeSpan.Zero)
                         {
                             //Start waiting period
                             _duration = new TimeSpan(0, 0, 10);
-                            _tiltState = TiltState.Close;
+                            _actuatorState = ActuatorState.Close;
                             out7.Write(false);
                             out8.Write(false);
                         }
                     }
-                    else if (_tiltState == TiltState.Open || _tiltState == TiltState.Close)
+                    else if (_actuatorState == ActuatorState.Open || _actuatorState == ActuatorState.Close)
                     {
                         if (_duration == TimeSpan.Zero)
                         {
                             //Start moving actuator
                             _duration = new TimeSpan(0, 0, 4);
 
-                            if (_tiltState == TiltState.Open)
+                            if (_actuatorState == ActuatorState.Open)
                             {
-                                _tiltState = TiltState.Closing;
+                                _actuatorState = ActuatorState.Closing;
                                 out7.Write(false);
                                 out8.Write(true);
                             }
-                            else if (_tiltState == TiltState.Close)
+                            else if (_actuatorState == ActuatorState.Close)
                             {
-                                _tiltState = TiltState.Opening;
+                                _actuatorState = ActuatorState.Opening;
                                 out7.Write(true);
                                 out8.Write(false);
                             }
                         }
                     }
-                    else if (_tiltState == TiltState.Opening)
+                    else if (_actuatorState == ActuatorState.Opening)
                     {
                         if (_duration == TimeSpan.Zero)
                         {
                             //Start waiting period
                             _duration = new TimeSpan(0, 0, 10);
-                            _tiltState = TiltState.Open;
+                            _actuatorState = ActuatorState.Open;
                             out7.Write(false);
                             out8.Write(false);
                         }
@@ -176,14 +176,14 @@ namespace NetduinoPlus.Controler
                         {
                             //Start initializing actuator
                             _duration = new TimeSpan(0, 0, 4);
-                            _tiltState = TiltState.Closing;
+                            _actuatorState = ActuatorState.Closing;
                             _autoModeInitializing = true;
                         }
                     }
                 }
             }
 
-            return _tiltState;
+            return _actuatorState;
         }
     }
 }
