@@ -34,27 +34,12 @@ namespace NetduinoPlus.Controler
         }
 
         #region Public Properties
-        public String Mode
+        public ActuatorControl.TiltMode Mode
         {
-            get
-            {
-                String modeTxt = "Mode: ";
-
-                switch (_tiltMode)
-                {
-                    case TiltMode.Manual:
-                        modeTxt += "Manuel";
-                    break;
-                    case TiltMode.Auto:
-                        modeTxt += "Automatique";
-                    break;
-                }
-
-                return modeTxt;
-            }
+            get { return _tiltMode; }
         }
 
-        public String State
+        public ActuatorControl.TiltState State
         {
             get { return ManageState(); }
         }
@@ -122,31 +107,14 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        private String ManageState()
+        private ActuatorControl.TiltState ManageState()
         {
-            String stateTxt = "État: ";
-
             if (_duration > TimeSpan.Zero)
             {
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
-            if (_tiltMode == TiltMode.Manual)
-            {
-                switch (_tiltState)
-                {
-                    case TiltState.Stopped:
-                        stateTxt += "Arrêté";
-                        break;
-                    case TiltState.Opening:
-                        stateTxt += "Ouverture...";
-                        break;
-                    case TiltState.Closing:
-                        stateTxt += "Fermeture...";
-                        break;
-                }
-            }
-            else if (_tiltMode == TiltMode.Auto)
+            if (_tiltMode == TiltMode.Auto)
             {
                 if (_autoModeReady)
                 {
@@ -213,23 +181,9 @@ namespace NetduinoPlus.Controler
                         }
                     }
                 }
-
-                switch (_tiltState)
-                {
-                    case TiltState.Open:
-                    case TiltState.Close:
-                        stateTxt += "Déplacement dans " + _duration.ToString() + "";
-                        break;
-                    case TiltState.Opening:
-                        stateTxt += "Ouverture...";
-                        break;
-                    case TiltState.Closing:
-                        stateTxt += "Fermeture...";
-                        break;
-                }
             }
 
-            return stateTxt;
+            return _tiltState;
         }
     }
 }
