@@ -27,8 +27,8 @@ namespace NetduinoPlus.Controler
         public enum ActuatorState
         {
             Open,
-            Close,
             Opening,
+            Close,
             Closing,
             Stopped
         }
