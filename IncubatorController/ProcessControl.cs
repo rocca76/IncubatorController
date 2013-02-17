@@ -56,6 +56,16 @@ namespace NetduinoPlus.Controler
             get { return _heatPower; }
             set { _heatPower = value; }
         }
+
+        public String TiltMode
+        {
+            get { return ActuatorControl.GetInstance().Mode; }
+        }
+
+        public String TiltState
+        {
+            get { return ActuatorControl.GetInstance().State; }
+        }
         #endregion
 
         #region Events
@@ -125,6 +135,26 @@ namespace NetduinoPlus.Controler
         public void ReadCO2()
         {
             CurrentCO2 = K30Sensor.ReadCO2();
+        }
+
+        public void OpenActuator()
+        {
+            ActuatorControl.GetInstance().Open();
+        }
+
+        public void CloseActuator()
+        {
+            ActuatorControl.GetInstance().Close();
+        }
+
+        public void StopActuator()
+        {
+            ActuatorControl.GetInstance().Stop();
+        }
+
+        public void SetActuatorMode(String mode)
+        {
+            ActuatorControl.GetInstance().SetMode(mode);
         }
         #endregion
 

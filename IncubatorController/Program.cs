@@ -15,7 +15,7 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private OutputPort _led = new OutputPort(Pins.ONBOARD_LED, false);
         private bool _toggle = true;
-        private Timer _SensorTimer = null;
+        private Timer _processTimer = null;
         #endregion
 
         #region Public Properties
@@ -39,10 +39,10 @@ namespace NetduinoPlus.Controler
             NetworkCommunication.EventHandlerMessageReceived += new ReceivedEventHandler(OnMessageReceived);
             NetworkCommunication.InitInstance();
 
-            _SensorTimer = new Timer(new TimerCallback(OnReadSensor), null, 0, 1000);
+            _processTimer = new Timer(new TimerCallback(OnProcessTimer), null, 0, 1000);
         }
 
-        private void OnReadSensor(object state)
+        private void OnProcessTimer(object state)
         {
           try
           {
@@ -71,6 +71,22 @@ namespace NetduinoPlus.Controler
             else if (parts[0] == "TARGET_TEMPERATURE")
             {
                 ProcessControl.GetInstance().TargetTemperature = double.Parse(parts[1]);
+            }
+            else if (parts[0] == "OPEN_ACTUATOR")
+            {
+               ProcessControl.GetInstance().OpenActuator();
+            }
+            else if (parts[0] == "CLOSE_ACTUATOR")
+            {
+                ProcessControl.GetInstance().CloseActuator();
+            }
+            else if (parts[0] == "STOP_ACTUATOR")
+            {
+                ProcessControl.GetInstance().StopActuator();
+            }
+            else if (parts[0] == "ACTUATOR_MODE")
+            {
+                ProcessControl.GetInstance().SetActuatorMode(parts[1]);
             }
         }
 
@@ -109,6 +125,12 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<co2>");
             xmlBuilder.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
             xmlBuilder.Append("</co2>");
+            xmlBuilder.Append("<tiltmode>");
+            xmlBuilder.Append(ProcessControl.GetInstance().TiltMode);
+            xmlBuilder.Append("</tiltmode>");
+            xmlBuilder.Append("<tiltstate>");
+            xmlBuilder.Append(ProcessControl.GetInstance().TiltState);
+            xmlBuilder.Append("</tiltstate>");
             xmlBuilder.Append("</data>");
             xmlBuilder.Append("</netduino>");
 
