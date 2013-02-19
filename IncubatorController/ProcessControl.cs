@@ -66,6 +66,11 @@ namespace NetduinoPlus.Controler
         {
             get { return ActuatorControl.GetInstance().State; }
         }
+
+        public TimeSpan ActuatorDuration
+        {
+            get { return ActuatorControl.GetInstance().Duration; }
+        }
         #endregion
 
         #region Events
@@ -135,21 +140,6 @@ namespace NetduinoPlus.Controler
         public void ReadCO2()
         {
             CurrentCO2 = K30Sensor.ReadCO2();
-        }
-
-        public void OpenActuator()
-        {
-            ActuatorControl.GetInstance().Open();
-        }
-
-        public void CloseActuator()
-        {
-            ActuatorControl.GetInstance().Close();
-        }
-
-        public void StopActuator()
-        {
-            ActuatorControl.GetInstance().Stop();
         }
 
         public void SetActuatorMode(String mode)
