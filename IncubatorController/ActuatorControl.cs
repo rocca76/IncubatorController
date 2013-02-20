@@ -12,7 +12,7 @@ namespace NetduinoPlus.Controler
         private bool _autoModeInitializing = false;
         private TimeSpan _duration = TimeSpan.Zero;
         private ActuatorMode _actuatorMode = ActuatorMode.Manual;
-        private ActuatorState _actuatorState = ActuatorState.Stopped;
+        private ActuatorState _actuatorState = ActuatorState.Unknown;
         private static ActuatorControl _actuatorControl = null;
 
         private OutputPort out7 = new OutputPort(Pins.GPIO_PIN_D7, false);
@@ -21,6 +21,7 @@ namespace NetduinoPlus.Controler
         public enum ActuatorMode
         {
             Manual,
+            ManualCentered,
             Auto
         }
 
@@ -30,7 +31,8 @@ namespace NetduinoPlus.Controler
             Opening,
             Close,
             Closing,
-            Stopped
+            Stopped,
+            Unknown
         }
 
         #region Public Properties
@@ -42,6 +44,11 @@ namespace NetduinoPlus.Controler
         public ActuatorControl.ActuatorState State
         {
             get { return ManageState(); }
+        }
+
+        public TimeSpan Duration
+        {
+            get { return _duration; }
         }
         #endregion
 
@@ -55,51 +62,25 @@ namespace NetduinoPlus.Controler
             return _actuatorControl;            
         }
 
-        public void Open()
-        {
-            if (_actuatorMode == ActuatorMode.Manual)
-            {
-                out7.Write(true);
-                out8.Write(false);
-
-                _actuatorState = ActuatorState.Opening;
-            }
-        }
-
-        public void Close()
-        {
-            if (_actuatorMode == ActuatorMode.Manual)
-            {
-                out7.Write(false);
-                out8.Write(true);
-
-                _actuatorState = ActuatorState.Closing;
-            }
-        }
-
-        public void Stop()
-        {
-            if (_actuatorMode == ActuatorMode.Manual)
-            {
-                out7.Write(false);
-                out8.Write(false);
-
-                _actuatorState = ActuatorState.Stopped;
-            }
-        }
-
         public void SetMode(String mode)
         {
             out7.Write(false);
             out8.Write(false);
 
-            if (mode == "MANUAL")
+            if (mode == "MANUAL" || mode =="MANUAL_CENTERED")
             {
                 _autoModeReady = false;
                 _autoModeInitializing = false;
                 _duration = TimeSpan.Zero;
-                _actuatorMode = ActuatorMode.Manual;
-                _actuatorState = ActuatorState.Stopped;
+
+                if (mode == "MANUAL")
+                {
+                    _actuatorMode = ActuatorMode.Manual;
+                }
+                else if (mode == "MANUAL_CENTERED")
+                {
+                    _actuatorMode = ActuatorMode.ManualCentered;
+                }
             }
             else if (mode == "AUTO")
             {
@@ -114,7 +95,42 @@ namespace NetduinoPlus.Controler
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
-            if (_actuatorMode == ActuatorMode.Auto)
+            if (_actuatorMode == ActuatorMode.Manual && _actuatorState != ActuatorState.Stopped)
+            {
+                _actuatorState = ActuatorState.Stopped;
+                out7.Write(false);
+                out8.Write(false);
+            }
+            else if (_actuatorMode == ActuatorMode.ManualCentered)
+            {
+                if (_actuatorState == ActuatorState.Close || _actuatorState == ActuatorState.Open)
+                {
+                    _duration = new TimeSpan(0, 0, 2);
+
+                    if (_actuatorState == ActuatorState.Close)
+                    {
+                        _actuatorState = ActuatorState.Opening;
+                        out7.Write(true);
+                        out8.Write(false);
+                    }
+                    else if (_actuatorState == ActuatorState.Open)
+                    {
+                        _actuatorState = ActuatorState.Closing;
+                        out7.Write(false);
+                        out8.Write(true);
+                    }
+                }
+                else if (_actuatorState == ActuatorState.Closing || _actuatorState == ActuatorState.Opening)
+                {
+                    if (_duration == TimeSpan.Zero)
+                    {
+                        _actuatorState = ActuatorState.Stopped;
+                        out7.Write(false);
+                        out8.Write(false);
+                    }
+                }
+            }
+            else if (_actuatorMode == ActuatorMode.Auto)
             {
                 if (_autoModeReady)
                 {
@@ -123,7 +139,7 @@ namespace NetduinoPlus.Controler
                         if (_duration == TimeSpan.Zero)
                         {
                             //Start waiting period
-                            _duration = new TimeSpan(0, 0, 10);
+                            _duration = new TimeSpan(0, 0, 7);
                             _actuatorState = ActuatorState.Close;
                             out7.Write(false);
                             out8.Write(false);
@@ -155,7 +171,7 @@ namespace NetduinoPlus.Controler
                         if (_duration == TimeSpan.Zero)
                         {
                             //Start waiting period
-                            _duration = new TimeSpan(0, 0, 10);
+                            _duration = new TimeSpan(0, 0, 7);
                             _actuatorState = ActuatorState.Open;
                             out7.Write(false);
                             out8.Write(false);
@@ -176,8 +192,10 @@ namespace NetduinoPlus.Controler
                         {
                             //Start initializing actuator
                             _duration = new TimeSpan(0, 0, 4);
-                            _actuatorState = ActuatorState.Closing;
                             _autoModeInitializing = true;
+                            _actuatorState = ActuatorState.Closing;
+                            out7.Write(false);
+                            out8.Write(true);
                         }
                     }
                 }

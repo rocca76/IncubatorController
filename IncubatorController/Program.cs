@@ -80,18 +80,6 @@ namespace NetduinoPlus.Controler
             {
                 ProcessControl.GetInstance().TargetCO2 = int.Parse(parts[1]);
             }
-            else if (parts[0] == "OPEN_ACTUATOR")
-            {
-               ProcessControl.GetInstance().OpenActuator();
-            }
-            else if (parts[0] == "CLOSE_ACTUATOR")
-            {
-                ProcessControl.GetInstance().CloseActuator();
-            }
-            else if (parts[0] == "STOP_ACTUATOR")
-            {
-                ProcessControl.GetInstance().StopActuator();
-            }
             else if (parts[0] == "ACTUATOR_MODE")
             {
                 ProcessControl.GetInstance().SetActuatorMode(parts[1]);
@@ -155,6 +143,9 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<actuatorstate>");
             xmlBuilder.Append(ProcessControl.GetInstance().ActuatorState.ToString());
             xmlBuilder.Append("</actuatorstate>");
+            xmlBuilder.Append("<actuatorduration>");
+            xmlBuilder.Append(ProcessControl.GetInstance().ActuatorDuration.ToString());
+            xmlBuilder.Append("</actuatorduration>");
             xmlBuilder.Append("</data>");
             xmlBuilder.Append("</netduino>");
 
