@@ -72,6 +72,14 @@ namespace NetduinoPlus.Controler
             {
                 ProcessControl.GetInstance().TargetTemperature = double.Parse(parts[1]);
             }
+            else if (parts[0] == "TARGET_RELATIVE_HUMIDITY")
+            {
+                ProcessControl.GetInstance().TargetRelativeHumidity = double.Parse(parts[1]);
+            }
+            else if (parts[0] == "TARGET_CO2")
+            {
+                ProcessControl.GetInstance().TargetCO2 = int.Parse(parts[1]);
+            }
             else if (parts[0] == "OPEN_ACTUATOR")
             {
                ProcessControl.GetInstance().OpenActuator();
@@ -110,6 +118,7 @@ namespace NetduinoPlus.Controler
             StringBuilder xmlBuilder = new StringBuilder();
             xmlBuilder.Append("<netduino>");
             xmlBuilder.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
+
             xmlBuilder.Append("<temperature>");
             xmlBuilder.Append(ProcessControl.GetInstance().CurrentTemperature.ToString("F2"));
             xmlBuilder.Append("</temperature>");
@@ -119,12 +128,27 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<heatpower>");
             xmlBuilder.Append(ProcessControl.GetInstance().HeatPower.ToString());
             xmlBuilder.Append("</heatpower>");
+
             xmlBuilder.Append("<relativehumidity>");
             xmlBuilder.Append(ProcessControl.GetInstance().CurrentRelativeHumidity.ToString("F2"));
             xmlBuilder.Append("</relativehumidity>");
+            xmlBuilder.Append("<targetrelativehumidity>");
+            xmlBuilder.Append(ProcessControl.GetInstance().TargetRelativeHumidity.ToString("F2"));
+            xmlBuilder.Append("</targetrelativehumidity>");
+            xmlBuilder.Append("<pump>");
+            xmlBuilder.Append(ProcessControl.GetInstance().Pump.ToString());
+            xmlBuilder.Append("</pump>");
+
             xmlBuilder.Append("<co2>");
             xmlBuilder.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
             xmlBuilder.Append("</co2>");
+            xmlBuilder.Append("<targetco2>");
+            xmlBuilder.Append(ProcessControl.GetInstance().TargetCO2.ToString());
+            xmlBuilder.Append("</targetco2>");
+            xmlBuilder.Append("<fan>");
+            xmlBuilder.Append(ProcessControl.GetInstance().Fan.ToString());
+            xmlBuilder.Append("</fan>");
+
             xmlBuilder.Append("<actuatormode>");
             xmlBuilder.Append(ProcessControl.GetInstance().ActuatorMode.ToString());
             xmlBuilder.Append("</actuatormode>");
