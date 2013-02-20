@@ -18,8 +18,8 @@ namespace NetduinoPlus.Controler
         private ActuatorState _actuatorState = ActuatorState.Unknown;
         private static ActuatorControl _actuatorControl = null;
 
-        private OutputPort out7 = new OutputPort(Pins.GPIO_PIN_D7, false);
-        private OutputPort out8 = new OutputPort(Pins.GPIO_PIN_D8, false);
+        private OutputPort outOpen = new OutputPort(Pins.GPIO_PIN_D7, false);
+        private OutputPort outClose = new OutputPort(Pins.GPIO_PIN_D8, false);
 
         public enum ActuatorMode
         {
@@ -67,8 +67,8 @@ namespace NetduinoPlus.Controler
 
         public void SetMode(String mode)
         {
-            out7.Write(false);
-            out8.Write(false);
+            outOpen.Write(false);
+            outClose.Write(false);
 
             if (mode == "MANUAL" || mode =="MANUAL_CENTERED")
             {
@@ -101,8 +101,8 @@ namespace NetduinoPlus.Controler
             if (_actuatorMode == ActuatorMode.Manual && _actuatorState != ActuatorState.Stopped)
             {
                 _actuatorState = ActuatorState.Stopped;
-                out7.Write(false);
-                out8.Write(false);
+                outOpen.Write(false);
+                outClose.Write(false);
             }
             else if (_actuatorMode == ActuatorMode.ManualCentered)
             {
@@ -113,14 +113,14 @@ namespace NetduinoPlus.Controler
                     if (_actuatorState == ActuatorState.Close)
                     {
                         _actuatorState = ActuatorState.Opening;
-                        out7.Write(true);
-                        out8.Write(false);
+                        outOpen.Write(true);
+                        outClose.Write(false);
                     }
                     else if (_actuatorState == ActuatorState.Open)
                     {
                         _actuatorState = ActuatorState.Closing;
-                        out7.Write(false);
-                        out8.Write(true);
+                        outOpen.Write(false);
+                        outClose.Write(true);
                     }
                 }
                 else if (_actuatorState == ActuatorState.Closing || _actuatorState == ActuatorState.Opening)
@@ -128,8 +128,8 @@ namespace NetduinoPlus.Controler
                     if (_duration == TimeSpan.Zero)
                     {
                         _actuatorState = ActuatorState.Stopped;
-                        out7.Write(false);
-                        out8.Write(false);
+                        outOpen.Write(false);
+                        outClose.Write(false);
                     }
                 }
             }
@@ -144,8 +144,8 @@ namespace NetduinoPlus.Controler
                             //Start waiting period
                             _duration = new TimeSpan(0, 0, TILT_PERIOD);
                             _actuatorState = ActuatorState.Close;
-                            out7.Write(false);
-                            out8.Write(false);
+                            outOpen.Write(false);
+                            outClose.Write(false);
                         }
                     }
                     else if (_actuatorState == ActuatorState.Open || _actuatorState == ActuatorState.Close)
@@ -158,14 +158,14 @@ namespace NetduinoPlus.Controler
                             if (_actuatorState == ActuatorState.Open)
                             {
                                 _actuatorState = ActuatorState.Closing;
-                                out7.Write(false);
-                                out8.Write(true);
+                                outOpen.Write(false);
+                                outClose.Write(true);
                             }
                             else if (_actuatorState == ActuatorState.Close)
                             {
                                 _actuatorState = ActuatorState.Opening;
-                                out7.Write(true);
-                                out8.Write(false);
+                                outOpen.Write(true);
+                                outClose.Write(false);
                             }
                         }
                     }
@@ -176,8 +176,8 @@ namespace NetduinoPlus.Controler
                             //Start waiting period
                             _duration = new TimeSpan(0, 0, TILT_PERIOD);
                             _actuatorState = ActuatorState.Open;
-                            out7.Write(false);
-                            out8.Write(false);
+                            outOpen.Write(false);
+                            outClose.Write(false);
                         }
                     }
                 }
@@ -197,8 +197,8 @@ namespace NetduinoPlus.Controler
                             _duration = new TimeSpan(0, 0, ACTUARTOR_DELAY);
                             _autoModeInitializing = true;
                             _actuatorState = ActuatorState.Closing;
-                            out7.Write(false);
-                            out8.Write(true);
+                            outOpen.Write(false);
+                            outClose.Write(true);
                         }
                     }
                 }
