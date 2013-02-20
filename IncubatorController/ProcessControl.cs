@@ -131,19 +131,7 @@ namespace NetduinoPlus.Controler
         {
             CurrentTemperature = SHT11Sensor.ReadTemperature();
 
-            if (CurrentTemperature < (TargetTemperature - 5))
-            {
-                HeatPower = 1500;
-            }
-            else if (CurrentTemperature >= (TargetTemperature - 5) && CurrentTemperature < (TargetTemperature - 4))
-            {
-                HeatPower = 1250;
-            }
-            else if (CurrentTemperature >= (TargetTemperature - 4) && CurrentTemperature < (TargetTemperature - 3))
-            {
-                HeatPower = 1000;
-            }
-            else if (CurrentTemperature >= (TargetTemperature - 3) && CurrentTemperature < (TargetTemperature - 2))
+            if (CurrentTemperature < (TargetTemperature - 2))
             {
                 HeatPower = 750;
             }
@@ -232,30 +220,6 @@ namespace NetduinoPlus.Controler
                     out4.Write(false);
                     out5.Write(true);
                     out6.Write(false);
-                }
-                break;
-                case 1000:
-                {
-                    out3.Write(false);
-                    out4.Write(false);
-                    out5.Write(true);
-                    out6.Write(true);
-                }
-                break;
-                case 1250:
-                {
-                    out3.Write(false);
-                    out4.Write(true);
-                    out5.Write(true);
-                    out6.Write(true);
-                }
-                break;
-                case 1500:
-                {
-                    out3.Write(true);
-                    out4.Write(true);
-                    out5.Write(true);
-                    out6.Write(true);
                 }
                 break;
             }
