@@ -8,6 +8,9 @@ namespace NetduinoPlus.Controler
 {
     class ActuatorControl
     {
+        const int ACTUARTOR_DELAY = 12; //seconds
+        const int TILT_PERIOD = 60;//7200; //seconds
+
         private bool _autoModeReady = false;
         private bool _autoModeInitializing = false;
         private TimeSpan _duration = TimeSpan.Zero;
@@ -105,7 +108,7 @@ namespace NetduinoPlus.Controler
             {
                 if (_actuatorState == ActuatorState.Close || _actuatorState == ActuatorState.Open)
                 {
-                    _duration = new TimeSpan(0, 0, 2);
+                    _duration = new TimeSpan(0, 0, ACTUARTOR_DELAY / 2);
 
                     if (_actuatorState == ActuatorState.Close)
                     {
@@ -139,7 +142,7 @@ namespace NetduinoPlus.Controler
                         if (_duration == TimeSpan.Zero)
                         {
                             //Start waiting period
-                            _duration = new TimeSpan(0, 0, 7);
+                            _duration = new TimeSpan(0, 0, TILT_PERIOD);
                             _actuatorState = ActuatorState.Close;
                             out7.Write(false);
                             out8.Write(false);
@@ -150,7 +153,7 @@ namespace NetduinoPlus.Controler
                         if (_duration == TimeSpan.Zero)
                         {
                             //Start moving actuator
-                            _duration = new TimeSpan(0, 0, 4);
+                            _duration = new TimeSpan(0, 0, ACTUARTOR_DELAY);
 
                             if (_actuatorState == ActuatorState.Open)
                             {
@@ -171,7 +174,7 @@ namespace NetduinoPlus.Controler
                         if (_duration == TimeSpan.Zero)
                         {
                             //Start waiting period
-                            _duration = new TimeSpan(0, 0, 7);
+                            _duration = new TimeSpan(0, 0, TILT_PERIOD);
                             _actuatorState = ActuatorState.Open;
                             out7.Write(false);
                             out8.Write(false);
@@ -191,7 +194,7 @@ namespace NetduinoPlus.Controler
                         else
                         {
                             //Start initializing actuator
-                            _duration = new TimeSpan(0, 0, 4);
+                            _duration = new TimeSpan(0, 0, ACTUARTOR_DELAY);
                             _autoModeInitializing = true;
                             _actuatorState = ActuatorState.Closing;
                             out7.Write(false);
