@@ -25,10 +25,10 @@ namespace NetduinoPlus.Controler
         private int _targetCO2 = 0;
         private int _fan = 0;
 
-        private OutputPort out3 = new OutputPort(Pins.GPIO_PIN_D3, false);
-        private OutputPort out4 = new OutputPort(Pins.GPIO_PIN_D4, false);
-        private OutputPort out5 = new OutputPort(Pins.GPIO_PIN_D5, false);
-        private OutputPort out6 = new OutputPort(Pins.GPIO_PIN_D6, false);
+        private OutputPort out250W = new OutputPort(Pins.GPIO_PIN_D3, false); //250W
+        private OutputPort out500W = new OutputPort(Pins.GPIO_PIN_D4, false); //500W
+        private OutputPort outPump = new OutputPort(Pins.GPIO_PIN_D5, false); //Pump
+        private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D6, false); //Fan + Trap
 
         #endregion
 
@@ -163,6 +163,8 @@ namespace NetduinoPlus.Controler
             {
                 Pump = 0;
             }
+
+            SetPumpOutputPin();
         }
 
         public void ReadCO2()
@@ -177,6 +179,8 @@ namespace NetduinoPlus.Controler
             {
                 Fan = 0;
             }
+
+            SetFanOutputPin();
         }
 
         public void SetActuatorMode(String mode)
@@ -192,38 +196,54 @@ namespace NetduinoPlus.Controler
             {
                 case 0:
                 {
-                    out3.Write(false);
-                    out4.Write(false);
-                    out5.Write(false);
-                    out6.Write(false);
+                    out250W.Write(false);
+                    out500W.Write(false);
                 }
                 break;
                 case 250:
                 {
-                    out3.Write(true);
-                    out4.Write(false);
-                    out5.Write(false);
-                    out6.Write(false);
+                    out250W.Write(true);
+                    out500W.Write(false);
                 }
                 break;
                 case 500:
                 {
-                    out3.Write(false);
-                    out4.Write(false);
-                    out5.Write(true);
-                    out6.Write(false);
+                    out250W.Write(false);
+                    out500W.Write(true);
                 }
                 break;
                 case 750:
                 {
-                    out3.Write(true);
-                    out4.Write(false);
-                    out5.Write(true);
-                    out6.Write(false);
+                    out250W.Write(true);
+                    out500W.Write(true);
                 }
                 break;
             }
 
+        }
+
+        private void SetPumpOutputPin()
+        {
+            if (Pump == 1)
+            {
+                outPump.Write(true);
+            }
+            else if (Pump == 0)
+            {
+                outPump.Write(false);
+            }
+        }
+
+        private void SetFanOutputPin()
+        {
+            if (Fan == 1)
+            {
+                outFan.Write(true);
+            }
+            else if (Fan == 0)
+            {
+                outFan.Write(false);
+            }
         }
         #endregion
     }
