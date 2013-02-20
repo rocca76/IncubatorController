@@ -36,6 +36,8 @@ namespace NetduinoPlus.Controler
             button = new InterruptPort(Pins.ONBOARD_SW1, false, Port.ResistorMode.Disabled, Port.InterruptMode.InterruptEdgeLow);
             button.OnInterrupt += new NativeEventHandler(button_OnInterrupt);
 
+            ProcessControl.LoadConfiguration();
+
             NetworkCommunication.EventHandlerMessageReceived += new ReceivedEventHandler(OnMessageReceived);
             NetworkCommunication.InitInstance();
 

@@ -4,6 +4,7 @@ using System.Threading;
 using Sensirion.SHT11;
 using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
+using System.IO;
 
 namespace NetduinoPlus.Controler
 {
@@ -125,6 +126,11 @@ namespace NetduinoPlus.Controler
                 }
                 return _instance;
             }
+        }
+
+        public static void LoadConfiguration()
+        {
+            ConfigurationManager.Load();
         }
 
         public void ReadTemperature()
