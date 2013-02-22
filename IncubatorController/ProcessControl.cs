@@ -23,13 +23,13 @@ namespace NetduinoPlus.Controler
         private int _pump = 0;
 
         private int _currentCO2 = 0;
-        private int _targetCO2 = 0;
+        private int _targetCO2 = 10000;
         private int _fan = 0;
 
-        private OutputPort out250W = new OutputPort(Pins.GPIO_PIN_D3, false); //250W
-        private OutputPort out500W = new OutputPort(Pins.GPIO_PIN_D4, false); //500W
-        private OutputPort outPump = new OutputPort(Pins.GPIO_PIN_D5, false); //Pump
-        private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D6, false); //Fan + Trap
+        private OutputPort out250W = new OutputPort(Pins.GPIO_PIN_D4, false); //250W
+        private OutputPort out500W = new OutputPort(Pins.GPIO_PIN_D5, false); //500W
+        private OutputPort outPump = new OutputPort(Pins.GPIO_PIN_D6, false); //Pump
+        private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D9, false); //Fan + Trap
 
         #endregion
 
