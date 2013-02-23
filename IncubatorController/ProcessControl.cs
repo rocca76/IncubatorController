@@ -22,7 +22,6 @@ namespace NetduinoPlus.Controler
 
         private double _currentRelativeHumidity = 0.0;
         private double _targetRelativeHumidity = 0.0;
-        private int _pump = 0;
 
         private int _currentCO2 = 0;
         private int _targetCO2 = 10000;
@@ -162,7 +161,7 @@ namespace NetduinoPlus.Controler
 
         public void ReadCO2()
         {
-            CurrentCO2 = K30Sensor.ReadCO2();
+            CurrentCO2 = 0; // K30Sensor.ReadCO2();
             VentilationControl.GetInstance().ManageState();
         }
 
