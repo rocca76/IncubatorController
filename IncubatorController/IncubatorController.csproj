@@ -33,6 +33,8 @@
   </PropertyGroup>
   <Import Project="$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets" />
   <ItemGroup>
+    <Compile Include="PumpControl.cs" />
+    <Compile Include="VentilationControl.cs" />
     <Compile Include="ConfigurationManager.cs" />
     <Compile Include="I2CBus.cs" />
     <Compile Include="K30Sensor.cs" />

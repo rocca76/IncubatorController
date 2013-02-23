@@ -52,6 +52,8 @@ namespace NetduinoPlus.Controler
               ProcessControl.GetInstance().ReadRelativeHumidity();
               ProcessControl.GetInstance().ReadCO2();
 
+              ProcessControl.GetInstance().SetOutputPin();
+
               ProcessData();
               //WriteFile();
           }
@@ -125,9 +127,9 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<targetrelativehumidity>");
             xmlBuilder.Append(ProcessControl.GetInstance().TargetRelativeHumidity.ToString("F2"));
             xmlBuilder.Append("</targetrelativehumidity>");
-            xmlBuilder.Append("<pump>");
-            xmlBuilder.Append(ProcessControl.GetInstance().Pump.ToString());
-            xmlBuilder.Append("</pump>");
+            xmlBuilder.Append("<pumpstate>");
+            xmlBuilder.Append(PumpControl.GetInstance().PumpState.ToString());
+            xmlBuilder.Append("</pumpstate>");
 
             xmlBuilder.Append("<co2>");
             xmlBuilder.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
@@ -135,18 +137,24 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<targetco2>");
             xmlBuilder.Append(ProcessControl.GetInstance().TargetCO2.ToString());
             xmlBuilder.Append("</targetco2>");
-            xmlBuilder.Append("<fan>");
-            xmlBuilder.Append(ProcessControl.GetInstance().Fan.ToString());
-            xmlBuilder.Append("</fan>");
+            xmlBuilder.Append("<trapstate>");
+            xmlBuilder.Append(VentilationControl.GetInstance().TrapState.ToString());
+            xmlBuilder.Append("</trapstate>");
+            xmlBuilder.Append("<fanstate>");
+            xmlBuilder.Append(VentilationControl.GetInstance().FanState.ToString());
+            xmlBuilder.Append("</fanstate>");
+            xmlBuilder.Append("<fanduration>");
+            xmlBuilder.Append(VentilationControl.GetInstance().Duration.ToString());
+            xmlBuilder.Append("</fanduration>");
 
             xmlBuilder.Append("<actuatormode>");
-            xmlBuilder.Append(ProcessControl.GetInstance().ActuatorMode.ToString());
+            xmlBuilder.Append(ActuatorControl.GetInstance().Mode.ToString());
             xmlBuilder.Append("</actuatormode>");
             xmlBuilder.Append("<actuatorstate>");
-            xmlBuilder.Append(ProcessControl.GetInstance().ActuatorState.ToString());
+            xmlBuilder.Append(ActuatorControl.GetInstance().State.ToString());
             xmlBuilder.Append("</actuatorstate>");
             xmlBuilder.Append("<actuatorduration>");
-            xmlBuilder.Append(ProcessControl.GetInstance().ActuatorDuration.ToString());
+            xmlBuilder.Append(ActuatorControl.GetInstance().Duration.ToString());
             xmlBuilder.Append("</actuatorduration>");
             xmlBuilder.Append("</data>");
             xmlBuilder.Append("</netduino>");
