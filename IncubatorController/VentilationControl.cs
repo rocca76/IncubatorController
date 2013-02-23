@@ -27,6 +27,7 @@ namespace NetduinoPlus.Controler
         private TimeSpan _duration = TimeSpan.Zero;
         private FanStateEnum _fan = FanStateEnum.Stopped;
         private TrapStateEnum _trap = TrapStateEnum.Closed;
+        private bool _openTrap = false;
 
         private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D9, false);   //Fan
         private OutputPort outTrap = new OutputPort(Pins.GPIO_PIN_D10, false); //Trap
@@ -68,8 +69,6 @@ namespace NetduinoPlus.Controler
 
         public void ManageState()
         {
-            bool openTrap = false;
-
             if (_duration > TimeSpan.Zero)
             {
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
@@ -82,13 +81,13 @@ namespace NetduinoPlus.Controler
                 {
                     _fan = FanStateEnum.Running;
                     outFan.Write(true);
-                    openTrap = true;
+                    _openTrap = true;
                 }
                 else
                 {
                     _fan = FanStateEnum.Stopped;
                     outFan.Write(false);
-                    openTrap = false;
+                    _openTrap = false;
                 }
             }
             else
@@ -101,14 +100,14 @@ namespace NetduinoPlus.Controler
                         _fan = FanStateEnum.Running;
                         _duration = new TimeSpan(0, 0, RUNING_DURATION);
                         outFan.Write(true);
-                        openTrap = true;
+                        _openTrap = true;
                     }
                     else if (_fan == FanStateEnum.Running)
                     {
                         _fan = FanStateEnum.Stopped;
                         _duration = new TimeSpan(0, 0, WAITING_DURATION);
                         outFan.Write(false);
-                        openTrap = false;
+                        _openTrap = false;
                     }
                 }
             }
@@ -120,16 +119,16 @@ namespace NetduinoPlus.Controler
             }
             else
             {
-                if (openTrap)
+                if (_openTrap && _trap == TrapStateEnum.Closed)
                 {
                     _trap = TrapStateEnum.Opened;
+                    outTrap.Write(true);
                 }
-                else
+                else if (_openTrap == false && _trap == TrapStateEnum.Opened)
                 {
                     _trap = TrapStateEnum.Closed;
+                    outTrap.Write(false);
                 }
-
-                outTrap.Write(openTrap);
             }
         }
         #endregion
