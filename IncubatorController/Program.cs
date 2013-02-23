@@ -76,6 +76,10 @@ namespace NetduinoPlus.Controler
             {
                 ProcessControl.GetInstance().TargetTemperature = double.Parse(parts[1]);
             }
+            else if (parts[0] == "LIMIT_MAX_TEMPERATURE")
+            {
+                ProcessControl.GetInstance().LimitMaxTemperature = double.Parse(parts[1]);
+            }
             else if (parts[0] == "TARGET_RELATIVE_HUMIDITY")
             {
                 ProcessControl.GetInstance().TargetRelativeHumidity = double.Parse(parts[1]);
@@ -117,6 +121,12 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<targettemperature>");
             xmlBuilder.Append(ProcessControl.GetInstance().TargetTemperature.ToString("F2"));
             xmlBuilder.Append("</targettemperature>");
+            xmlBuilder.Append("<limitmaxtemperature>");
+            xmlBuilder.Append(ProcessControl.GetInstance().LimitMaxTemperature.ToString("F2"));
+            xmlBuilder.Append("</limitmaxtemperature>");
+            xmlBuilder.Append("<maxtemperaturereached>");
+            xmlBuilder.Append(ProcessControl.GetInstance().MaxTemperatureLimitReached.ToString());
+            xmlBuilder.Append("</maxtemperaturereached>");
             xmlBuilder.Append("<heatpower>");
             xmlBuilder.Append(ProcessControl.GetInstance().HeatPower.ToString());
             xmlBuilder.Append("</heatpower>");
