@@ -8,8 +8,8 @@ namespace NetduinoPlus.Controler
 {
     class ActuatorControl
     {
-        const int ACTUARTOR_DELAY = 12; //seconds
-        const int TILT_PERIOD = 60;//7200; //seconds
+        const int ACTUARTOR_DELAY = 12; // 12 seconds
+        const int TILT_PERIOD = 60;     // 7200 seconds (2hr)
 
         private bool _autoModeReady = false;
         private bool _autoModeInitializing = false;

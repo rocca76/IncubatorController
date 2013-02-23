@@ -7,8 +7,8 @@ namespace NetduinoPlus.Controler
 {
     class VentilationControl
     {
-        const int RUNING_DURATION = 4; //seconds
-        const int WAITING_DURATION = 30;//7200; //seconds
+        const int RUNING_DURATION = 5;   // 300 seconds (5min)
+        const int WAITING_DURATION = 10; // 21600 seconds (6hr)
 
         public enum FanStateEnum
         {
