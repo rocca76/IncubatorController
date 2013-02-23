@@ -130,6 +130,9 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<pumpstate>");
             xmlBuilder.Append(PumpControl.GetInstance().PumpState.ToString());
             xmlBuilder.Append("</pumpstate>");
+            xmlBuilder.Append("<pumpduration>");
+            xmlBuilder.Append(PumpControl.GetInstance().Duration.ToString());
+            xmlBuilder.Append("</pumpduration>");
 
             xmlBuilder.Append("<co2>");
             xmlBuilder.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
