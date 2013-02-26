@@ -121,15 +121,15 @@ namespace NetduinoPlus.Controler
 
             if (CurrentTemperature > 0)
             {
-                if (CurrentTemperature < (TargetTemperature - 2))
+                if (CurrentTemperature < (TargetTemperature - 0.5))
                 {
                     HeatPower = 750;
                 }
-                else if (CurrentTemperature >= (TargetTemperature - 2) && CurrentTemperature < (TargetTemperature - 1))
+                else if (CurrentTemperature >= (TargetTemperature - 0.5) && CurrentTemperature < (TargetTemperature - 0.25))
                 {
                     HeatPower = 500;
                 }
-                else if (CurrentTemperature >= (TargetTemperature - 1) && CurrentTemperature < TargetTemperature)
+                else if (CurrentTemperature >= (TargetTemperature - 0.25) && CurrentTemperature < TargetTemperature)
                 {
                     HeatPower = 250;
                 }
@@ -146,6 +146,7 @@ namespace NetduinoPlus.Controler
             if (CurrentTemperature > LimitMaxTemperature)
             {
                 MaxTemperatureLimitReached = 1;
+                HeatPower = 0;
             }
             else
             {
@@ -168,6 +169,16 @@ namespace NetduinoPlus.Controler
         public void SetActuatorMode(String mode)
         {
             ActuatorControl.GetInstance().SetMode(mode);
+        }
+
+        public void SetActuatorOpen(int open)
+        {
+            ActuatorControl.GetInstance().Open(open);
+        }
+
+        public void SetActuatorClose(int close)
+        {
+            ActuatorControl.GetInstance().Close(close);
         }
 
         public void SetOutputPin()

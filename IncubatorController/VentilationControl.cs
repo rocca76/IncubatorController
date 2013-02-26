@@ -7,8 +7,8 @@ namespace NetduinoPlus.Controler
 {
     class VentilationControl
     {
-        const int RUNING_DURATION = 5;   // 300 seconds (5min)
-        const int WAITING_DURATION = 10; // 21600 seconds (6hr)
+        const int RUNING_DURATION = 300;    // seconds (5min)
+        const int WAITING_DURATION = 43200; // seconds (12hr)
 
         public enum FanStateEnum
         {
@@ -93,7 +93,7 @@ namespace NetduinoPlus.Controler
             else
             {
                 //Sequence control
-                if (_duration == TimeSpan.Zero)
+                /*if (_duration == TimeSpan.Zero)
                 {
                     if (_fan == FanStateEnum.Stopped)
                     {
@@ -109,7 +109,7 @@ namespace NetduinoPlus.Controler
                         outFan.Write(false);
                         _openTrap = false;
                     }
-                }
+                }*/
             }
 
             if (ProcessControl.GetInstance().MaxTemperatureLimitReached == 1)

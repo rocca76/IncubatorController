@@ -9,7 +9,7 @@ namespace NetduinoPlus.Controler
     class ActuatorControl
     {
         const int ACTUARTOR_DELAY = 12; // 12 seconds
-        const int TILT_PERIOD = 60;     // 7200 seconds (2hr)
+        const int TILT_PERIOD = 7200;   // seconds (2hr)
 
         private bool _autoModeReady = false;
         private bool _autoModeInitializing = false;
@@ -63,6 +63,30 @@ namespace NetduinoPlus.Controler
             }
 
             return _actuatorControl;            
+        }
+
+        public void Open(int open)
+        {
+            if (open == 0)
+            {
+                outOpen.Write(false);
+            }
+            else if (open == 1)
+            {
+                outOpen.Write(true);
+            }
+        }
+
+        public void Close(int close)
+        {
+            if (close == 0)
+            {
+                outClose.Write(false);
+            }
+            else if (close == 1)
+            {
+                outClose.Write(true);
+            }
         }
 
         public void SetMode(String mode)

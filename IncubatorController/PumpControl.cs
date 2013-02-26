@@ -7,8 +7,8 @@ namespace NetduinoPlus.Controler
 {
     class PumpControl
     {
-        const int RUNING_DURATION = 3;   // 3 seconds
-        const int WAITING_DURATION = 10; // 57 seconds
+        const int RUNING_DURATION = 1;   // seconds
+        const int WAITING_DURATION = 300; // 5 minutes
 
         public enum PumpStateEnum
         {

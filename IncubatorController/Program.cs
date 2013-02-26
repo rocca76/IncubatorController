@@ -92,6 +92,14 @@ namespace NetduinoPlus.Controler
             {
                 ProcessControl.GetInstance().SetActuatorMode(parts[1]);
             }
+            else if (parts[0] == "ACTUATOR_OPEN")
+            {
+                ProcessControl.GetInstance().SetActuatorOpen( int.Parse(parts[1]) );
+            }
+            else if (parts[0] == "ACTUATOR_CLOSE")
+            {
+                ProcessControl.GetInstance().SetActuatorClose( int.Parse(parts[1]) );
+            }
         }
 
         private void WriteFile()
