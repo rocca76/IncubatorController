@@ -61,7 +61,9 @@ namespace NetduinoPlus.Controler
 
             if (ProcessControl.GetInstance().CurrentRelativeHumidity > 0)
             {
-                if (ProcessControl.GetInstance().CurrentRelativeHumidity < ProcessControl.GetInstance().TargetRelativeHumidity)
+              double temperatureDelta = Abs( ProcessControl.GetInstance().TargetTemperature - ProcessControl.GetInstance().CurrentTemperature );
+
+              if ((ProcessControl.GetInstance().CurrentRelativeHumidity < ProcessControl.GetInstance().TargetRelativeHumidity) && (temperatureDelta <= 1))
                 {
                     if (_duration == TimeSpan.Zero)
                     {
@@ -97,6 +99,10 @@ namespace NetduinoPlus.Controler
 
 
         #region Private Methods
+        public static double Abs(double value)
+        {
+          return (value >= 0) ? value : -value;
+        }
         #endregion
     }
 }
