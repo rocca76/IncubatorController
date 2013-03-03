@@ -288,29 +288,17 @@ namespace NetduinoPlus.Controler
 
         private void ThreadMain()
         {
-            try
+            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
             {
-                using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-                {
-                    IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse(_remoteIP), 250);
+                IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse(_remoteIP), 250);
 
-                    Debug.Print("Connecting to: " + endpoint.ToString());
-                    socket.Connect(endpoint);
-                    socket.Send(Encoding.UTF8.GetBytes(Message));
-                    socket.Close();
-                }
+                Debug.Print("Connecting to: " + endpoint.ToString());
+                socket.Connect(endpoint);
+                socket.Send(Encoding.UTF8.GetBytes(Message));
+                socket.Close();
+            }
                 
-                _senderEventHandler(this);
-            }
-            catch (SocketException se)
-            {
-                Debug.Print("Unable to connect or send through socket");
-                Debug.Print(se.ToString());
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.ToString());
-            }
+            _senderEventHandler(this);   
         }
     }
 }

@@ -66,6 +66,11 @@ namespace NetduinoPlus.Controler
             }
           }
 
+          if (co2 == 0)
+            {
+                co2 = ReadSensor();
+            }
+
           return co2;
         }
         #endregion

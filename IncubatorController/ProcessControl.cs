@@ -23,9 +23,6 @@ namespace NetduinoPlus.Controler
         private double _currentRelativeHumidity = 0.0;
         private double _targetRelativeHumidity = 0.0;
 
-        private int _currentCO2 = 0;
-        private int _targetCO2 = 10000;
-
         private OutputPort out250W = new OutputPort(Pins.GPIO_PIN_D4, false);  //250W
         private OutputPort out500W = new OutputPort(Pins.GPIO_PIN_D5, false);  //500W
         #endregion
@@ -72,18 +69,6 @@ namespace NetduinoPlus.Controler
         {
             get { return _targetRelativeHumidity; }
             set { _targetRelativeHumidity = value; }
-        }
-
-        public int CurrentCO2
-        {
-            get { return _currentCO2; }
-            set { _currentCO2 = value; }
-        }
-
-        public int TargetCO2
-        {
-            get { return _targetCO2; }
-            set { _targetCO2 = value; }
         }
         #endregion
 
@@ -158,12 +143,6 @@ namespace NetduinoPlus.Controler
         {
             CurrentRelativeHumidity = SHT11Sensor.ReadRelativeHumidity();
             PumpControl.GetInstance().ManageState();
-        }
-
-        public void ReadCO2()
-        {
-            CurrentCO2 = 0; // K30Sensor.ReadCO2();
-            VentilationControl.GetInstance().ManageState();
         }
 
         public void SetActuatorMode(String mode)
