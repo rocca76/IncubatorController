@@ -13,6 +13,8 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private static ProcessControl _instance = null;
         private static readonly object LockObject = new object();
+        private MovingAverage _temperatureAverage = new MovingAverage();
+        private MovingAverage _relativeHumidityAverage = new MovingAverage();
 
         private double _currentTemperature = 0.0;
         private double _targetTemperature = 0.0;
@@ -102,7 +104,9 @@ namespace NetduinoPlus.Controler
 
         public void ReadTemperature()
         {
-            CurrentTemperature = SHT11Sensor.ReadTemperature();
+             double temperature = SHT11Sensor.ReadTemperature();
+            _temperatureAverage.Push(temperature);
+            CurrentTemperature = _temperatureAverage.Average;
 
             if (CurrentTemperature > 0)
             {
@@ -141,7 +145,10 @@ namespace NetduinoPlus.Controler
 
         public void ReadRelativeHumidity()
         {
-            CurrentRelativeHumidity = SHT11Sensor.ReadRelativeHumidity();
+            double relativeHumidity = SHT11Sensor.ReadRelativeHumidity();
+            _relativeHumidityAverage.Push(relativeHumidity);
+            CurrentRelativeHumidity = _relativeHumidityAverage.Average;
+
             PumpControl.GetInstance().ManageState();
         }
 
