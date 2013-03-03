@@ -34,6 +34,7 @@ namespace NetduinoPlus.Controler
         private FanStateEnum _fanState = FanStateEnum.Stopped;
         private TrapStateEnum _trapState = TrapStateEnum.Closed;
         private bool _openTrap = false;
+        private bool _startFan = false;
         private int _fanEnabled = 0;
         private int _intervalTargetMinutes = 0;
         private int _durationTargetSeconds = 0;
@@ -133,17 +134,14 @@ namespace NetduinoPlus.Controler
                 {
                     if (_fanEnabled == 1)
                     {
-                        _fanState = FanStateEnum.Running;
-                        outFan.Write(true);
+                        _startFan = true;
                     }
 
                     _openTrap = true;
                 }
                 else
                 {
-                    _fanState = FanStateEnum.Stopped;
-                    outFan.Write(false);
-                    
+                    _startFan = false;
                     _openTrap = false;
                 }
             }
@@ -159,8 +157,7 @@ namespace NetduinoPlus.Controler
 
                         if (_fanEnabled == 1)
                         {
-                            _fanState = FanStateEnum.Running;
-                            outFan.Write(true);
+                            _startFan = true;
                         }
 
                         _duration = new TimeSpan(0, 0, _durationTargetSeconds);
@@ -171,7 +168,7 @@ namespace NetduinoPlus.Controler
                         _fanState = FanStateEnum.Stopped;
 
                         _duration = new TimeSpan(0, IntervalTargetMinutes, 0);
-                        outFan.Write(false);
+                        _startFan = false;
                         _openTrap = false;
                     }
                 }
@@ -179,19 +176,30 @@ namespace NetduinoPlus.Controler
                 if (_intervalTargetMinutes == 0 && _durationTargetSeconds == 0)
                 {
                     _ventilationState = VentilationState.Stopped;
-                    _fanState = FanStateEnum.Stopped;
 
                     _duration = TimeSpan.Zero;
-                    outFan.Write(false);
+                    _startFan = false;
                     _openTrap = false;
                 }
             }
 
 
             ///////////////////////////////
-            // Overheat protection
+            // Protection by trap
+
+            bool openTrapForced = false;
 
             if (ProcessControl.GetInstance().MaxTemperatureLimitReached == 1)
+            {
+                openTrapForced = true;
+            }
+
+            if (ProcessControl.GetInstance().CurrentRelativeHumidity > (ProcessControl.GetInstance().TargetRelativeHumidity + 5.0))
+            {
+                openTrapForced = true;
+            }
+
+            if (openTrapForced)
             {
                 _trapState = TrapStateEnum.Opened;
                 outTrap.Write(true);
@@ -207,6 +215,34 @@ namespace NetduinoPlus.Controler
                 {
                     _trapState = TrapStateEnum.Closed;
                     outTrap.Write(false);
+                }
+            }
+
+            //////// Protection by fan
+
+            bool fanForced = false;
+
+            if (ProcessControl.GetInstance().CurrentRelativeHumidity > (ProcessControl.GetInstance().TargetRelativeHumidity + 10.0))
+            {
+                fanForced = true;
+            }
+
+            if (fanForced)
+            {
+                _fanState = FanStateEnum.Running;
+                outFan.Write(true);
+            }
+            else
+            {
+                if (_startFan && _fanState == FanStateEnum.Stopped)
+                {
+                    _fanState = FanStateEnum.Running;
+                    outFan.Write(true);
+                }
+                else if (_startFan == false && _fanState == FanStateEnum.Running)
+                {
+                    _fanState = FanStateEnum.Stopped;
+                    outFan.Write(false);
                 }
             }
 
