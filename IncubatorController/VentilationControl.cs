@@ -8,6 +8,8 @@ namespace NetduinoPlus.Controler
     class VentilationControl
     {
         const int CO2_DISABLE = 9999;
+        const double RELATIVE_HUMIDITY_TRAP_DELTA = 3.0;
+        const double RELATIVE_HUMIDITY_FAN_DELTA = 10.0;
 
         public enum FanStateEnum
         {
@@ -40,6 +42,7 @@ namespace NetduinoPlus.Controler
         private int _durationTargetSeconds = 0;
         private int _currentCO2 = 0;
         private int _targetCO2 = CO2_DISABLE;
+        private bool _fanForced = false;
 
         private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D9, false);   //Fan
         private OutputPort outTrap = new OutputPort(Pins.GPIO_PIN_D10, false); //Trap
@@ -194,7 +197,8 @@ namespace NetduinoPlus.Controler
                 openTrapForced = true;
             }
 
-            if (ProcessControl.GetInstance().CurrentRelativeHumidity > (ProcessControl.GetInstance().TargetRelativeHumidity + 5.0))
+            double limitMax = ProcessControl.GetInstance().TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA;
+            if ( (ProcessControl.GetInstance().CurrentRelativeHumidity > limitMax) && ProcessControl.GetInstance().TargetRelativeHumidity > 0 )
             {
                 openTrapForced = true;
             }
@@ -206,6 +210,11 @@ namespace NetduinoPlus.Controler
             }
             else
             {
+                if (_startFan == false)
+                {
+                    _fanForced = false;
+                }
+
                 if (_openTrap && _trapState == TrapStateEnum.Closed)
                 {
                     _trapState = TrapStateEnum.Opened;
@@ -220,14 +229,13 @@ namespace NetduinoPlus.Controler
 
             //////// Protection by fan
 
-            bool fanForced = false;
-
-            if (ProcessControl.GetInstance().CurrentRelativeHumidity > (ProcessControl.GetInstance().TargetRelativeHumidity + 10.0))
+            limitMax = ProcessControl.GetInstance().TargetRelativeHumidity + RELATIVE_HUMIDITY_FAN_DELTA;
+            if ( (ProcessControl.GetInstance().CurrentRelativeHumidity > limitMax) && ProcessControl.GetInstance().TargetRelativeHumidity > 0 )
             {
-                fanForced = true;
+                _fanForced = true;
             }
 
-            if (fanForced)
+            if (_fanForced)
             {
                 _fanState = FanStateEnum.Running;
                 outFan.Write(true);
