@@ -156,23 +156,22 @@ namespace NetduinoPlus.Controler
                     if (_ventilationState == VentilationState.Stopped && _intervalTargetMinutes > 0 && _durationTargetSeconds > 0)
                     {
                         _ventilationState = VentilationState.Started;
+                        _duration = new TimeSpan(0, 0, _durationTargetSeconds);
+
                         _openTrap = true;
 
                         if (_fanEnabled == 1)
                         {
                             _startFan = true;
                         }
-
-                        _duration = new TimeSpan(0, 0, _durationTargetSeconds);
                     }
                     else if (_ventilationState == VentilationState.Started && _intervalTargetMinutes > 0 && _durationTargetSeconds > 0)
                     {
                         _ventilationState = VentilationState.Stopped;
-                        _fanState = FanStateEnum.Stopped;
-
                         _duration = new TimeSpan(0, IntervalTargetMinutes, 0);
-                        _startFan = false;
+
                         _openTrap = false;
+                        _startFan = false;
                     }
                 }
 
