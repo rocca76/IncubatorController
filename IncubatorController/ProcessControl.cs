@@ -13,6 +13,8 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private static ProcessControl _instance = null;
         private static readonly object LockObject = new object();
+        private MovingAverage _temperatureAverage = new MovingAverage();
+        private MovingAverage _relativeHumidityAverage = new MovingAverage();
 
         private double _currentTemperature = 0.0;
         private double _targetTemperature = 0.0;
@@ -22,9 +24,6 @@ namespace NetduinoPlus.Controler
 
         private double _currentRelativeHumidity = 0.0;
         private double _targetRelativeHumidity = 0.0;
-
-        private int _currentCO2 = 0;
-        private int _targetCO2 = 10000;
 
         private OutputPort out250W = new OutputPort(Pins.GPIO_PIN_D4, false);  //250W
         private OutputPort out500W = new OutputPort(Pins.GPIO_PIN_D5, false);  //500W
@@ -73,18 +72,6 @@ namespace NetduinoPlus.Controler
             get { return _targetRelativeHumidity; }
             set { _targetRelativeHumidity = value; }
         }
-
-        public int CurrentCO2
-        {
-            get { return _currentCO2; }
-            set { _currentCO2 = value; }
-        }
-
-        public int TargetCO2
-        {
-            get { return _targetCO2; }
-            set { _targetCO2 = value; }
-        }
         #endregion
 
         #region Events
@@ -117,7 +104,9 @@ namespace NetduinoPlus.Controler
 
         public void ReadTemperature()
         {
-            CurrentTemperature = SHT11Sensor.ReadTemperature();
+             double temperature = SHT11Sensor.ReadTemperature();
+            _temperatureAverage.Push(temperature);
+            CurrentTemperature = _temperatureAverage.Average;
 
             if (CurrentTemperature > 0)
             {
@@ -156,14 +145,11 @@ namespace NetduinoPlus.Controler
 
         public void ReadRelativeHumidity()
         {
-            CurrentRelativeHumidity = SHT11Sensor.ReadRelativeHumidity();
-            PumpControl.GetInstance().ManageState();
-        }
+            double relativeHumidity = SHT11Sensor.ReadRelativeHumidity();
+            _relativeHumidityAverage.Push(relativeHumidity);
+            CurrentRelativeHumidity = _relativeHumidityAverage.Average;
 
-        public void ReadCO2()
-        {
-            CurrentCO2 = 0; // K30Sensor.ReadCO2();
-            VentilationControl.GetInstance().ManageState();
+            PumpControl.GetInstance().ManageState();
         }
 
         public void SetActuatorMode(String mode)
