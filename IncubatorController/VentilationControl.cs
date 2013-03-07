@@ -7,8 +7,9 @@ namespace NetduinoPlus.Controler
 {
     class VentilationControl
     {
-        const int RUNING_DURATION = 300;    // seconds (5min)
-        const int WAITING_DURATION = 43200; // seconds (12hr)
+        const int CO2_DISABLE = 9999;
+        const double RELATIVE_HUMIDITY_TRAP_DELTA = 3.0;
+        const double RELATIVE_HUMIDITY_FAN_DELTA = 10.0;
 
         public enum FanStateEnum
         {
@@ -22,12 +23,26 @@ namespace NetduinoPlus.Controler
             Opened
         }
 
+        public enum VentilationState
+        {
+            Stopped,
+            Started
+        }
+
         #region Private Variables
         private static VentilationControl _ventilationControl = null;
         private TimeSpan _duration = TimeSpan.Zero;
-        private FanStateEnum _fan = FanStateEnum.Stopped;
-        private TrapStateEnum _trap = TrapStateEnum.Closed;
+        private VentilationState _ventilationState = VentilationState.Stopped;
+        private FanStateEnum _fanState = FanStateEnum.Stopped;
+        private TrapStateEnum _trapState = TrapStateEnum.Closed;
         private bool _openTrap = false;
+        private bool _startFan = false;
+        private int _fanEnabled = 0;
+        private int _intervalTargetMinutes = 0;
+        private int _durationTargetSeconds = 0;
+        private int _currentCO2 = 0;
+        private int _targetCO2 = CO2_DISABLE;
+        private bool _fanForced = false;
 
         private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D9, false);   //Fan
         private OutputPort outTrap = new OutputPort(Pins.GPIO_PIN_D10, false); //Trap
@@ -35,9 +50,21 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Properties
+        public int CurrentCO2
+        {
+            get { return _currentCO2; }
+            set { _currentCO2 = value; }
+        }
+
+        public int TargetCO2
+        {
+            get { return _targetCO2; }
+            set { _targetCO2 = value; }
+        }
+
         public VentilationControl.FanStateEnum FanState
         {
-            get  { return _fan; }
+            get { return _fanState; }
         }
 
         public TimeSpan Duration
@@ -47,8 +74,32 @@ namespace NetduinoPlus.Controler
 
         public VentilationControl.TrapStateEnum TrapState
         {
-            get { return _trap; }
+            get { return _trapState; }
         }
+
+        public VentilationControl.VentilationState State
+        {
+            get { return ManageState(); }
+        }
+
+        public int FanEnabled
+        {
+            get { return _fanEnabled; }
+            set { _fanEnabled = value; }
+        }
+
+        public int IntervalTargetMinutes
+        {
+            get { return _intervalTargetMinutes; }
+            set { _intervalTargetMinutes = value; }
+        }
+
+        public int DurationTargetSeconds
+        {
+            get { return _durationTargetSeconds; }
+            set { _durationTargetSeconds = value; }
+        }
+
         #endregion
 
 
@@ -67,69 +118,142 @@ namespace NetduinoPlus.Controler
             return _ventilationControl;
         }
 
-        public void ManageState()
+        public void ReadCO2()
+        {
+            _currentCO2 = K30Sensor.ReadCO2();
+        }
+
+        public VentilationControl.VentilationState ManageState()
         {
             if (_duration > TimeSpan.Zero)
             {
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
-            if (ProcessControl.GetInstance().CurrentCO2 > 0)
+            if (_currentCO2 > 0 && _targetCO2 != CO2_DISABLE)
             {
                 //Sensor control
-                if (ProcessControl.GetInstance().CurrentCO2 > ProcessControl.GetInstance().TargetCO2)
+                if (VentilationControl.GetInstance().CurrentCO2 > VentilationControl.GetInstance().TargetCO2)
                 {
-                    _fan = FanStateEnum.Running;
-                    outFan.Write(true);
+                    if (_fanEnabled == 1)
+                    {
+                        _startFan = true;
+                    }
+
                     _openTrap = true;
                 }
                 else
                 {
-                    _fan = FanStateEnum.Stopped;
-                    outFan.Write(false);
+                    _startFan = false;
                     _openTrap = false;
                 }
             }
             else
             {
                 //Sequence control
-                /*if (_duration == TimeSpan.Zero)
+                if (_duration == TimeSpan.Zero)
                 {
-                    if (_fan == FanStateEnum.Stopped)
+                    if (_ventilationState == VentilationState.Stopped && _intervalTargetMinutes > 0 && _durationTargetSeconds > 0)
                     {
-                        _fan = FanStateEnum.Running;
-                        _duration = new TimeSpan(0, 0, RUNING_DURATION);
-                        outFan.Write(true);
+                        _ventilationState = VentilationState.Started;
+                        _duration = new TimeSpan(0, 0, _durationTargetSeconds);
+
                         _openTrap = true;
+
+                        if (_fanEnabled == 1)
+                        {
+                            _startFan = true;
+                        }
                     }
-                    else if (_fan == FanStateEnum.Running)
+                    else if (_ventilationState == VentilationState.Started && _intervalTargetMinutes > 0 && _durationTargetSeconds > 0)
                     {
-                        _fan = FanStateEnum.Stopped;
-                        _duration = new TimeSpan(0, 0, WAITING_DURATION);
-                        outFan.Write(false);
+                        _ventilationState = VentilationState.Stopped;
+                        _duration = new TimeSpan(0, IntervalTargetMinutes, 0);
+
                         _openTrap = false;
+                        _startFan = false;
                     }
-                }*/
+                }
+
+                if (_intervalTargetMinutes == 0 && _durationTargetSeconds == 0)
+                {
+                    _ventilationState = VentilationState.Stopped;
+
+                    _duration = TimeSpan.Zero;
+                    _startFan = false;
+                    _openTrap = false;
+                }
             }
+
+
+            ///////////////////////////////
+            // Protection by trap
+
+            bool openTrapForced = false;
 
             if (ProcessControl.GetInstance().MaxTemperatureLimitReached == 1)
             {
-                _trap = TrapStateEnum.Opened;
+                openTrapForced = true;
+            }
+
+            double limitMax = ProcessControl.GetInstance().TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA;
+            if ( (ProcessControl.GetInstance().CurrentRelativeHumidity > limitMax) && ProcessControl.GetInstance().TargetRelativeHumidity > 0 )
+            {
+                openTrapForced = true;
+            }
+
+            if (openTrapForced)
+            {
+                _trapState = TrapStateEnum.Opened;
                 outTrap.Write(true);
             }
             else
             {
-                if (_openTrap && _trap == TrapStateEnum.Closed)
+                if (_startFan == false)
                 {
-                    _trap = TrapStateEnum.Opened;
+                    _fanForced = false;
+                }
+
+                if (_openTrap && _trapState == TrapStateEnum.Closed)
+                {
+                    _trapState = TrapStateEnum.Opened;
                     outTrap.Write(true);
                 }
-                else if (_openTrap == false && _trap == TrapStateEnum.Opened)
+                else if (_openTrap == false && _trapState == TrapStateEnum.Opened)
                 {
-                    _trap = TrapStateEnum.Closed;
+                    _trapState = TrapStateEnum.Closed;
                     outTrap.Write(false);
                 }
             }
+
+            //////// Protection by fan
+
+            limitMax = ProcessControl.GetInstance().TargetRelativeHumidity + RELATIVE_HUMIDITY_FAN_DELTA;
+            if ( (ProcessControl.GetInstance().CurrentRelativeHumidity > limitMax) && ProcessControl.GetInstance().TargetRelativeHumidity > 0 )
+            {
+                _fanForced = true;
+            }
+
+            if (_fanForced)
+            {
+                _fanState = FanStateEnum.Running;
+                outFan.Write(true);
+            }
+            else
+            {
+                if (_startFan && _fanState == FanStateEnum.Stopped)
+                {
+                    _fanState = FanStateEnum.Running;
+                    outFan.Write(true);
+                }
+                else if (_startFan == false && _fanState == FanStateEnum.Running)
+                {
+                    _fanState = FanStateEnum.Stopped;
+                    outFan.Write(false);
+                }
+            }
+
+            return _ventilationState;
         }
         #endregion
 

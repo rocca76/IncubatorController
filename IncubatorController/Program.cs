@@ -5,6 +5,9 @@ using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using Microsoft.SPOT;
 using Microsoft.SPOT.Net.NetworkInformation;
 using System.Text;
+using System.Net.Sockets;
+using System.IO;
+using System.Collections;
 
 //Smart Personal Object Technology
 
@@ -48,18 +51,26 @@ namespace NetduinoPlus.Controler
         {
           try
           {
+              //WriteFile();
+
               ProcessControl.GetInstance().ReadTemperature();
               ProcessControl.GetInstance().ReadRelativeHumidity();
-              ProcessControl.GetInstance().ReadCO2();
+              VentilationControl.GetInstance().ReadCO2();
 
               ProcessControl.GetInstance().SetOutputPin();
 
               ProcessData();
-              //WriteFile();
+          }
+          catch (SocketException se)
+          {
+              Debug.Print("Unable to connect or send through socket");
+              Debug.Print(se.ToString());
+              PowerState.RebootDevice(true);
           }
           catch (Exception ex)
           {
               Debug.Print(ex.ToString());
+              PowerState.RebootDevice(true);
           }
         }
         
@@ -84,9 +95,12 @@ namespace NetduinoPlus.Controler
             {
                 ProcessControl.GetInstance().TargetRelativeHumidity = double.Parse(parts[1]);
             }
-            else if (parts[0] == "TARGET_CO2")
+            else if (parts[0] == "TARGET_VENTILATION")
             {
-                ProcessControl.GetInstance().TargetCO2 = int.Parse(parts[1]);
+                VentilationControl.GetInstance().FanEnabled = int.Parse(parts[1]);
+                VentilationControl.GetInstance().IntervalTargetMinutes = int.Parse(parts[2]);
+                VentilationControl.GetInstance().DurationTargetSeconds = int.Parse(parts[3]);
+                VentilationControl.GetInstance().TargetCO2 = int.Parse(parts[4]);
             }
             else if (parts[0] == "ACTUATOR_MODE")
             {
@@ -104,14 +118,41 @@ namespace NetduinoPlus.Controler
 
         private void WriteFile()
         {
+            Hashtable ht = new Hashtable();
+            ht.Add("TemperatureTarget", 37.2); // key, value
+
+            //(string)ht["A"];
+
+            foreach (DictionaryEntry de in ht)
+            {
+                if ((string)de.Key == "TemperatureTarget")
+                {
+                    double v = (double)de.Value;
+                }
+                
+            }
+
+
+            String[] lines = { "First line", "Second line", "Third line" };
+
+            using (StreamWriter file = new StreamWriter(@"SD\IncubateurTarget.txt"))
+            {
+                foreach (String line in lines)
+                {
+                    file.WriteLine(line);
+                }
+            }
+
+            //string[] parts = message.Split(' ');
+
             StringBuilder data = new StringBuilder();
             data.Append(DateTime.Now.ToString());
             data.Append(";");
-            data.Append(ProcessControl.GetInstance().CurrentTemperature.ToString("F2"));
+            data.Append(ProcessControl.GetInstance().TargetTemperature.ToString("F2"));
             data.Append(";");
-            data.Append(ProcessControl.GetInstance().CurrentRelativeHumidity.ToString("F2"));
+            data.Append(ProcessControl.GetInstance().TargetRelativeHumidity.ToString("F2"));
             data.Append(";");
-            data.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
+            data.Append(VentilationControl.GetInstance().TargetCO2.ToString());
 
             WriteFile writeFile = new WriteFile(data.ToString());
             writeFile.Start();
@@ -153,20 +194,34 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("</pumpduration>");
 
             xmlBuilder.Append("<co2>");
-            xmlBuilder.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
+            xmlBuilder.Append(VentilationControl.GetInstance().CurrentCO2.ToString());
             xmlBuilder.Append("</co2>");
             xmlBuilder.Append("<targetco2>");
-            xmlBuilder.Append(ProcessControl.GetInstance().TargetCO2.ToString());
+            xmlBuilder.Append(VentilationControl.GetInstance().TargetCO2.ToString());
             xmlBuilder.Append("</targetco2>");
+
             xmlBuilder.Append("<trapstate>");
             xmlBuilder.Append(VentilationControl.GetInstance().TrapState.ToString());
             xmlBuilder.Append("</trapstate>");
             xmlBuilder.Append("<fanstate>");
             xmlBuilder.Append(VentilationControl.GetInstance().FanState.ToString());
             xmlBuilder.Append("</fanstate>");
-            xmlBuilder.Append("<fanduration>");
+            xmlBuilder.Append("<ventilationduration>");
             xmlBuilder.Append(VentilationControl.GetInstance().Duration.ToString());
-            xmlBuilder.Append("</fanduration>");
+            xmlBuilder.Append("</ventilationduration>");
+            xmlBuilder.Append("<ventilationfanenabled>");
+            xmlBuilder.Append(VentilationControl.GetInstance().FanEnabled.ToString()); // Fan used
+            xmlBuilder.Append("</ventilationfanenabled>");
+            xmlBuilder.Append("<ventilationIntervaltarget>");
+            xmlBuilder.Append(VentilationControl.GetInstance().IntervalTargetMinutes.ToString()); //minutes
+            xmlBuilder.Append("</ventilationIntervaltarget>");
+            xmlBuilder.Append("<ventilationdurationtarget>");
+            xmlBuilder.Append(VentilationControl.GetInstance().DurationTargetSeconds.ToString()); // seconds
+            xmlBuilder.Append("</ventilationdurationtarget>");
+            xmlBuilder.Append("<ventilationdstate>");
+            xmlBuilder.Append(VentilationControl.GetInstance().State.ToString()); //Started or stopped
+            xmlBuilder.Append("</ventilationdstate>");
+
 
             xmlBuilder.Append("<actuatormode>");
             xmlBuilder.Append(ActuatorControl.GetInstance().Mode.ToString());
