@@ -29,7 +29,8 @@ namespace NetduinoPlus.Controler
         }
 
         #region Private Variables
-        private static VentilationControl _ventilationControl = null;
+        private static VentilationControl _instance = null;
+        private static readonly object LockObject = new object();
         private TimeSpan _duration = TimeSpan.Zero;
         private VentilationState _ventilationState = VentilationState.Stopped;
         private FanStateEnum _fanState = FanStateEnum.Stopped;
@@ -109,12 +110,15 @@ namespace NetduinoPlus.Controler
         #region Public Methods
         public static VentilationControl GetInstance()
         {
-            if (_ventilationControl == null)
+            lock (LockObject)
             {
-                _ventilationControl = new VentilationControl();
-            }
+                if (_instance == null)
+                {
+                    _instance = new VentilationControl();
+                }
 
-            return _ventilationControl;
+                return _instance;
+            }
         }
 
         public void ReadCO2()

@@ -44,6 +44,7 @@ namespace NetduinoPlus.Controler
                 {
                     _instance = new K30Sensor();
                 }
+
                 return _instance;
             }
         }

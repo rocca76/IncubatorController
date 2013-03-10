@@ -76,6 +76,7 @@ namespace NetduinoPlus.Controler
         #region Constructors
         public ProcessControl() 
         {
+            NetworkCommunication.EventHandlerMessageReceived += new ReceivedEventHandler(OnMessageReceived);
             SHT11Sensor.InitInstance();
         }
         #endregion
@@ -89,6 +90,7 @@ namespace NetduinoPlus.Controler
                 {
                     _instance = new ProcessControl();
                 }
+
                 return _instance;
             }
         }
@@ -200,6 +202,47 @@ namespace NetduinoPlus.Controler
         #endregion
 
         #region Private Methods
+        private void OnMessageReceived(String message)
+        {
+            string[] parts = message.Split(' ');
+
+            if (parts[0] == "TIME")
+            {
+                DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
+                Utility.SetLocalTime(presentTime);
+            }
+            else if (parts[0] == "TARGET_TEMPERATURE")
+            {
+                ProcessControl.GetInstance().TargetTemperature = double.Parse(parts[1]);
+            }
+            else if (parts[0] == "LIMIT_MAX_TEMPERATURE")
+            {
+                ProcessControl.GetInstance().LimitMaxTemperature = double.Parse(parts[1]);
+            }
+            else if (parts[0] == "TARGET_RELATIVE_HUMIDITY")
+            {
+                ProcessControl.GetInstance().TargetRelativeHumidity = double.Parse(parts[1]);
+            }
+            else if (parts[0] == "TARGET_VENTILATION")
+            {
+                VentilationControl.GetInstance().FanEnabled = int.Parse(parts[1]);
+                VentilationControl.GetInstance().IntervalTargetMinutes = int.Parse(parts[2]);
+                VentilationControl.GetInstance().DurationTargetSeconds = int.Parse(parts[3]);
+                VentilationControl.GetInstance().TargetCO2 = int.Parse(parts[4]);
+            }
+            else if (parts[0] == "ACTUATOR_MODE")
+            {
+                ProcessControl.GetInstance().SetActuatorMode(parts[1]);
+            }
+            else if (parts[0] == "ACTUATOR_OPEN")
+            {
+                ProcessControl.GetInstance().SetActuatorOpen(int.Parse(parts[1]));
+            }
+            else if (parts[0] == "ACTUATOR_CLOSE")
+            {
+                ProcessControl.GetInstance().SetActuatorClose(int.Parse(parts[1]));
+            }
+        }
         #endregion
     }
 }

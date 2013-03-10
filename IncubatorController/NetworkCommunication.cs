@@ -9,24 +9,23 @@ using System.Text;
 namespace NetduinoPlus.Controler
 {
     public delegate void ReceivedEventHandler(String message);
-    public delegate void SentEventHandler(SenderThread requestSender);
 
     class NetworkCommunication
     {
         #region Private Variables
         private static Thread _listeningThread = null;
-        private static NetworkCommunication _networkCommunication = null;
-        private static SenderThread _senderThread = null;
+        private static NetworkCommunication _instance = null;
         private static bool _networkIsAvailable = false;
-        private static int _messageSentCount = 1;
-        private static int _messageReceivedCount = 1;
-        private bool _patchFirmware42 = false;
-        private static String _remoteIP;
+        private static int _messageSentCount = 0;
+        private static int _messageReceivedCount = 0;
         #endregion
 
 
         #region Constructors
-        private NetworkCommunication() {}
+        private NetworkCommunication() 
+        {
+            NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
+        }
         #endregion
 
 
@@ -46,48 +45,28 @@ namespace NetduinoPlus.Controler
         #region Public Static Methods
         public static void InitInstance()
         {
-            if (_networkCommunication == null)
+            if (_instance == null)
             {
-                NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
-                _networkCommunication = new NetworkCommunication();
+                _instance = new NetworkCommunication();
             }
-
-            _networkCommunication.ListeningThread();
-            
-            _networkIsAvailable = true;
-        }
-
-        public static void Send(String message)
-        {
-            _networkCommunication.SendingThread(message);
         }
         #endregion
 
 
         #region Private Static Methods
-        private static void SentEventHandler(SenderThread requestSender)
+        private void NetworkChange_NetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs network)
         {
-            _senderThread = null;
+            _networkIsAvailable = network.IsAvailable;
 
-            LogFile.Network("Message Sent " + _messageSentCount.ToString() + " : [ " + requestSender.Message + " ]");
-            _messageSentCount++;
-        }
+            LogFile.Network(DateTime.UtcNow.ToString("u") + " " + (_networkIsAvailable ? "Online" : "Offline"));
 
-        private static void NetworkChange_NetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs e)
-        {
-            LogFile.Network(DateTime.UtcNow.ToString("u") + " " + (e.IsAvailable ? "Online" : "Offline"));
-
-            if (e.IsAvailable)
+            if (_networkIsAvailable)
             {
-                InitInstance();
+                _messageReceivedCount = 0;
+                _instance.ListeningThread();
             }
             else
             {
-                _networkIsAvailable = false;
-                _messageSentCount = 1;
-                _messageReceivedCount = 1;
-
-                ShutdownSender();
                 ShutdownListener();
             }
         }
@@ -99,17 +78,6 @@ namespace NetduinoPlus.Controler
         {
             _listeningThread = new Thread(new ThreadStart(ReceiveSocketsInListeningThread));
             _listeningThread.Start();
-        }
-
-        private void SendingThread(String message)
-        {
-            if (_networkIsAvailable && _patchFirmware42)
-            {
-                ShutdownSender();
-
-                _senderThread = new SenderThread(SentEventHandler, _remoteIP, message);
-                _senderThread.Start();
-            }
         }
 
         private void ReceiveSocketsInListeningThread()
@@ -140,9 +108,6 @@ namespace NetduinoPlus.Controler
                         {
                             if (SocketConnected(socket))
                             {
-                                string[] remoteEndPoint = socket.RemoteEndPoint.ToString().Split(':');
-                                _remoteIP = remoteEndPoint[0];
-
                                 byte[] buffer = new byte[socket.Available];
 
                                 socket.Receive(buffer);
@@ -169,16 +134,14 @@ namespace NetduinoPlus.Controler
 
         private void RaiseMessageReceivedEvent(String message)
         {
-            LogFile.Network("Message Received " + _messageReceivedCount.ToString() + " : [ " + message + " ]");
-
             _messageReceivedCount++;
-
-            _patchFirmware42 = true;
+            LogFile.Network("Message Received " + _messageReceivedCount.ToString() + " : [ " + message + " ]");
 
             if (message == "EXIT")
             {
-                ShutdownSender();
-                _patchFirmware42 = false;
+                //LogFile.Network("Message Sent " + _messageSentCount.ToString() + " : [ " + requestSender.Message + " ]");
+                //_messageSentCount++;
+                //socket.Send(Encoding.UTF8.GetBytes(Message));
             }
 
             if (EventHandlerMessageReceived != null)
@@ -187,27 +150,7 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        private static void ShutdownSender()
-        {
-            try
-            {
-                if (_senderThread != null)
-                {
-                    if (_senderThread.IsAlive)
-                    {
-                        _senderThread.Stop();
-                    }
-
-                    _senderThread = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                LogFile.Exception(ex.ToString());
-            }
-        }
-
-        private static void ShutdownListener()
+        private void ShutdownListener()
         {
             try
             {
@@ -219,7 +162,6 @@ namespace NetduinoPlus.Controler
                     }
 
                     _listeningThread = null;
-                    _remoteIP = null;
                 }
             }
             catch (Exception ex)
@@ -228,79 +170,5 @@ namespace NetduinoPlus.Controler
             }
         }
         #endregion
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-
-    public class SenderThread
-    {
-        #region Private Variables
-        private Thread currentThread = null;
-        private SentEventHandler _senderEventHandler = null;
-        private String _message;
-        private String _remoteIP = null;
-        #endregion
-
-
-        #region Constructors
-        public SenderThread(SentEventHandler sendEventHandler, String remoteIP, String message)
-        {
-            _senderEventHandler = sendEventHandler;
-            _remoteIP = remoteIP;
-            _message = message;
-        }
-        #endregion
-
-
-        #region Events
-        #endregion
-
-
-        #region Public Properties
-        public String Message
-        {
-            get { return _message; }
-        }
-
-        public bool IsAlive
-        {
-            get { return currentThread.IsAlive; }
-        }
-        #endregion
-
-        public void Start()
-        {
-            this.currentThread = new Thread(ThreadMain);
-            currentThread.Start();
-        }
-
-        public void Stop()
-        {
-            LogFile.Network("Stopping network thread.");
-            this.currentThread.Abort();
-        }
-
-        public void Dispose()
-        {
-            Stop();
-        }
-
-        private void ThreadMain()
-        {
-            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-            {
-                IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse(_remoteIP), 250);
-
-                LogFile.Network("Connecting to: " + endpoint.ToString());
-
-                socket.Connect(endpoint);
-                socket.Send(Encoding.UTF8.GetBytes(Message));
-                socket.Close();
-            }
-                
-            _senderEventHandler(this);   
-        }
     }
 }

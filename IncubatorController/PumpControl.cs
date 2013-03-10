@@ -17,7 +17,8 @@ namespace NetduinoPlus.Controler
         }
 
         #region Private Variables
-        private static PumpControl _pumpControl = null;
+        private static PumpControl _instance = null;
+        private static readonly object LockObject = new object();
         private TimeSpan _duration = TimeSpan.Zero;
         private PumpStateEnum _pumpState = PumpStateEnum.Stopped;
 
@@ -44,12 +45,15 @@ namespace NetduinoPlus.Controler
         #region Public Methods
         public static PumpControl GetInstance()
         {
-            if (_pumpControl == null)
+            lock (LockObject)
             {
-                _pumpControl = new PumpControl();
-            }
+                if (_instance == null)
+                {
+                    _instance = new PumpControl();
+                }
 
-            return _pumpControl;
+                return _instance;
+            }
         }
 
         public void ManageState()
