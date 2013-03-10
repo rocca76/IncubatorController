@@ -1,8 +1,7 @@
 using System;
-using Microsoft.SPOT;
 using Microsoft.SPOT.Hardware;
 
-namespace NetduinoPlusTesting
+namespace NetduinoPlus.Controler
 {
     public class I2CBus : IDisposable
     {
@@ -40,8 +39,9 @@ namespace NetduinoPlusTesting
         /// <param name="config">I2C slave device configuration.</param>
         /// <param name="writeBuffer">The array of bytes that will be sent to the device.</param>
         /// <param name="transactionTimeout">The amount of time the system will wait before resuming execution of the transaction.</param>
-        public void Write(I2CDevice.Configuration config, byte[] writeBuffer, int transactionTimeout)
+        public int Write(I2CDevice.Configuration config, byte[] writeBuffer, int transactionTimeout)
         {
+            int transferred = 0;
             // Set i2c device configuration.
             _slaveDevice.Config = config;
 
@@ -50,13 +50,18 @@ namespace NetduinoPlusTesting
 
             lock(_slaveDevice)
             {
-                // the i2c data is sent here to the device.
-                int transferred = _slaveDevice.Execute(writeXAction, transactionTimeout);
-
-                // make sure the data was sent.
-                if (transferred != writeBuffer.Length)
-                    throw new Exception("Could not write to device.");
+                try
+                {
+                    // the i2c data is sent here to the device.
+                    transferred = _slaveDevice.Execute(writeXAction, transactionTimeout);
+                }
+                catch (Exception ex)
+                {
+                    LogFile.Exception(ex.ToString());
+                }
             }
+
+            return transferred;
         }
 
         /// <summary>
@@ -65,8 +70,9 @@ namespace NetduinoPlusTesting
         /// <param name="config">I2C slave device configuration.</param>
         /// <param name="readBuffer">The array of bytes that will contain the data read from the device.</param>
         /// <param name="transactionTimeout">The amount of time the system will wait before resuming execution of the transaction.</param>
-        public void Read(I2CDevice.Configuration config, byte[] readBuffer, int transactionTimeout)
+        public int Read(I2CDevice.Configuration config, byte[] readBuffer, int transactionTimeout)
         {
+            int transferred = 0;
             // Set i2c device configuration.
             _slaveDevice.Config = config;
 
@@ -75,13 +81,18 @@ namespace NetduinoPlusTesting
 
             lock (_slaveDevice)
             {
-                // the i2c data is received here from the device.
-                int transferred = _slaveDevice.Execute(readXAction, transactionTimeout);
-
-                // make sure the data was received.
-                if (transferred != readBuffer.Length)
-                    throw new Exception("Could not read from device.");
+                try
+                {
+                    // the i2c data is received here from the device.
+                    transferred = _slaveDevice.Execute(readXAction, transactionTimeout);
+                }
+                catch(Exception ex)
+                {
+                    LogFile.Exception(ex.ToString());
+                }
             }
+
+            return transferred;
         }
 
         /// <summary>

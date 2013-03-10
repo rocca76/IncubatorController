@@ -1,5 +1,4 @@
 using System;
-using Microsoft.SPOT;
 using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 
@@ -120,7 +119,35 @@ namespace NetduinoPlus.Controler
 
         public void ReadCO2()
         {
-            _currentCO2 = K30Sensor.ReadCO2();
+            int co2Data = 0;
+            K30Sensor.ECO2Result result = K30Sensor.GetInstance().ReadCO2(ref co2Data);
+            LogFile.Application("CO2: " + co2Data.ToString());
+
+            if (result == K30Sensor.ECO2Result.ValidResult)
+            {
+                _currentCO2 = co2Data;
+            }
+            else
+            {
+                switch (result)
+                {
+                    case K30Sensor.ECO2Result.ChecksumError:
+                        LogFile.Application("CO2: Checksum Error");
+                    break;
+                    case K30Sensor.ECO2Result.ReadIncomplete:
+                        LogFile.Application("CO2: Read Incomplete");
+                    break;
+                    case K30Sensor.ECO2Result.NoReadDataTransfered:
+                        LogFile.Application("CO2: No Read Data Transfered");
+                    break;
+                    case K30Sensor.ECO2Result.NoWriteDataTransfered:
+                        LogFile.Application("CO2: No Write Data Transfered");
+                    break;
+                    case K30Sensor.ECO2Result.UnknownResult:
+                        LogFile.Application("CO2: Unknown Error");
+                    break;
+                }
+            }
         }
 
         public VentilationControl.VentilationState ManageState()

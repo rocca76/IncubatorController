@@ -1,10 +1,7 @@
 using System;
-using Microsoft.SPOT;
-using System.Threading;
 using Sensirion.SHT11;
 using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
-using System.IO;
 
 namespace NetduinoPlus.Controler
 {
@@ -29,7 +26,6 @@ namespace NetduinoPlus.Controler
         private OutputPort out500W = new OutputPort(Pins.GPIO_PIN_D5, false);  //500W
         #endregion
         
-
         #region Public Properties
         public double CurrentTemperature
         {
@@ -104,9 +100,11 @@ namespace NetduinoPlus.Controler
 
         public void ReadTemperature()
         {
-             double temperature = SHT11Sensor.ReadTemperature();
+            double temperature = SHT11Sensor.ReadTemperature();
             _temperatureAverage.Push(temperature);
             CurrentTemperature = _temperatureAverage.Average;
+
+            LogFile.Application("Temperature: RAW = " + temperature.ToString("F2") + "  Average = " + CurrentTemperature.ToString("F2"));
 
             if (CurrentTemperature > 0)
             {
@@ -148,6 +146,8 @@ namespace NetduinoPlus.Controler
             double relativeHumidity = SHT11Sensor.ReadRelativeHumidity();
             _relativeHumidityAverage.Push(relativeHumidity);
             CurrentRelativeHumidity = _relativeHumidityAverage.Average;
+
+            LogFile.Application("HR: RAW = " + relativeHumidity.ToString("F2") + "  Average = " + CurrentRelativeHumidity.ToString("F2"));
 
             PumpControl.GetInstance().ManageState();
         }

@@ -2,6 +2,7 @@ using System;
 using Microsoft.SPOT;
 using System.Threading;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
+using NetduinoPlus.Controler;
 
 namespace Sensirion.SHT11
 {
@@ -36,13 +37,13 @@ namespace Sensirion.SHT11
 
                 if (SHT11.SoftReset())
                 {
-                    Debug.Print("Error while resetting SHT11");
+                    LogFile.Error("Error while resetting SHT11");
                 }
 
                 // Set Temperature and Humidity to 14/12 bit
                 if (SHT11.WriteStatusRegister((SHT11.SHT11Settings.NullFlag)))
                 {
-                    Debug.Print("Error while writing status register SHT11");
+                    LogFile.Error("Error while writing status register SHT11");
                 }
             }
         }

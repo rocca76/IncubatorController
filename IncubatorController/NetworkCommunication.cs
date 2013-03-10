@@ -69,13 +69,13 @@ namespace NetduinoPlus.Controler
         {
             _senderThread = null;
 
-            Debug.Print("Message Sent " + _messageSentCount.ToString() + " : [ " + requestSender.Message + " ]");
+            LogFile.Network("Message Sent " + _messageSentCount.ToString() + " : [ " + requestSender.Message + " ]");
             _messageSentCount++;
         }
 
         private static void NetworkChange_NetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs e)
         {
-            Debug.Print(DateTime.UtcNow.ToString("u") + " " + (e.IsAvailable ? "Online" : "Offline"));
+            LogFile.Network(DateTime.UtcNow.ToString("u") + " " + (e.IsAvailable ? "Online" : "Offline"));
 
             if (e.IsAvailable)
             {
@@ -116,7 +116,7 @@ namespace NetduinoPlus.Controler
         {
             try
             {
-                Debug.Print("Waiting for valid IP address...");
+                LogFile.Network("Waiting for valid IP address...");
 
                 NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()[0];
 
@@ -125,7 +125,7 @@ namespace NetduinoPlus.Controler
                     Thread.Sleep(1000);
                 }
 
-                Debug.Print("IP address: " + networkInterface.IPAddress.ToString());
+                LogFile.Network("IP address: " + networkInterface.IPAddress.ToString());
 
                 using (Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
                 {
@@ -134,7 +134,7 @@ namespace NetduinoPlus.Controler
 
                     while (true)
                     {
-                        Debug.Print("Listening for connection...");
+                        LogFile.Network("Listening for connection...");
 
                         using (Socket socket = listener.Accept())
                         {
@@ -158,7 +158,7 @@ namespace NetduinoPlus.Controler
             }
             catch (SocketException se)
             {
-                Debug.Print(se.ToString());
+                LogFile.Exception(se.ToString());
             }
         }
 
@@ -169,7 +169,8 @@ namespace NetduinoPlus.Controler
 
         private void RaiseMessageReceivedEvent(String message)
         {
-            Debug.Print("Message Received " + _messageReceivedCount.ToString() + " : [ " + message + " ]");
+            LogFile.Network("Message Received " + _messageReceivedCount.ToString() + " : [ " + message + " ]");
+
             _messageReceivedCount++;
 
             _patchFirmware42 = true;
@@ -202,7 +203,7 @@ namespace NetduinoPlus.Controler
             }
             catch (Exception ex)
             {
-                Debug.Print(ex.ToString());
+                LogFile.Exception(ex.ToString());
             }
         }
 
@@ -223,7 +224,7 @@ namespace NetduinoPlus.Controler
             }
             catch (Exception ex)
             {
-                Debug.Print(ex.ToString());
+                LogFile.Exception(ex.ToString());
             }
         }
         #endregion
@@ -277,7 +278,7 @@ namespace NetduinoPlus.Controler
 
         public void Stop()
         {
-            Debug.Print("Stopping this thread.");
+            LogFile.Network("Stopping network thread.");
             this.currentThread.Abort();
         }
 
@@ -292,7 +293,8 @@ namespace NetduinoPlus.Controler
             {
                 IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse(_remoteIP), 250);
 
-                Debug.Print("Connecting to: " + endpoint.ToString());
+                LogFile.Network("Connecting to: " + endpoint.ToString());
+
                 socket.Connect(endpoint);
                 socket.Send(Encoding.UTF8.GetBytes(Message));
                 socket.Close();

@@ -2,8 +2,6 @@
 using System.Threading;
 using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
-using Microsoft.SPOT;
-using Microsoft.SPOT.Net.NetworkInformation;
 using System.Text;
 using System.Net.Sockets;
 using System.IO;
@@ -17,7 +15,6 @@ namespace NetduinoPlus.Controler
     {
         #region Private Variables
         private OutputPort _led = new OutputPort(Pins.ONBOARD_LED, false);
-        private bool _toggle = true;
         private Timer _processTimer = null;
         #endregion
 
@@ -36,6 +33,8 @@ namespace NetduinoPlus.Controler
 
         private void Run()
         {
+            LogFile.InitInstance();
+
             button = new InterruptPort(Pins.ONBOARD_SW1, false, Port.ResistorMode.Disabled, Port.InterruptMode.InterruptEdgeLow);
             button.OnInterrupt += new NativeEventHandler(button_OnInterrupt);
 
@@ -51,7 +50,7 @@ namespace NetduinoPlus.Controler
         {
           try
           {
-              //WriteFile();
+              //WriteFileDictionaryEntry();
 
               ProcessControl.GetInstance().ReadTemperature();
               ProcessControl.GetInstance().ReadRelativeHumidity();
@@ -63,14 +62,12 @@ namespace NetduinoPlus.Controler
           }
           catch (SocketException se)
           {
-              Debug.Print("Unable to connect or send through socket");
-              Debug.Print(se.ToString());
-              PowerState.RebootDevice(true);
+              LogFile.Exception(se.ToString());
           }
           catch (Exception ex)
           {
-              Debug.Print(ex.ToString());
-              PowerState.RebootDevice(true);
+              LogFile.Exception(ex.ToString());
+              //PowerState.RebootDevice(true);
           }
         }
         
@@ -116,7 +113,7 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        private void WriteFile()
+        private void WriteFileDictionaryEntry()
         {
             Hashtable ht = new Hashtable();
             ht.Add("TemperatureTarget", 37.2); // key, value
@@ -153,9 +150,6 @@ namespace NetduinoPlus.Controler
             data.Append(ProcessControl.GetInstance().TargetRelativeHumidity.ToString("F2"));
             data.Append(";");
             data.Append(VentilationControl.GetInstance().TargetCO2.ToString());
-
-            WriteFile writeFile = new WriteFile(data.ToString());
-            writeFile.Start();
         }
 
         private void ProcessData()
