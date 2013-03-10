@@ -4,8 +4,6 @@ using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using System.Text;
 using System.Net.Sockets;
-using System.IO;
-using System.Collections;
 
 //Smart Personal Object Technology
 
@@ -50,8 +48,6 @@ namespace NetduinoPlus.Controler
         {
           try
           {
-              //WriteFileDictionaryEntry();
-
               ProcessControl.GetInstance().ReadTemperature();
               ProcessControl.GetInstance().ReadRelativeHumidity();
               VentilationControl.GetInstance().ReadCO2();
@@ -111,45 +107,6 @@ namespace NetduinoPlus.Controler
             {
                 ProcessControl.GetInstance().SetActuatorClose( int.Parse(parts[1]) );
             }
-        }
-
-        private void WriteFileDictionaryEntry()
-        {
-            Hashtable ht = new Hashtable();
-            ht.Add("TemperatureTarget", 37.2); // key, value
-
-            //(string)ht["A"];
-
-            foreach (DictionaryEntry de in ht)
-            {
-                if ((string)de.Key == "TemperatureTarget")
-                {
-                    double v = (double)de.Value;
-                }
-                
-            }
-
-
-            String[] lines = { "First line", "Second line", "Third line" };
-
-            using (StreamWriter file = new StreamWriter(@"SD\IncubateurTarget.txt"))
-            {
-                foreach (String line in lines)
-                {
-                    file.WriteLine(line);
-                }
-            }
-
-            //string[] parts = message.Split(' ');
-
-            StringBuilder data = new StringBuilder();
-            data.Append(DateTime.Now.ToString());
-            data.Append(";");
-            data.Append(ProcessControl.GetInstance().TargetTemperature.ToString("F2"));
-            data.Append(";");
-            data.Append(ProcessControl.GetInstance().TargetRelativeHumidity.ToString("F2"));
-            data.Append(";");
-            data.Append(VentilationControl.GetInstance().TargetCO2.ToString());
         }
 
         private void ProcessData()
