@@ -1,13 +1,21 @@
-using System;
-using Microsoft.SPOT;
 using Microsoft.SPOT.Hardware;
 using System.Threading;
-using NetduinoPlusTesting;
+
 
 namespace NetduinoPlus.Controler
 {
     class K30Sensor
     {
+        public enum ECO2Result
+        {
+            ValidResult,
+            ChecksumError,
+            ReadIncomplete,
+            NoReadDataTransfered,
+            NoWriteDataTransfered,
+            UnknownResult
+        }
+
         #region Private Variables
         private static K30Sensor _instance = null;
         private static readonly object LockObject = new object();
@@ -36,73 +44,78 @@ namespace NetduinoPlus.Controler
                 {
                     _instance = new K30Sensor();
                 }
+
                 return _instance;
             }
         }
 
-        public static int ReadCO2()
+        public ECO2Result ReadCO2(ref int co2Data)
         {
-          int co2 = 0;
+          co2Data = 0;
+          ECO2Result result = ECO2Result.UnknownResult;
+          I2CDevice.Configuration slaveConfig = new I2CDevice.Configuration(0x7F, 100);
 
-          for (byte retry = 0; retry < 10; retry++)
+          byte[] dataWrite = new byte[4] { 0x22, 0x00, 0x08, 0x2A };
+          int transferred = I2CBus.GetInstance().Write(slaveConfig, dataWrite, 500);
+
+          if (transferred > 0)
           {
-            try
-            {
-              co2 = ReadSensor();
-            }
-            catch (Exception ex)
-            {
-              Debug.Print(ex.ToString() + " - CO2 = " + co2.ToString());
-              co2 = 0;
-            }
+              Thread.Sleep(10);
 
-            if (co2 == 0)
-            {
-              Thread.Sleep(100);
-            }
-            else
-            {
-              break;
-            }
+              byte[] dataRead = new byte[4] { 0x00, 0x00, 0x00, 0x00 };
+              transferred = I2CBus.GetInstance().Read(slaveConfig, dataRead, 500);
+
+              if (transferred > 0)
+              {
+                  if ((dataRead[0] & 0x01) == 1)
+                  {
+                      co2Data |= dataRead[1] & 0xFF;
+                      co2Data = co2Data << 8;
+                      co2Data |= dataRead[2] & 0xFF;
+
+                      if (dataRead[3] == CheckSum(dataRead, 3))
+                      {
+                          result = ECO2Result.ValidResult;
+                      }
+                      else
+                      {
+                          result = ECO2Result.ChecksumError;
+                      }
+                  }
+                  else
+                  {
+                      result = ECO2Result.ReadIncomplete;
+                  }
+              }
+              else
+              {
+                  result = ECO2Result.NoReadDataTransfered;
+              }
+          }
+          else
+          {
+              result = ECO2Result.NoWriteDataTransfered;
           }
 
-          if (co2 == 0)
-            {
-                co2 = ReadSensor();
-            }
-
-          return co2;
+          return result;
         }
         #endregion
 
 
         #region Private Methods
-        private static int ReadSensor()
+        private byte CheckSum(byte[] buf, byte count)
         {
-          I2CDevice.Configuration slaveConfig = new I2CDevice.Configuration(0x7F, 100);
+            byte i = 0;
+            byte sum = 0;
 
-          byte[] dataWrite = new byte[4] { 0x22, 0x00, 0x08, 0x2A };
-          I2CBus.GetInstance().Write(slaveConfig, dataWrite, 3000);
+            while (count > 0)
+            {
+                sum += buf[i++];
+                count--;
+            }
 
-          Thread.Sleep(10);
-
-          byte[] dataRead = new byte[4] { 0x00, 0x00, 0x00, 0x00 };
-          I2CBus.GetInstance().Read(slaveConfig, dataRead, 3000);
-
-          int co2Value = 0;
-          co2Value |= dataRead[1] & 0xFF;
-          co2Value = co2Value << 8;
-          co2Value |= dataRead[2] & 0xFF;
-
-          int sum = (dataRead[0] + dataRead[1] + dataRead[2]) % 256;
-
-          if (sum != dataRead[3])
-          {
-            co2Value = 0;
-          }
-
-          return co2Value;
-        }
+            return sum;
+        } 
         #endregion
     }
 }

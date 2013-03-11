@@ -1,5 +1,4 @@
 using System;
-using Microsoft.SPOT;
 using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 
@@ -7,7 +6,6 @@ namespace NetduinoPlus.Controler
 {
     class VentilationControl
     {
-        const int CO2_DISABLE = 9999;
         const double RELATIVE_HUMIDITY_TRAP_DELTA = 3.0;
         const double RELATIVE_HUMIDITY_FAN_DELTA = 10.0;
 
@@ -30,7 +28,8 @@ namespace NetduinoPlus.Controler
         }
 
         #region Private Variables
-        private static VentilationControl _ventilationControl = null;
+        private static VentilationControl _instance = null;
+        private static readonly object LockObject = new object();
         private TimeSpan _duration = TimeSpan.Zero;
         private VentilationState _ventilationState = VentilationState.Stopped;
         private FanStateEnum _fanState = FanStateEnum.Stopped;
@@ -40,8 +39,6 @@ namespace NetduinoPlus.Controler
         private int _fanEnabled = 0;
         private int _intervalTargetMinutes = 0;
         private int _durationTargetSeconds = 0;
-        private int _currentCO2 = 0;
-        private int _targetCO2 = CO2_DISABLE;
         private bool _fanForced = false;
 
         private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D9, false);   //Fan
@@ -50,18 +47,6 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Properties
-        public int CurrentCO2
-        {
-            get { return _currentCO2; }
-            set { _currentCO2 = value; }
-        }
-
-        public int TargetCO2
-        {
-            get { return _targetCO2; }
-            set { _targetCO2 = value; }
-        }
-
         public VentilationControl.FanStateEnum FanState
         {
             get { return _fanState; }
@@ -79,7 +64,7 @@ namespace NetduinoPlus.Controler
 
         public VentilationControl.VentilationState State
         {
-            get { return ManageState(); }
+            get { return _ventilationState; }
         }
 
         public int FanEnabled
@@ -110,30 +95,28 @@ namespace NetduinoPlus.Controler
         #region Public Methods
         public static VentilationControl GetInstance()
         {
-            if (_ventilationControl == null)
+            lock (LockObject)
             {
-                _ventilationControl = new VentilationControl();
+                if (_instance == null)
+                {
+                    _instance = new VentilationControl();
+                }
+
+                return _instance;
             }
-
-            return _ventilationControl;
         }
 
-        public void ReadCO2()
-        {
-            _currentCO2 = K30Sensor.ReadCO2();
-        }
-
-        public VentilationControl.VentilationState ManageState()
+        public void ManageState()
         {
             if (_duration > TimeSpan.Zero)
             {
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
-            if (_currentCO2 > 0 && _targetCO2 != CO2_DISABLE)
+            if (ProcessControl.GetInstance().CurrentCO2 > 0 && ProcessControl.GetInstance().TargetCO2 != ProcessControl.CO2_DISABLE)
             {
                 //Sensor control
-                if (VentilationControl.GetInstance().CurrentCO2 > VentilationControl.GetInstance().TargetCO2)
+                if (ProcessControl.GetInstance().CurrentCO2 > ProcessControl.GetInstance().TargetCO2)
                 {
                     if (_fanEnabled == 1)
                     {
@@ -252,8 +235,6 @@ namespace NetduinoPlus.Controler
                     outFan.Write(false);
                 }
             }
-
-            return _ventilationState;
         }
         #endregion
 

@@ -48,12 +48,13 @@
     <Compile Include="SHT11\SHT11.cs" />
     <Compile Include="SHT11\SHT11_GPIO_IOProvider.cs" />
     <Compile Include="ActuatorControl.cs" />
-    <Compile Include="WriteFile.cs" />
+    <Compile Include="LogFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.SPOT.Hardware" />
     <Reference Include="Microsoft.SPOT.Hardware.PWM" />
     <Reference Include="Microsoft.SPOT.Hardware.SerialPort" />
+    <Reference Include="Microsoft.SPOT.IO" />
     <Reference Include="Microsoft.SPOT.Native" />
     <Reference Include="Microsoft.SPOT.Net" />
     <Reference Include="SecretLabs.NETMF.Hardware" />

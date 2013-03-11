@@ -2,6 +2,7 @@ using System;
 using Microsoft.SPOT;
 using System.Collections;
 using System.IO;
+using System.Text;
 
 namespace NetduinoPlus.Controler
 {
@@ -37,6 +38,8 @@ namespace NetduinoPlus.Controler
 
         public static void Load()
         {
+            //WriteFileDictionaryEntry();
+
             //ReadFile();
 
             //const string filePath = @"SD\\Incubator.config";
@@ -59,6 +62,45 @@ namespace NetduinoPlus.Controler
                 myFile.Close();
             }
             return content;
+        }
+
+        private static void WriteFileDictionaryEntry()
+        {
+            Hashtable ht = new Hashtable();
+            ht.Add("TemperatureTarget", 37.2); // key, value
+
+            //(string)ht["A"];
+
+            foreach (DictionaryEntry de in ht)
+            {
+                if ((string)de.Key == "TemperatureTarget")
+                {
+                    double v = (double)de.Value;
+                }
+
+            }
+
+
+            String[] lines = { "First line", "Second line", "Third line" };
+
+            using (StreamWriter file = new StreamWriter(@"SD\IncubateurTarget.txt"))
+            {
+                foreach (String line in lines)
+                {
+                    file.WriteLine(line);
+                }
+            }
+
+            //string[] parts = message.Split(' ');
+
+            StringBuilder data = new StringBuilder();
+            data.Append(DateTime.Now.ToString());
+            data.Append(";");
+            data.Append(ProcessControl.GetInstance().TargetTemperature.ToString("F2"));
+            data.Append(";");
+            data.Append(ProcessControl.GetInstance().TargetRelativeHumidity.ToString("F2"));
+            data.Append(";");
+            data.Append(ProcessControl.GetInstance().TargetCO2.ToString());
         }
     }
 }

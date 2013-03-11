@@ -16,7 +16,8 @@ namespace NetduinoPlus.Controler
         private TimeSpan _duration = TimeSpan.Zero;
         private ActuatorMode _actuatorMode = ActuatorMode.Manual;
         private ActuatorState _actuatorState = ActuatorState.Unknown;
-        private static ActuatorControl _actuatorControl = null;
+        private static ActuatorControl _instance = null;
+        private static readonly object LockObject = new object();
 
         private OutputPort outOpen = new OutputPort(Pins.GPIO_PIN_D7, false);
         private OutputPort outClose = new OutputPort(Pins.GPIO_PIN_D8, false);
@@ -46,7 +47,7 @@ namespace NetduinoPlus.Controler
 
         public ActuatorControl.ActuatorState State
         {
-            get { return ManageState(); }
+            get { return _actuatorState; }
         }
 
         public TimeSpan Duration
@@ -57,12 +58,15 @@ namespace NetduinoPlus.Controler
 
         public static ActuatorControl GetInstance()
         {
-            if (_actuatorControl == null)
+            lock (LockObject)
             {
-                _actuatorControl = new ActuatorControl();
-            }
+                if (_instance == null)
+                {
+                    _instance = new ActuatorControl();
+                }
 
-            return _actuatorControl;            
+                return _instance;    
+            }        
         }
 
         public void Open(int open)
@@ -115,7 +119,7 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        private ActuatorControl.ActuatorState ManageState()
+        public void ManageState()
         {
             if (_duration > TimeSpan.Zero)
             {
@@ -227,8 +231,6 @@ namespace NetduinoPlus.Controler
                     }
                 }
             }
-
-            return _actuatorState;
         }
     }
 }
