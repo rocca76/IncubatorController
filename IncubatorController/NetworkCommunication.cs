@@ -8,7 +8,7 @@ using System.Text;
 
 namespace NetduinoPlus.Controler
 {
-    public delegate void ReceivedEventHandler(Socket clientSocket, String message);
+    public delegate void ReceivedEventHandler(String command);
 
     class NetworkCommunication
     {
@@ -22,7 +22,7 @@ namespace NetduinoPlus.Controler
         private NetworkCommunication() 
         {
             NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
-            _listenerThread = new ListenerThread(ProcessControl.GetInstance());
+            _listenerThread = new ListenerThread();
         }
         #endregion
 
@@ -80,26 +80,25 @@ namespace NetduinoPlus.Controler
         #endregion
     }
 
+
     class ListenerThread
     {
         #region Private Variables
-        private ProcessControl _processControl = null;
         private Thread _currentThread = null;
-        private int _messageReceivedCount = 0;
+        private int _commandReceivedCount = 0;
         #endregion
 
 
         #region Constructors
-        public ListenerThread( ProcessControl processControl ) 
+        public ListenerThread() 
         {
-            _processControl = processControl;
             Start();
         }
         #endregion
 
 
         #region Events
-        public static event ReceivedEventHandler EventHandlerMessageReceived;
+        public static event ReceivedEventHandler CommandReceived;
         #endregion
 
 
@@ -110,16 +109,17 @@ namespace NetduinoPlus.Controler
         #region Public Methods
         public void Start()
         {
-            LogFile.Network("Starting network thread.");
+            LogFile.Network("Starting listener thread.");
 
-            _messageReceivedCount = 0;
+            _commandReceivedCount = 0;
+
             _currentThread = new Thread(ListeningThread);
             _currentThread.Start();
         }
 
         public void Stop()
         {
-            LogFile.Network("Stopping network thread.");
+            LogFile.Network("Stopping listener thread.");
 
             if (_currentThread != null)
             {
@@ -176,23 +176,111 @@ namespace NetduinoPlus.Controler
 
                                 if (buffer.Length > 0)
                                 {
-                                    String message = new String(Encoding.UTF8.GetChars(buffer));
+                                    _commandReceivedCount++;
 
+                                    String command = new String(Encoding.UTF8.GetChars(buffer));
 
-                                    String dataOutput = ProcessControl.GetInstance().BuildDataOutput();
+                                    LogFile.Network("Message Received: " + _commandReceivedCount.ToString() + ", Size: " + buffer.Length.ToString() + ", Value: " + command);
 
-
-                                    _messageReceivedCount++;
-
-                                    LogFile.Network("Message: Count=" + _messageReceivedCount.ToString() + ", Size=" + buffer.Length.ToString() + ", Value=" + message);
-
-                                    if (EventHandlerMessageReceived != null)
+                                    if (CommandReceived != null)
                                     {
-                                        EventHandlerMessageReceived(clientSocket, message);
+                                        CommandReceived(command);
                                     }
                                 }
                             }
                         }
+                    }
+                }
+            }
+            catch (SocketException se)
+            {
+                LogFile.Network(se.ToString());
+            }
+            catch (Exception ex)
+            {
+                LogFile.Network(ex.ToString());
+            }
+        }
+        #endregion
+    }
+
+
+    class SenderThread
+    {
+        #region Private Variables
+        private Thread _currentThread = null;
+        private int _dataSentCount = 0;
+        #endregion
+
+
+        #region Constructors
+        public SenderThread()
+        {
+            Start();
+        }
+        #endregion
+
+
+        #region Events
+        #endregion
+
+
+        #region Public Properties
+        #endregion
+
+
+        #region Public Methods
+        public void Start()
+        {
+            LogFile.Network("Starting sender thread.");
+
+            _dataSentCount = 0;
+
+            _currentThread = new Thread(SendingThread);
+            _currentThread.Start();
+        }
+
+        public void Stop()
+        {
+            LogFile.Network("Stopping sender thread.");
+
+            if (_currentThread != null)
+            {
+                if (_currentThread.IsAlive)
+                {
+                    _currentThread.Abort();
+                }
+
+                _currentThread = null;
+            }
+        }
+        #endregion
+
+
+        #region Private Methods
+        private void SendingThread()
+        {
+            try
+            {
+                IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse("192.168.250.100"), 250);
+
+                while (true)
+                {
+                    using (Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+                    {
+                        LogFile.Network("Connecting to: " + endpoint.ToString());
+
+                        clientSocket.Connect(endpoint);
+
+                        String stateOutput = ProcessControl.GetInstance().BuildStateOutput();
+
+                        int size = clientSocket.Send(Encoding.UTF8.GetBytes(stateOutput));
+
+                        _dataSentCount++;
+
+                        clientSocket.Close();
+
+                        LogFile.Network("Message Sent: " + _dataSentCount.ToString() + ", Size: " + stateOutput.Length.ToString() + ", Value: " + stateOutput);
                     }
                 }
             }
