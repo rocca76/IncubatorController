@@ -35,6 +35,7 @@
   <ItemGroup>
     <Compile Include="MovingAverage.cs" />
     <Compile Include="PumpControl.cs" />
+    <Compile Include="Stopwatch.cs" />
     <Compile Include="VentilationControl.cs" />
     <Compile Include="ConfigurationManager.cs" />
     <Compile Include="I2CBus.cs" />
@@ -61,5 +62,7 @@
     <Reference Include="SecretLabs.NETMF.Hardware.NetduinoPlus" />
     <Reference Include="System" />
     <Reference Include="System.IO" />
+    <Reference Include="Toolbox.NETMF.NET.Core, Version=4.2.0.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="Toolbox.NETMF.NET.Integrated, Version=4.2.0.0, Culture=neutral, processorArchitecture=MSIL" />
   </ItemGroup>
 </Project>

@@ -103,7 +103,7 @@ namespace NetduinoPlus.Controler
         #region Public Methods
         public static ProcessControl GetInstance()
         {
-            lock (LockObject)
+            //lock (LockObject)
             {
                 if (_instance == null)
                 {
@@ -121,7 +121,7 @@ namespace NetduinoPlus.Controler
 
         public void ProcessData()
         {
-            ReadSensor();
+            //ReadSensor();
 
             ManageHeatingState();
             SetOutputPin();
@@ -129,8 +129,6 @@ namespace NetduinoPlus.Controler
             PumpControl.GetInstance().ManageState();
             VentilationControl.GetInstance().ManageState();
             ActuatorControl.GetInstance().ManageState();
-
-            SenderThread.Notify.Set();
         }
 
         public void SetActuatorMode(String mode)
@@ -154,7 +152,11 @@ namespace NetduinoPlus.Controler
         {
             string[] parts = command.Split(' ');
 
-            if (parts[0] == "TIME")
+            if (command == "Initialize sender<EOF>")
+            {
+              NetworkCommunication.GetInstance().InitializeSender();
+            }
+            else if (parts[0] == "TIME")
             {
                 DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
                 Utility.SetLocalTime(presentTime);

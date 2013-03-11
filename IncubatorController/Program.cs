@@ -4,6 +4,7 @@ using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using System.Text;
 using System.Net.Sockets;
+using System.Diagnostics;
 
 //Smart Personal Object Technology
 
@@ -12,7 +13,7 @@ namespace NetduinoPlus.Controler
     public class Program
     {
         #region Private Variables
-        private Timer _processTimer = null;
+        private static Timer _processTimer = null;
         #endregion
 
         #region Public Properties
@@ -40,8 +41,13 @@ namespace NetduinoPlus.Controler
         {
           try
           {
-              SenderThread.Notify.Set();
-              //ProcessControl.GetInstance().ProcessData();
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            ProcessControl.GetInstance().ProcessData();
+            NetworkCommunication.GetInstance().NotifySender();
+
+            stopwatch.Stop();
+            LogFile.Network("Process duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");
           }
           catch (Exception ex)
           {

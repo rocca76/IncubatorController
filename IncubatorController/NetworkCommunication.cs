@@ -5,6 +5,8 @@ using Microsoft.SPOT.Net.NetworkInformation;
 using Microsoft.SPOT;
 using System;
 using System.Text;
+using System.Diagnostics;
+using Toolbox.NETMF.NET;
 
 namespace NetduinoPlus.Controler
 {
@@ -44,6 +46,25 @@ namespace NetduinoPlus.Controler
             {
                 _instance = new NetworkCommunication();
             }
+        }
+
+        public static NetworkCommunication GetInstance()
+        {
+          return _instance;
+        }
+
+        public void InitializeSender()
+        {
+          if (_senderThread != null)
+          {
+            _senderThread.Stop();
+            _senderThread.Start();
+          }
+        }
+
+        public void NotifySender()
+        {
+          _senderThread.Notify.Set();
         }
         #endregion
 
@@ -159,7 +180,7 @@ namespace NetduinoPlus.Controler
 
                 using (Socket socketListener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
                 {
-                    socketListener.Bind(new IPEndPoint(IPAddress.Any, 250));
+                    socketListener.Bind(new IPEndPoint(IPAddress.Any, 11000));
                     socketListener.Listen(1);
 
                     while (true)
@@ -213,14 +234,14 @@ namespace NetduinoPlus.Controler
         private Thread _currentThread = null;
         private int _dataSentCount = 0;
         private static ManualResetEvent _manualResetEvent = new ManualResetEvent(false);
+        private SimpleSocket _clientSocket = null;
+
+        private bool _cancelSender = false;
         #endregion
 
 
         #region Constructors
-        public SenderThread()
-        {
-            Start();
-        }
+        public SenderThread() { }
         #endregion
 
 
@@ -229,7 +250,7 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Properties
-        public static ManualResetEvent Notify
+        public ManualResetEvent Notify
         {
             get { return _manualResetEvent; }
         }
@@ -241,6 +262,7 @@ namespace NetduinoPlus.Controler
         {
             LogFile.Network("Starting sender thread.");
 
+            _cancelSender = false;
             _dataSentCount = 0;
 
             _currentThread = new Thread(SendingThread);
@@ -249,17 +271,13 @@ namespace NetduinoPlus.Controler
 
         public void Stop()
         {
-            LogFile.Network("Stopping sender thread.");
+          _cancelSender = true;
 
-            if (_currentThread != null)
-            {
-                if (_currentThread.IsAlive)
-                {
-                    _currentThread.Abort();
-                }
-
-                _currentThread = null;
-            }
+          if (_clientSocket != null)
+          {
+            _clientSocket.Close();
+            _clientSocket = null;
+          }
         }
         #endregion
 
@@ -269,34 +287,26 @@ namespace NetduinoPlus.Controler
         {
             try
             {
-                IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse("192.168.0.100"), 250);
-
-                while (true)
+                while (_cancelSender == false)
                 {
-                    LogFile.Network("Waiting to send states...");
+                    Stopwatch stopwatch = Stopwatch.StartNew();
 
                     _manualResetEvent.WaitOne();
 
-                    using (Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-                    {
-                        LogFile.Network("Connecting to: " + endpoint.ToString());
+                    _clientSocket = new IntegratedSocket("192.168.0.100", 11000);
+                    _clientSocket.Connect();
 
-                        clientSocket.Connect(endpoint);
+                    String stateOutput = "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789<EOF>"; //ProcessControl.GetInstance().BuildStateOutput();
 
-                        String stateOutput = ""; // ProcessControl.GetInstance().BuildStateOutput();
+                    _clientSocket.Send(stateOutput);
+                    _dataSentCount++;
 
-                        LogFile.Network("Sending " + stateOutput.Length.ToString() + " bytes");
+                    _clientSocket.Close();
+                    _manualResetEvent.Reset();
 
-                        int size = clientSocket.Send(Encoding.UTF8.GetBytes(stateOutput));
+                    stopwatch.Stop();
 
-                        _dataSentCount++;
-
-                        clientSocket.Close();
-
-                        LogFile.Network("Message Sent: " + _dataSentCount.ToString() + ", Size: " + size.ToString() + ", Value: " + stateOutput);
-                    }
-
-                    //_manualResetEvent.Reset();
+                    LogFile.Network("Message Sent: " + stopwatch.ElapsedMilliseconds.ToString()  + "ms, " + _dataSentCount.ToString() + ", Size: " + stateOutput.Length.ToString() + ", Value: " + stateOutput);
                 }
             }
             catch (SocketException se)
