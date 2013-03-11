@@ -20,6 +20,7 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private static LogFile _instance = null;
         private static bool _sdCardAvailable = false;
+        private static readonly object LockObject = new object();
         #endregion
 
 
@@ -99,31 +100,34 @@ namespace NetduinoPlus.Controler
         {
             try
             {
-                Debug.Print(log);
-
-                if (_sdCardAvailable)
+                lock (LockObject)
                 {
-                    String path = @"SD\";
+                    Debug.Print(log);
 
-                    switch (type)
+                    if (_sdCardAvailable)
                     {
-                        case ELogType.Application:
-                            path = @"SD\ApplicationLog.txt";
-                        break;
-                        case ELogType.Network:
-                            path = @"SD\NetworkLog.txt";
-                        break;
-                        case ELogType.Exception:
-                            path = @"SD\Exceptionlog.txt";
-                        break;
-                        case ELogType.Error:
-                            path = @"SD\Errorlog.txt";
-                        break;
-                    }
+                        String path = @"SD\";
 
-                    using (StreamWriter streamWriter = new StreamWriter(path, true))
-                    {
-                        streamWriter.WriteLine(DateTime.Now.ToString() + ": " + log.Trim());
+                        switch (type)
+                        {
+                            case ELogType.Application:
+                                path = @"SD\ApplicationLog.txt";
+                                break;
+                            case ELogType.Network:
+                                path = @"SD\NetworkLog.txt";
+                                break;
+                            case ELogType.Exception:
+                                path = @"SD\Exceptionlog.txt";
+                                break;
+                            case ELogType.Error:
+                                path = @"SD\Errorlog.txt";
+                                break;
+                        }
+
+                        using (StreamWriter streamWriter = new StreamWriter(path, true))
+                        {
+                            streamWriter.WriteLine(DateTime.Now.ToString() + ": " + log.Trim());
+                        }
                     }
                 }
             }

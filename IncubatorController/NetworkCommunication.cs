@@ -15,6 +15,7 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private static NetworkCommunication _instance = null;
         private ListenerThread _listenerThread = null;
+        private SenderThread _senderThread = null;
         #endregion
 
 
@@ -23,6 +24,7 @@ namespace NetduinoPlus.Controler
         {
             NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
             _listenerThread = new ListenerThread();
+            _senderThread = new SenderThread();
         }
         #endregion
 
@@ -210,6 +212,7 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private Thread _currentThread = null;
         private int _dataSentCount = 0;
+        private static ManualResetEvent _manualResetEvent = new ManualResetEvent(false);
         #endregion
 
 
@@ -226,6 +229,10 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Properties
+        public static ManualResetEvent Notify
+        {
+            get { return _manualResetEvent; }
+        }
         #endregion
 
 
@@ -262,17 +269,23 @@ namespace NetduinoPlus.Controler
         {
             try
             {
-                IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse("192.168.250.100"), 250);
+                IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse("192.168.0.100"), 250);
 
                 while (true)
                 {
+                    LogFile.Network("Waiting to send states...");
+
+                    _manualResetEvent.WaitOne();
+
                     using (Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
                     {
                         LogFile.Network("Connecting to: " + endpoint.ToString());
 
                         clientSocket.Connect(endpoint);
 
-                        String stateOutput = ProcessControl.GetInstance().BuildStateOutput();
+                        String stateOutput = ""; // ProcessControl.GetInstance().BuildStateOutput();
+
+                        LogFile.Network("Sending " + stateOutput.Length.ToString() + " bytes");
 
                         int size = clientSocket.Send(Encoding.UTF8.GetBytes(stateOutput));
 
@@ -280,8 +293,10 @@ namespace NetduinoPlus.Controler
 
                         clientSocket.Close();
 
-                        LogFile.Network("Message Sent: " + _dataSentCount.ToString() + ", Size: " + stateOutput.Length.ToString() + ", Value: " + stateOutput);
+                        LogFile.Network("Message Sent: " + _dataSentCount.ToString() + ", Size: " + size.ToString() + ", Value: " + stateOutput);
                     }
+
+                    //_manualResetEvent.Reset();
                 }
             }
             catch (SocketException se)

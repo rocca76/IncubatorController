@@ -121,16 +121,17 @@ namespace NetduinoPlus.Controler
 
         public void ProcessData()
         {
-            ReadSensor();
+            lock (LockObject)
+            {
+                ReadSensor();
 
-            ManageHeatingState();
-            SetOutputPin();
+                ManageHeatingState();
+                SetOutputPin();
 
-            PumpControl.GetInstance().ManageState();
-            VentilationControl.GetInstance().ManageState();
-            ActuatorControl.GetInstance().ManageState();
-
-            SenderThread.Notify.Set();
+                PumpControl.GetInstance().ManageState();
+                VentilationControl.GetInstance().ManageState();
+                ActuatorControl.GetInstance().ManageState();
+            }
         }
 
         public void SetActuatorMode(String mode)
@@ -178,7 +179,7 @@ namespace NetduinoPlus.Controler
                 VentilationControl.GetInstance().FanEnabled = int.Parse(parts[1]);
                 VentilationControl.GetInstance().IntervalTargetMinutes = int.Parse(parts[2]);
                 VentilationControl.GetInstance().DurationTargetSeconds = int.Parse(parts[3]);
-                ProcessControl.GetInstance().TargetCO2 = int.Parse(parts[4]);
+                VentilationControl.GetInstance().TargetCO2 = int.Parse(parts[4]);
             }
             else if (parts[0] == "ACTUATOR_MODE")
             {
@@ -324,7 +325,11 @@ namespace NetduinoPlus.Controler
         {
             StringBuilder xmlBuilder = new StringBuilder();
 
+<<<<<<< Updated upstream
+
+=======
             
+>>>>>>> Stashed changes
             xmlBuilder.Append("<netduino>");
             xmlBuilder.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
 
@@ -358,10 +363,17 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("</pumpduration>");
 
             xmlBuilder.Append("<co2>");
+<<<<<<< Updated upstream
+            xmlBuilder.Append(VentilationControl.GetInstance().CurrentCO2.ToString());
+            xmlBuilder.Append("</co2>");
+            xmlBuilder.Append("<targetco2>");
+            xmlBuilder.Append(VentilationControl.GetInstance().TargetCO2.ToString());
+=======
             xmlBuilder.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
             xmlBuilder.Append("</co2>");
             xmlBuilder.Append("<targetco2>");
             xmlBuilder.Append(ProcessControl.GetInstance().TargetCO2.ToString());
+>>>>>>> Stashed changes
             xmlBuilder.Append("</targetco2>");
 
             xmlBuilder.Append("<trapstate>");
@@ -386,6 +398,10 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append(VentilationControl.GetInstance().State.ToString()); //Started or stopped
             xmlBuilder.Append("</ventilationdstate>");
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
             xmlBuilder.Append("<actuatormode>");
             xmlBuilder.Append(ActuatorControl.GetInstance().Mode.ToString());
             xmlBuilder.Append("</actuatormode>");
@@ -397,7 +413,10 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("</actuatorduration>");
             xmlBuilder.Append("</data>");
             xmlBuilder.Append("</netduino>");
+<<<<<<< Updated upstream
+=======
 
+>>>>>>> Stashed changes
 
             return xmlBuilder.ToString();
         }

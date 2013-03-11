@@ -6,7 +6,6 @@ namespace NetduinoPlus.Controler
 {
     class VentilationControl
     {
-        const int CO2_DISABLE = 9999;
         const double RELATIVE_HUMIDITY_TRAP_DELTA = 3.0;
         const double RELATIVE_HUMIDITY_FAN_DELTA = 10.0;
 
@@ -40,8 +39,6 @@ namespace NetduinoPlus.Controler
         private int _fanEnabled = 0;
         private int _intervalTargetMinutes = 0;
         private int _durationTargetSeconds = 0;
-        private int _currentCO2 = 0;
-        private int _targetCO2 = CO2_DISABLE;
         private bool _fanForced = false;
 
         private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D9, false);   //Fan
@@ -50,18 +47,6 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Properties
-        public int CurrentCO2
-        {
-            get { return _currentCO2; }
-            set { _currentCO2 = value; }
-        }
-
-        public int TargetCO2
-        {
-            get { return _targetCO2; }
-            set { _targetCO2 = value; }
-        }
-
         public VentilationControl.FanStateEnum FanState
         {
             get { return _fanState; }
@@ -121,39 +106,6 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        public void ReadCO2()
-        {
-            int co2Data = 0;
-            K30Sensor.ECO2Result result = K30Sensor.GetInstance().ReadCO2(ref co2Data);
-            LogFile.Application("CO2: " + co2Data.ToString());
-
-            if (result == K30Sensor.ECO2Result.ValidResult)
-            {
-                _currentCO2 = co2Data;
-            }
-            else
-            {
-                switch (result)
-                {
-                    case K30Sensor.ECO2Result.ChecksumError:
-                        LogFile.Application("CO2: Checksum Error");
-                    break;
-                    case K30Sensor.ECO2Result.ReadIncomplete:
-                        LogFile.Application("CO2: Read Incomplete");
-                    break;
-                    case K30Sensor.ECO2Result.NoReadDataTransfered:
-                        LogFile.Application("CO2: No Read Data Transfered");
-                    break;
-                    case K30Sensor.ECO2Result.NoWriteDataTransfered:
-                        LogFile.Application("CO2: No Write Data Transfered");
-                    break;
-                    case K30Sensor.ECO2Result.UnknownResult:
-                        LogFile.Application("CO2: Unknown Error");
-                    break;
-                }
-            }
-        }
-
         public void ManageState()
         {
             if (_duration > TimeSpan.Zero)
@@ -161,10 +113,10 @@ namespace NetduinoPlus.Controler
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
-            if (_currentCO2 > 0 && _targetCO2 != CO2_DISABLE)
+            if (ProcessControl.GetInstance().CurrentCO2 > 0 && ProcessControl.GetInstance().TargetCO2 != ProcessControl.CO2_DISABLE)
             {
                 //Sensor control
-                if (VentilationControl.GetInstance().CurrentCO2 > VentilationControl.GetInstance().TargetCO2)
+                if (ProcessControl.GetInstance().CurrentCO2 > ProcessControl.GetInstance().TargetCO2)
                 {
                     if (_fanEnabled == 1)
                     {

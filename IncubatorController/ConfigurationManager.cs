@@ -100,7 +100,7 @@ namespace NetduinoPlus.Controler
             data.Append(";");
             data.Append(ProcessControl.GetInstance().TargetRelativeHumidity.ToString("F2"));
             data.Append(";");
-            data.Append(VentilationControl.GetInstance().TargetCO2.ToString());
+            data.Append(ProcessControl.GetInstance().TargetCO2.ToString());
         }
     }
 }

@@ -40,7 +40,8 @@ namespace NetduinoPlus.Controler
         {
           try
           {
-              ProcessControl.GetInstance().ProcessData();
+              SenderThread.Notify.Set();
+              //ProcessControl.GetInstance().ProcessData();
           }
           catch (Exception ex)
           {
