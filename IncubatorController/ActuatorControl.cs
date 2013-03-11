@@ -47,7 +47,7 @@ namespace NetduinoPlus.Controler
 
         public ActuatorControl.ActuatorState State
         {
-            get { return ManageState(); }
+            get { return _actuatorState; }
         }
 
         public TimeSpan Duration
@@ -119,7 +119,7 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        private ActuatorControl.ActuatorState ManageState()
+        public void ManageState()
         {
             if (_duration > TimeSpan.Zero)
             {
@@ -231,8 +231,6 @@ namespace NetduinoPlus.Controler
                     }
                 }
             }
-
-            return _actuatorState;
         }
     }
 }

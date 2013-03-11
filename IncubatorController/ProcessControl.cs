@@ -2,6 +2,8 @@ using System;
 using Sensirion.SHT11;
 using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
+using System.Net.Sockets;
+using System.Text;
 
 namespace NetduinoPlus.Controler
 {
@@ -76,7 +78,7 @@ namespace NetduinoPlus.Controler
         #region Constructors
         public ProcessControl() 
         {
-            NetworkCommunication.EventHandlerMessageReceived += new ReceivedEventHandler(OnMessageReceived);
+            ListenerThread.EventHandlerMessageReceived += new ReceivedEventHandler(OnMessageReceived);
             SHT11Sensor.InitInstance();
         }
         #endregion
@@ -95,63 +97,24 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        public static void LoadConfiguration()
+        public void LoadConfiguration()
         {
             ConfigurationManager.Load();
         }
 
-        public void ReadTemperature()
+        public void ProcessData()
         {
-            double temperature = SHT11Sensor.ReadTemperature();
-            _temperatureAverage.Push(temperature);
-            CurrentTemperature = _temperatureAverage.Average;
-
-            LogFile.Application("Temperature: RAW = " + temperature.ToString("F2") + "  Average = " + CurrentTemperature.ToString("F2"));
-
-            if (CurrentTemperature > 0)
+            lock (LockObject)
             {
-                if (CurrentTemperature < (TargetTemperature - 0.5))
-                {
-                    HeatPower = 750;
-                }
-                else if (CurrentTemperature >= (TargetTemperature - 0.5) && CurrentTemperature < (TargetTemperature - 0.25))
-                {
-                    HeatPower = 500;
-                }
-                else if (CurrentTemperature >= (TargetTemperature - 0.25) && CurrentTemperature < TargetTemperature)
-                {
-                    HeatPower = 250;
-                }
-                else if (CurrentTemperature >= TargetTemperature)
-                {
-                    HeatPower = 0;
-                }
-            }
-            else
-            {
-                HeatPower = 0;
-            }
+                ReadSensor();
 
-            if (CurrentTemperature > LimitMaxTemperature)
-            {
-                MaxTemperatureLimitReached = 1;
-                HeatPower = 0;
+                ManageHeatingState();
+                SetOutputPin();
+
+                PumpControl.GetInstance().ManageState();
+                VentilationControl.GetInstance().ManageState();
+                ActuatorControl.GetInstance().ManageState();
             }
-            else
-            {
-                MaxTemperatureLimitReached = 0;
-            }
-        }
-
-        public void ReadRelativeHumidity()
-        {
-            double relativeHumidity = SHT11Sensor.ReadRelativeHumidity();
-            _relativeHumidityAverage.Push(relativeHumidity);
-            CurrentRelativeHumidity = _relativeHumidityAverage.Average;
-
-            LogFile.Application("HR: RAW = " + relativeHumidity.ToString("F2") + "  Average = " + CurrentRelativeHumidity.ToString("F2"));
-
-            PumpControl.GetInstance().ManageState();
         }
 
         public void SetActuatorMode(String mode)
@@ -168,41 +131,10 @@ namespace NetduinoPlus.Controler
         {
             ActuatorControl.GetInstance().Close(close);
         }
-
-        public void SetOutputPin()
-        {
-            switch (HeatPower)
-            {
-                case 0:
-                {
-                    out250W.Write(false);
-                    out500W.Write(false);
-                }
-                break;
-                case 250:
-                {
-                    out250W.Write(true);
-                    out500W.Write(false);
-                }
-                break;
-                case 500:
-                {
-                    out250W.Write(false);
-                    out500W.Write(true);
-                }
-                break;
-                case 750:
-                {
-                    out250W.Write(true);
-                    out500W.Write(true);
-                }
-                break;
-            }
-        }
         #endregion
 
         #region Private Methods
-        private void OnMessageReceived(String message)
+        private void OnMessageReceived(Socket clientSocket, String message)
         {
             string[] parts = message.Split(' ');
 
@@ -210,6 +142,13 @@ namespace NetduinoPlus.Controler
             {
                 DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
                 Utility.SetLocalTime(presentTime);
+            }
+            else if (parts[0] == "GET_DATA")
+            {
+                String dataOutput = BuildDataOutput();
+                int timeout = clientSocket.SendTimeout;
+                int sent = clientSocket.Send(Encoding.UTF8.GetBytes(dataOutput));
+                sent = 0;
             }
             else if (parts[0] == "TARGET_TEMPERATURE")
             {
@@ -242,6 +181,188 @@ namespace NetduinoPlus.Controler
             {
                 ProcessControl.GetInstance().SetActuatorClose(int.Parse(parts[1]));
             }
+        }
+
+        private void ReadSensor()
+        {
+            ReadTemperature();
+            ReadRelativeHumidity();
+            ReadCO2();
+        }
+
+        private void ManageHeatingState()
+        {
+            if (_currentTemperature > 0)
+            {
+                if (_currentTemperature < (TargetTemperature - 0.5))
+                {
+                    HeatPower = 750;
+                }
+                else if (_currentTemperature >= (TargetTemperature - 0.5) && _currentTemperature < (TargetTemperature - 0.25))
+                {
+                    HeatPower = 500;
+                }
+                else if (_currentTemperature >= (TargetTemperature - 0.25) && _currentTemperature < TargetTemperature)
+                {
+                    HeatPower = 250;
+                }
+                else if (_currentTemperature >= TargetTemperature)
+                {
+                    HeatPower = 0;
+                }
+            }
+            else
+            {
+                HeatPower = 0;
+            }
+
+            if (_currentTemperature > LimitMaxTemperature)
+            {
+                MaxTemperatureLimitReached = 1;
+                HeatPower = 0;
+            }
+            else
+            {
+                MaxTemperatureLimitReached = 0;
+            }
+        }
+
+        private void ReadTemperature()
+        {
+            double temperature = SHT11Sensor.ReadTemperature();
+            _temperatureAverage.Push(temperature);
+            _currentTemperature = _temperatureAverage.Average;
+
+            LogFile.Application("Temperature: RAW = " + temperature.ToString("F2") + "  Average = " + _currentTemperature.ToString("F2"));
+        }
+
+        private void ReadRelativeHumidity()
+        {
+            double relativeHumidity = SHT11Sensor.ReadRelativeHumidity();
+            _relativeHumidityAverage.Push(relativeHumidity);
+            _currentRelativeHumidity = _relativeHumidityAverage.Average;
+
+            LogFile.Application("HR: RAW = " + relativeHumidity.ToString("F2") + "  Average = " + _currentRelativeHumidity.ToString("F2"));
+        }
+
+        private void ReadCO2()
+        {
+            VentilationControl.GetInstance().ReadCO2();
+        }
+
+        private void SetOutputPin()
+        {
+            switch (HeatPower)
+            {
+                case 0:
+                    {
+                        out250W.Write(false);
+                        out500W.Write(false);
+                    }
+                    break;
+                case 250:
+                    {
+                        out250W.Write(true);
+                        out500W.Write(false);
+                    }
+                    break;
+                case 500:
+                    {
+                        out250W.Write(false);
+                        out500W.Write(true);
+                    }
+                    break;
+                case 750:
+                    {
+                        out250W.Write(true);
+                        out500W.Write(true);
+                    }
+                    break;
+            }
+        }
+
+        public String BuildDataOutput()
+        {
+            StringBuilder xmlBuilder = new StringBuilder();
+
+            lock (LockObject)
+            {
+                xmlBuilder.Append("<netduino>");
+                xmlBuilder.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
+
+                xmlBuilder.Append("<temperature>");
+                xmlBuilder.Append(ProcessControl.GetInstance().CurrentTemperature.ToString("F2"));
+                xmlBuilder.Append("</temperature>");
+                xmlBuilder.Append("<targettemperature>");
+                xmlBuilder.Append(ProcessControl.GetInstance().TargetTemperature.ToString("F2"));
+                xmlBuilder.Append("</targettemperature>");
+                xmlBuilder.Append("<limitmaxtemperature>");
+                xmlBuilder.Append(ProcessControl.GetInstance().LimitMaxTemperature.ToString("F2"));
+                xmlBuilder.Append("</limitmaxtemperature>");
+                xmlBuilder.Append("<maxtemperaturereached>");
+                xmlBuilder.Append(ProcessControl.GetInstance().MaxTemperatureLimitReached.ToString());
+                xmlBuilder.Append("</maxtemperaturereached>");
+                xmlBuilder.Append("<heatpower>");
+                xmlBuilder.Append(ProcessControl.GetInstance().HeatPower.ToString());
+                xmlBuilder.Append("</heatpower>");
+
+                xmlBuilder.Append("<relativehumidity>");
+                xmlBuilder.Append(ProcessControl.GetInstance().CurrentRelativeHumidity.ToString("F2"));
+                xmlBuilder.Append("</relativehumidity>");
+                xmlBuilder.Append("<targetrelativehumidity>");
+                xmlBuilder.Append(ProcessControl.GetInstance().TargetRelativeHumidity.ToString("F2"));
+                xmlBuilder.Append("</targetrelativehumidity>");
+                xmlBuilder.Append("<pumpstate>");
+                xmlBuilder.Append(PumpControl.GetInstance().PumpState.ToString());
+                xmlBuilder.Append("</pumpstate>");
+                xmlBuilder.Append("<pumpduration>");
+                xmlBuilder.Append(PumpControl.GetInstance().Duration.ToString());
+                xmlBuilder.Append("</pumpduration>");
+
+                xmlBuilder.Append("<co2>");
+                xmlBuilder.Append(VentilationControl.GetInstance().CurrentCO2.ToString());
+                xmlBuilder.Append("</co2>");
+                xmlBuilder.Append("<targetco2>");
+                xmlBuilder.Append(VentilationControl.GetInstance().TargetCO2.ToString());
+                xmlBuilder.Append("</targetco2>");
+
+                xmlBuilder.Append("<trapstate>");
+                xmlBuilder.Append(VentilationControl.GetInstance().TrapState.ToString());
+                xmlBuilder.Append("</trapstate>");
+                xmlBuilder.Append("<fanstate>");
+                xmlBuilder.Append(VentilationControl.GetInstance().FanState.ToString());
+                xmlBuilder.Append("</fanstate>");
+                xmlBuilder.Append("<ventilationduration>");
+                xmlBuilder.Append(VentilationControl.GetInstance().Duration.ToString());
+                xmlBuilder.Append("</ventilationduration>");
+                xmlBuilder.Append("<ventilationfanenabled>");
+                xmlBuilder.Append(VentilationControl.GetInstance().FanEnabled.ToString()); // Fan used
+                xmlBuilder.Append("</ventilationfanenabled>");
+                xmlBuilder.Append("<ventilationIntervaltarget>");
+                xmlBuilder.Append(VentilationControl.GetInstance().IntervalTargetMinutes.ToString()); //minutes
+                xmlBuilder.Append("</ventilationIntervaltarget>");
+                xmlBuilder.Append("<ventilationdurationtarget>");
+                xmlBuilder.Append(VentilationControl.GetInstance().DurationTargetSeconds.ToString()); // seconds
+                xmlBuilder.Append("</ventilationdurationtarget>");
+                xmlBuilder.Append("<ventilationdstate>");
+                xmlBuilder.Append(VentilationControl.GetInstance().State.ToString()); //Started or stopped
+                xmlBuilder.Append("</ventilationdstate>");
+
+
+                xmlBuilder.Append("<actuatormode>");
+                xmlBuilder.Append(ActuatorControl.GetInstance().Mode.ToString());
+                xmlBuilder.Append("</actuatormode>");
+                xmlBuilder.Append("<actuatorstate>");
+                xmlBuilder.Append(ActuatorControl.GetInstance().State.ToString());
+                xmlBuilder.Append("</actuatorstate>");
+                xmlBuilder.Append("<actuatorduration>");
+                xmlBuilder.Append(ActuatorControl.GetInstance().Duration.ToString());
+                xmlBuilder.Append("</actuatorduration>");
+                xmlBuilder.Append("</data>");
+                xmlBuilder.Append("</netduino>");
+            }
+
+            return xmlBuilder.ToString();
         }
         #endregion
     }

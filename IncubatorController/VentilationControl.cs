@@ -79,7 +79,7 @@ namespace NetduinoPlus.Controler
 
         public VentilationControl.VentilationState State
         {
-            get { return ManageState(); }
+            get { return _ventilationState; }
         }
 
         public int FanEnabled
@@ -154,7 +154,7 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        public VentilationControl.VentilationState ManageState()
+        public void ManageState()
         {
             if (_duration > TimeSpan.Zero)
             {
@@ -283,8 +283,6 @@ namespace NetduinoPlus.Controler
                     outFan.Write(false);
                 }
             }
-
-            return _ventilationState;
         }
         #endregion
 

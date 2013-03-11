@@ -8,16 +8,13 @@ using System.Text;
 
 namespace NetduinoPlus.Controler
 {
-    public delegate void ReceivedEventHandler(String message);
+    public delegate void ReceivedEventHandler(Socket clientSocket, String message);
 
     class NetworkCommunication
     {
         #region Private Variables
-        private static Thread _listeningThread = null;
         private static NetworkCommunication _instance = null;
-        private static bool _networkIsAvailable = false;
-        private static int _messageSentCount = 0;
-        private static int _messageReceivedCount = 0;
+        private ListenerThread _listenerThread = null;
         #endregion
 
 
@@ -25,20 +22,16 @@ namespace NetduinoPlus.Controler
         private NetworkCommunication() 
         {
             NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
+            _listenerThread = new ListenerThread(ProcessControl.GetInstance());
         }
         #endregion
 
 
         #region Events
-        public static event ReceivedEventHandler EventHandlerMessageReceived;
         #endregion
 
 
         #region Public Properties
-        public bool NetworkAvailable
-        {
-            get { return _networkIsAvailable; }
-        }
         #endregion
 
 
@@ -56,31 +49,98 @@ namespace NetduinoPlus.Controler
         #region Private Static Methods
         private void NetworkChange_NetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs network)
         {
-            _networkIsAvailable = network.IsAvailable;
-
-            LogFile.Network(DateTime.UtcNow.ToString("u") + " " + (_networkIsAvailable ? "Online" : "Offline"));
-
-            if (_networkIsAvailable)
+            try
             {
-                _messageReceivedCount = 0;
-                _instance.ListeningThread();
+                if (network.IsAvailable)
+                {
+                    LogFile.Network("Network Available");
+
+                    _listenerThread.Start();
+                }
+                else
+                {
+                    LogFile.Network("Network Unavailable");
+
+                    _listenerThread.Stop();
+                }   
             }
-            else
+            catch (SocketException se)
             {
-                ShutdownListener();
+                LogFile.Network(se.ToString());
+            }
+            catch (Exception ex)
+            {
+                LogFile.Network(ex.ToString());
             }
         }
         #endregion
 
 
         #region Private Methods
-        private void ListeningThread()
+        #endregion
+    }
+
+    class ListenerThread
+    {
+        #region Private Variables
+        private ProcessControl _processControl = null;
+        private Thread _currentThread = null;
+        private int _messageReceivedCount = 0;
+        #endregion
+
+
+        #region Constructors
+        public ListenerThread( ProcessControl processControl ) 
         {
-            _listeningThread = new Thread(new ThreadStart(ReceiveSocketsInListeningThread));
-            _listeningThread.Start();
+            _processControl = processControl;
+            Start();
+        }
+        #endregion
+
+
+        #region Events
+        public static event ReceivedEventHandler EventHandlerMessageReceived;
+        #endregion
+
+
+        #region Public Properties
+        #endregion
+
+
+        #region Public Methods
+        public void Start()
+        {
+            LogFile.Network("Starting network thread.");
+
+            _messageReceivedCount = 0;
+            _currentThread = new Thread(ListeningThread);
+            _currentThread.Start();
         }
 
-        private void ReceiveSocketsInListeningThread()
+        public void Stop()
+        {
+            LogFile.Network("Stopping network thread.");
+
+            if (_currentThread != null)
+            {
+                if (_currentThread.IsAlive)
+                {
+                    _currentThread.Abort();
+                }
+
+                _currentThread = null;
+            }
+        }
+        #endregion
+
+
+        #region Private Methods
+        private bool SocketConnected(Socket clientSocket)
+        {
+            return !(clientSocket.Poll(5000000, SelectMode.SelectRead) & (clientSocket.Available == 0));
+        }
+
+        private void ListeningThread()
         {
             try
             {
@@ -95,26 +155,41 @@ namespace NetduinoPlus.Controler
 
                 LogFile.Network("IP address: " + networkInterface.IPAddress.ToString());
 
-                using (Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+                using (Socket socketListener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
                 {
-                    listener.Bind(new IPEndPoint(IPAddress.Any, 250));
-                    listener.Listen(1);
+                    socketListener.Bind(new IPEndPoint(IPAddress.Any, 250));
+                    socketListener.Listen(1);
 
                     while (true)
                     {
                         LogFile.Network("Listening for connection...");
 
-                        using (Socket socket = listener.Accept())
+                        using (Socket clientSocket = socketListener.Accept())
                         {
-                            if (SocketConnected(socket))
-                            {
-                                byte[] buffer = new byte[socket.Available];
+                            LogFile.Network("Connection Accept: " + clientSocket.RemoteEndPoint.ToString());
 
-                                socket.Receive(buffer);
+                            if (SocketConnected(clientSocket))
+                            {
+                                byte[] buffer = new byte[clientSocket.Available];
+
+                                clientSocket.Receive(buffer);
 
                                 if (buffer.Length > 0)
                                 {
-                                    RaiseMessageReceivedEvent(new String(Encoding.UTF8.GetChars(buffer)));
+                                    String message = new String(Encoding.UTF8.GetChars(buffer));
+
+
+                                    String dataOutput = ProcessControl.GetInstance().BuildDataOutput();
+
+
+                                    _messageReceivedCount++;
+
+                                    LogFile.Network("Message: Count=" + _messageReceivedCount.ToString() + ", Size=" + buffer.Length.ToString() + ", Value=" + message);
+
+                                    if (EventHandlerMessageReceived != null)
+                                    {
+                                        EventHandlerMessageReceived(clientSocket, message);
+                                    }
                                 }
                             }
                         }
@@ -123,50 +198,11 @@ namespace NetduinoPlus.Controler
             }
             catch (SocketException se)
             {
-                LogFile.Exception(se.ToString());
-            }
-        }
-
-        private bool SocketConnected(Socket client)
-        {
-            return !(client.Poll(5000000, SelectMode.SelectRead) & (client.Available == 0));
-        }
-
-        private void RaiseMessageReceivedEvent(String message)
-        {
-            _messageReceivedCount++;
-            LogFile.Network("Message Received " + _messageReceivedCount.ToString() + " : [ " + message + " ]");
-
-            if (message == "EXIT")
-            {
-                //LogFile.Network("Message Sent " + _messageSentCount.ToString() + " : [ " + requestSender.Message + " ]");
-                //_messageSentCount++;
-                //socket.Send(Encoding.UTF8.GetBytes(Message));
-            }
-
-            if (EventHandlerMessageReceived != null)
-            {
-                EventHandlerMessageReceived(message);
-            }
-        }
-
-        private void ShutdownListener()
-        {
-            try
-            {
-                if (_listeningThread != null)
-                {
-                    if (_listeningThread.IsAlive)
-                    {
-                        _listeningThread.Abort();
-                    }
-
-                    _listeningThread = null;
-                }
+                LogFile.Network(se.ToString());
             }
             catch (Exception ex)
             {
-                LogFile.Exception(ex.ToString());
+                LogFile.Network(ex.ToString());
             }
         }
         #endregion
