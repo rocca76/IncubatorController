@@ -241,7 +241,10 @@ namespace NetduinoPlus.Controler
 
 
         #region Constructors
-        public SenderThread() { }
+        public SenderThread() 
+        {
+            //Start();
+        }
         #endregion
 
 
@@ -287,27 +290,31 @@ namespace NetduinoPlus.Controler
         {
             try
             {
+                _clientSocket = new IntegratedSocket("192.168.250.100", 11000);
+                _clientSocket.Connect();
+
                 while (_cancelSender == false)
                 {
                     Stopwatch stopwatch = Stopwatch.StartNew();
 
-                    _manualResetEvent.WaitOne();
-
-                    _clientSocket = new IntegratedSocket("192.168.0.100", 11000);
-                    _clientSocket.Connect();
+                    //_manualResetEvent.WaitOne();
 
                     String stateOutput = "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789<EOF>"; //ProcessControl.GetInstance().BuildStateOutput();
 
                     _clientSocket.Send(stateOutput);
                     _dataSentCount++;
 
-                    _clientSocket.Close();
-                    _manualResetEvent.Reset();
+                   
+                    //_manualResetEvent.Reset();
 
                     stopwatch.Stop();
 
                     LogFile.Network("Message Sent: " + stopwatch.ElapsedMilliseconds.ToString()  + "ms, " + _dataSentCount.ToString() + ", Size: " + stateOutput.Length.ToString() + ", Value: " + stateOutput);
+
+                    Thread.Sleep(500);
                 }
+
+                _clientSocket.Close();
             }
             catch (SocketException se)
             {
