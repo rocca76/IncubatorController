@@ -78,7 +78,7 @@ namespace NetduinoPlus.Controler
 
         public static void Application(string log)
         {
-            //Log(ELogType.Application, log);
+            Log(ELogType.Application, log);
         }
 
         public static void Network(string log)

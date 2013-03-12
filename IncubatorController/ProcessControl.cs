@@ -159,10 +159,6 @@ namespace NetduinoPlus.Controler
 
                 NetworkCommunication.GetInstance().InitializeSender();
             }
-            else if (parts[0] == "EXIT")
-            {
-                //NetworkCommunication.GetInstance().InitializeSender();
-            }
             else if (parts[0] == "TARGET_TEMPERATURE")
             {
                 ProcessControl.GetInstance().TargetTemperature = double.Parse(parts[1]);
@@ -200,7 +196,7 @@ namespace NetduinoPlus.Controler
         {
             ReadTemperature();
             ReadRelativeHumidity();
-            //ReadCO2();
+            ReadCO2();
         }
 
         private void ManageHeatingState()
