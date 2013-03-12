@@ -47,7 +47,7 @@ namespace NetduinoPlus.Controler
             NetworkCommunication.GetInstance().NotifySender();
 
             stopwatch.Stop();
-            LogFile.Network("Process duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");
+            LogFile.Application("Process duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");
           }
           catch (Exception ex)
           {

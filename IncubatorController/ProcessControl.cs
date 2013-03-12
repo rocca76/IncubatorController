@@ -121,7 +121,7 @@ namespace NetduinoPlus.Controler
 
         public void ProcessData()
         {
-            //ReadSensor();
+            ReadSensor();
 
             ManageHeatingState();
             SetOutputPin();
@@ -152,16 +152,16 @@ namespace NetduinoPlus.Controler
         {
             string[] parts = command.Split(' ');
 
-            if (command == "Initialize sender<EOF>")
-            {
-              NetworkCommunication.GetInstance().InitializeSender();
-            }
-            else if (parts[0] == "TIME")
+            if (parts[0] == "TIME")
             {
                 DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
                 Utility.SetLocalTime(presentTime);
 
-                //Start sending data 
+                NetworkCommunication.GetInstance().InitializeSender();
+            }
+            else if (parts[0] == "EXIT")
+            {
+                //NetworkCommunication.GetInstance().InitializeSender();
             }
             else if (parts[0] == "TARGET_TEMPERATURE")
             {
@@ -200,7 +200,7 @@ namespace NetduinoPlus.Controler
         {
             ReadTemperature();
             ReadRelativeHumidity();
-            ReadCO2();
+            //ReadCO2();
         }
 
         private void ManageHeatingState()
