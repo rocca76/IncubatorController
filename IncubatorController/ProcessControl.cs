@@ -6,13 +6,13 @@ using System.Text;
 
 namespace NetduinoPlus.Controler
 {
-    class ProcessControl
+    public sealed class ProcessControl
     {
         public static readonly int CO2_DISABLE = 9999;
 
         #region Private Variables
-        private static ProcessControl _instance = null;
-        private static readonly object LockObject = new object();
+        private static readonly ProcessControl _instance = new ProcessControl();
+        private static readonly object _lockObject = new object();
         private MovingAverage _temperatureAverage = new MovingAverage();
         private MovingAverage _relativeHumidityAverage = new MovingAverage();
 
@@ -33,6 +33,11 @@ namespace NetduinoPlus.Controler
         #endregion
         
         #region Public Properties
+        public static ProcessControl Instance
+        {
+          get { return _instance; }
+        }
+
         public double CurrentTemperature
         {
             get { return _currentTemperature; }
@@ -100,19 +105,6 @@ namespace NetduinoPlus.Controler
         #endregion
 
         #region Public Methods
-        public static ProcessControl GetInstance()
-        {
-            //lock (LockObject)
-            {
-                if (_instance == null)
-                {
-                    _instance = new ProcessControl();
-                }
-
-                return _instance;
-            }
-        }
-
         public void LoadConfiguration()
         {
             ConfigurationManager.Load();
@@ -120,6 +112,8 @@ namespace NetduinoPlus.Controler
 
         public void ProcessData()
         {
+          lock(_lockObject)
+          {
             ReadSensor();
 
             ManageHeatingState();
@@ -128,6 +122,9 @@ namespace NetduinoPlus.Controler
             PumpControl.GetInstance().ManageState();
             VentilationControl.GetInstance().ManageState();
             ActuatorControl.GetInstance().ManageState();
+          }
+
+          NetworkCommunication.Instance.NotifySender();
         }
 
         public void SetActuatorMode(String mode)
@@ -160,34 +157,34 @@ namespace NetduinoPlus.Controler
             }
             else if (parts[0] == "TARGET_TEMPERATURE")
             {
-                ProcessControl.GetInstance().TargetTemperature = double.Parse(parts[1]);
+                ProcessControl.Instance.TargetTemperature = double.Parse(parts[1]);
             }
             else if (parts[0] == "LIMIT_MAX_TEMPERATURE")
             {
-                ProcessControl.GetInstance().LimitMaxTemperature = double.Parse(parts[1]);
+                ProcessControl.Instance.LimitMaxTemperature = double.Parse(parts[1]);
             }
             else if (parts[0] == "TARGET_RELATIVE_HUMIDITY")
             {
-                ProcessControl.GetInstance().TargetRelativeHumidity = double.Parse(parts[1]);
+                ProcessControl.Instance.TargetRelativeHumidity = double.Parse(parts[1]);
             }
             else if (parts[0] == "TARGET_VENTILATION")
             {
                 VentilationControl.GetInstance().FanEnabled = int.Parse(parts[1]);
                 VentilationControl.GetInstance().IntervalTargetMinutes = int.Parse(parts[2]);
                 VentilationControl.GetInstance().DurationTargetSeconds = int.Parse(parts[3]);
-                ProcessControl.GetInstance().TargetCO2 = int.Parse(parts[4]);
+                ProcessControl.Instance.TargetCO2 = int.Parse(parts[4]);
             }
             else if (parts[0] == "ACTUATOR_MODE")
             {
-                ProcessControl.GetInstance().SetActuatorMode(parts[1]);
+                ProcessControl.Instance.SetActuatorMode(parts[1]);
             }
             else if (parts[0] == "ACTUATOR_OPEN")
             {
-                ProcessControl.GetInstance().SetActuatorOpen(int.Parse(parts[1]));
+                ProcessControl.Instance.SetActuatorOpen(int.Parse(parts[1]));
             }
             else if (parts[0] == "ACTUATOR_CLOSE")
             {
-                ProcessControl.GetInstance().SetActuatorClose(int.Parse(parts[1]));
+                ProcessControl.Instance.SetActuatorClose(int.Parse(parts[1]));
             }
         }
 
@@ -326,26 +323,26 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
 
             xmlBuilder.Append("<temperature>");
-            xmlBuilder.Append(ProcessControl.GetInstance().CurrentTemperature.ToString("F2"));
+            xmlBuilder.Append(ProcessControl.Instance.CurrentTemperature.ToString("F2"));
             xmlBuilder.Append("</temperature>");
             xmlBuilder.Append("<targettemperature>");
-            xmlBuilder.Append(ProcessControl.GetInstance().TargetTemperature.ToString("F2"));
+            xmlBuilder.Append(ProcessControl.Instance.TargetTemperature.ToString("F2"));
             xmlBuilder.Append("</targettemperature>");
             xmlBuilder.Append("<limitmaxtemperature>");
-            xmlBuilder.Append(ProcessControl.GetInstance().LimitMaxTemperature.ToString("F2"));
+            xmlBuilder.Append(ProcessControl.Instance.LimitMaxTemperature.ToString("F2"));
             xmlBuilder.Append("</limitmaxtemperature>");
             xmlBuilder.Append("<maxtemperaturereached>");
-            xmlBuilder.Append(ProcessControl.GetInstance().MaxTemperatureLimitReached.ToString());
+            xmlBuilder.Append(ProcessControl.Instance.MaxTemperatureLimitReached.ToString());
             xmlBuilder.Append("</maxtemperaturereached>");
             xmlBuilder.Append("<heatpower>");
-            xmlBuilder.Append(ProcessControl.GetInstance().HeatPower.ToString());
+            xmlBuilder.Append(ProcessControl.Instance.HeatPower.ToString());
             xmlBuilder.Append("</heatpower>");
 
             xmlBuilder.Append("<relativehumidity>");
-            xmlBuilder.Append(ProcessControl.GetInstance().CurrentRelativeHumidity.ToString("F2"));
+            xmlBuilder.Append(ProcessControl.Instance.CurrentRelativeHumidity.ToString("F2"));
             xmlBuilder.Append("</relativehumidity>");
             xmlBuilder.Append("<targetrelativehumidity>");
-            xmlBuilder.Append(ProcessControl.GetInstance().TargetRelativeHumidity.ToString("F2"));
+            xmlBuilder.Append(ProcessControl.Instance.TargetRelativeHumidity.ToString("F2"));
             xmlBuilder.Append("</targetrelativehumidity>");
             xmlBuilder.Append("<pumpstate>");
             xmlBuilder.Append(PumpControl.GetInstance().PumpState.ToString());
@@ -355,10 +352,10 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("</pumpduration>");
 
             xmlBuilder.Append("<co2>");
-            xmlBuilder.Append(ProcessControl.GetInstance().CurrentCO2.ToString());
+            xmlBuilder.Append(ProcessControl.Instance.CurrentCO2.ToString());
             xmlBuilder.Append("</co2>");
             xmlBuilder.Append("<targetco2>");
-            xmlBuilder.Append(ProcessControl.GetInstance().TargetCO2.ToString());
+            xmlBuilder.Append(ProcessControl.Instance.TargetCO2.ToString());
             xmlBuilder.Append("</targetco2>");
 
             xmlBuilder.Append("<trapstate>");

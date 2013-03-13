@@ -5,7 +5,7 @@ using Microsoft.SPOT.IO;
 
 namespace NetduinoPlus.Controler
 {
-    public class LogFile
+    public sealed class LogFile
     {
         private enum ELogType
         {
@@ -16,13 +16,30 @@ namespace NetduinoPlus.Controler
         }
 
         #region Private Variables
-        private static LogFile _instance = null;
+        private static readonly LogFile _instance = new LogFile();
+        private static readonly object _lockObject = new object();
         private static bool _sdCardAvailable = false;
-        private static readonly object LockObject = new object();
         #endregion
 
 
         #region Constructors
+        private LogFile()
+        {
+          DirectoryInfo dirinfo = new DirectoryInfo(@"\SD");
+          if (dirinfo.Exists)
+          {
+            _sdCardAvailable = true;
+
+            Application("SD Detected");
+          }
+          else
+          {
+            Debug.Print("SD Not Detected");
+          }
+
+          RemovableMedia.Insert += new InsertEventHandler(RemovableMedia_Insert);
+          RemovableMedia.Eject += new EjectEventHandler(RemovableMedia_Eject);
+        }
         #endregion
 
 
@@ -34,46 +51,13 @@ namespace NetduinoPlus.Controler
         #endregion
 
 
-        #region Public Static Methods
-        public static LogFile GetInstance()
-        {
-            if (_instance == null)
-            {
-                _instance = new LogFile();
-            }
-
-            return _instance;
-        }
-
-        public void Initialize()
-        {
-            if (_instance == null)
-            {
-                _instance = new LogFile();
-
-                DirectoryInfo dirinfo = new DirectoryInfo(@"\SD");
-                if (dirinfo.Exists)
-                {
-                    _sdCardAvailable = true;
-
-                    Application("SD Detected");
-                }
-                else
-                {
-                    Debug.Print("SD Not Detected");
-                }
-
-                RemovableMedia.Insert += new InsertEventHandler(RemovableMedia_Insert);
-                RemovableMedia.Eject += new EjectEventHandler(RemovableMedia_Eject);
-            }
-        }
-
-        private static void RemovableMedia_Insert(object sender, MediaEventArgs e)
+        #region Public Methods
+        private void RemovableMedia_Insert(object sender, MediaEventArgs e)
         {
             _sdCardAvailable = true;
-            LogFile.Application("SD card inserted.");
+            Application("SD card inserted.");
         }
-        private static void RemovableMedia_Eject(object sender, MediaEventArgs e)
+        private void RemovableMedia_Eject(object sender, MediaEventArgs e)
         {
             _sdCardAvailable = false;
             Debug.Print("SD card ejected.");
@@ -103,35 +87,35 @@ namespace NetduinoPlus.Controler
         {
             try
             {
-                lock (LockObject)
-                {
-                    Debug.Print(log);
+              Debug.Print(log);
 
-                    if (_sdCardAvailable)
+              if (_sdCardAvailable)
+              {
+                  String path = @"SD\";
+
+                  switch (type)
+                  {
+                      case ELogType.Application:
+                          path = @"SD\ApplicationLog.txt";
+                          break;
+                      case ELogType.Network:
+                          path = @"SD\NetworkLog.txt";
+                          break;
+                      case ELogType.Exception:
+                          path = @"SD\Exceptionlog.txt";
+                          break;
+                      case ELogType.Error:
+                          path = @"SD\Errorlog.txt";
+                          break;
+                  }
+
+                  lock (_lockObject)
+                  {
+                    using (StreamWriter streamWriter = new StreamWriter(path, true))
                     {
-                        String path = @"SD\";
-
-                        switch (type)
-                        {
-                            case ELogType.Application:
-                                path = @"SD\ApplicationLog.txt";
-                                break;
-                            case ELogType.Network:
-                                path = @"SD\NetworkLog.txt";
-                                break;
-                            case ELogType.Exception:
-                                path = @"SD\Exceptionlog.txt";
-                                break;
-                            case ELogType.Error:
-                                path = @"SD\Errorlog.txt";
-                                break;
-                        }
-
-                        using (StreamWriter streamWriter = new StreamWriter(path, true))
-                        {
-                            streamWriter.WriteLine(DateTime.Now.ToString() + ": " + log.Trim());
-                        }
+                      streamWriter.WriteLine(DateTime.Now.ToString() + ": " + log.Trim());
                     }
+                  }
                 }
             }
             catch (Exception ex)

@@ -9,7 +9,6 @@ namespace NetduinoPlus.Controler
     public class Program
     {
         #region Private Variables
-        private static Timer _processTimer = null;
         #endregion
 
         #region Public Properties
@@ -20,28 +19,24 @@ namespace NetduinoPlus.Controler
 
         public static void Main()
         {
-            new Program().Run();
+            new Timer(new TimerCallback(OnProcessTimer), null, 0, 1000);
             Thread.Sleep(Timeout.Infinite);
         }
 
         private void Run()
         {
-            LogFile.GetInstance().Initialize();
-            ProcessControl.GetInstance().LoadConfiguration();
-
-            _processTimer = new Timer(new TimerCallback(OnProcessTimer), null, 0, 1000);
+            //LogFile.GetInstance().Initialize();
+            //ProcessControl.Instance.LoadConfiguration();
         }
 
-        private void OnProcessTimer(object state)
+        private static void OnProcessTimer(object state)
         {
           try
           {
             Stopwatch stopwatch = Stopwatch.StartNew();
-
-            ProcessControl.GetInstance().ProcessData();
-            NetworkCommunication.Instance.NotifySender();
-
+            //ProcessControl.Instance.ProcessData();            }
             stopwatch.Stop();
+
             LogFile.Application("Process duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");
           }
           catch (Exception ex)

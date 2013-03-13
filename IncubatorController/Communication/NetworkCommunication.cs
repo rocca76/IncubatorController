@@ -11,10 +11,10 @@ namespace NetduinoPlus.Controler
 {
     public delegate void ReceivedEventHandler(String command);
 
-    class NetworkCommunication
+    public sealed class NetworkCommunication
     {
         #region Private Variables
-        static readonly NetworkCommunication _instance = new NetworkCommunication();
+        private static readonly NetworkCommunication _instance = new NetworkCommunication();
         private ListenerThread _listenerThread = null;
         private SenderThread _senderThread = null;
         private String _remoteAddress = "";

@@ -113,10 +113,10 @@ namespace NetduinoPlus.Controler
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
-            if (ProcessControl.GetInstance().CurrentCO2 > 0 && ProcessControl.GetInstance().TargetCO2 != ProcessControl.CO2_DISABLE)
+            if (ProcessControl.Instance.CurrentCO2 > 0 && ProcessControl.Instance.TargetCO2 != ProcessControl.CO2_DISABLE)
             {
                 //Sensor control
-                if (ProcessControl.GetInstance().CurrentCO2 > ProcessControl.GetInstance().TargetCO2)
+                if (ProcessControl.Instance.CurrentCO2 > ProcessControl.Instance.TargetCO2)
                 {
                     if (_fanEnabled == 1)
                     {
@@ -174,13 +174,13 @@ namespace NetduinoPlus.Controler
 
             bool openTrapForced = false;
 
-            if (ProcessControl.GetInstance().MaxTemperatureLimitReached == 1)
+            if (ProcessControl.Instance.MaxTemperatureLimitReached == 1)
             {
                 openTrapForced = true;
             }
 
-            double limitMax = ProcessControl.GetInstance().TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA;
-            if ( (ProcessControl.GetInstance().CurrentRelativeHumidity > limitMax) && ProcessControl.GetInstance().TargetRelativeHumidity > 0 )
+            double limitMax = ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA;
+            if ( (ProcessControl.Instance.CurrentRelativeHumidity > limitMax) && ProcessControl.Instance.TargetRelativeHumidity > 0 )
             {
                 openTrapForced = true;
             }
@@ -211,8 +211,8 @@ namespace NetduinoPlus.Controler
 
             //////// Protection by fan
 
-            limitMax = ProcessControl.GetInstance().TargetRelativeHumidity + RELATIVE_HUMIDITY_FAN_DELTA;
-            if ( (ProcessControl.GetInstance().CurrentRelativeHumidity > limitMax) && ProcessControl.GetInstance().TargetRelativeHumidity > 0 )
+            limitMax = ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_FAN_DELTA;
+            if ( (ProcessControl.Instance.CurrentRelativeHumidity > limitMax) && ProcessControl.Instance.TargetRelativeHumidity > 0 )
             {
                 _fanForced = true;
             }

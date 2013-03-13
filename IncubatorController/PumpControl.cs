@@ -63,11 +63,11 @@ namespace NetduinoPlus.Controler
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
-            if (ProcessControl.GetInstance().CurrentRelativeHumidity > 0)
+            if (ProcessControl.Instance.CurrentRelativeHumidity > 0)
             {
-              double temperatureDelta = Abs( ProcessControl.GetInstance().TargetTemperature - ProcessControl.GetInstance().CurrentTemperature );
+              double temperatureDelta = Abs( ProcessControl.Instance.TargetTemperature - ProcessControl.Instance.CurrentTemperature );
 
-              if ((ProcessControl.GetInstance().CurrentRelativeHumidity < ProcessControl.GetInstance().TargetRelativeHumidity) && (temperatureDelta <= 1))
+              if ((ProcessControl.Instance.CurrentRelativeHumidity < ProcessControl.Instance.TargetRelativeHumidity) && (temperatureDelta <= 1))
               {
                 if (_duration == TimeSpan.Zero)
                 {

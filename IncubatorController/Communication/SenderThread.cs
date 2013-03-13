@@ -82,7 +82,7 @@ namespace NetduinoPlus.Controler
 
           _manualResetEvent.WaitOne();
 
-          String stateOutput = ProcessControl.GetInstance().BuildStateOutput();
+          String stateOutput = ProcessControl.Instance.BuildStateOutput();
 
           _clientSocket.Send(stateOutput);
           _dataSentCount++;
