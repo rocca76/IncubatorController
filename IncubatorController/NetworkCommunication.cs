@@ -14,7 +14,7 @@ namespace NetduinoPlus.Controler
     class NetworkCommunication
     {
         #region Private Variables
-        private static NetworkCommunication _instance = null;
+        static readonly NetworkCommunication _instance = new NetworkCommunication();
         private ListenerThread _listenerThread = null;
         private SenderThread _senderThread = null;
         private String _remoteAddress = "";
@@ -22,11 +22,25 @@ namespace NetduinoPlus.Controler
 
 
         #region Constructors
-        private NetworkCommunication() 
+        private NetworkCommunication()
         {
-            NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
-            _listenerThread = new ListenerThread();
-            _senderThread = new SenderThread();
+            try
+            {
+                NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
+
+                _listenerThread = new ListenerThread();
+                _listenerThread.Start();
+
+                _senderThread = new SenderThread();
+            }
+            catch (SocketException se)
+            {
+                LogFile.Network(se.ToString());
+            }
+            catch (Exception ex)
+            {
+                LogFile.Network(ex.ToString());
+            }
         }
         #endregion
 
@@ -36,6 +50,11 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Properties
+        public static NetworkCommunication Instance
+        {
+            get { return _instance; }
+        }
+
         public String RemoteAddress
         {
             get { return _remoteAddress; }
@@ -45,25 +64,9 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Static Methods
-        public static void InitInstance()
+        public void StartSender()
         {
-            if (_instance == null)
-            {
-                _instance = new NetworkCommunication();
-            }
-        }
-
-        public static NetworkCommunication GetInstance()
-        {
-          return _instance;
-        }
-
-        public void InitializeSender()
-        {
-          if (_senderThread != null)
-          {
             _senderThread.Start();
-          }
         }
 
         public void NotifySender()
@@ -111,16 +114,13 @@ namespace NetduinoPlus.Controler
     class ListenerThread
     {
         #region Private Variables
-        private Thread _currentThread = null;
+        private Thread _listenerThread = null;
         private int _commandReceivedCount = 0;
+        private Socket _socketListener = null;
         #endregion
 
 
         #region Constructors
-        public ListenerThread() 
-        {
-            Start();
-        }
         #endregion
 
 
@@ -136,90 +136,69 @@ namespace NetduinoPlus.Controler
         #region Public Methods
         public void Start()
         {
-            LogFile.Network("Starting listener thread.");
+            NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()[0];
+
+            do
+            {
+                LogFile.Network("Awaiting IP Address");
+                Thread.Sleep(1000);
+            }
+            while (networkInterface.IPAddress == "0.0.0.0");
+
+            LogFile.Network("IP Address Granted: " + networkInterface.IPAddress);
+
+            _socketListener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _socketListener.Bind(new IPEndPoint(IPAddress.Any, 11000));
+            _socketListener.Listen(1);
 
             _commandReceivedCount = 0;
 
-            _currentThread = new Thread(ListeningThread);
-            _currentThread.Start();
+            _listenerThread = new Thread(WaitForConnection);
+            _listenerThread.Start();
         }
 
         public void Stop()
         {
-            LogFile.Network("Stopping listener thread.");
-
-            if (_currentThread != null)
+            if (_socketListener != null)
             {
-                if (_currentThread.IsAlive)
+                using (_socketListener)
                 {
-                    _currentThread.Abort();
+                    _socketListener.Close();
                 }
 
-                _currentThread = null;
+                _socketListener = null; ////?????
+            }
+
+            if (_listenerThread != null)
+            {
+                if (_listenerThread.IsAlive)
+                {
+                    _listenerThread.Abort();
+                }
+
+                _listenerThread = null;
             }
         }
         #endregion
 
 
         #region Private Methods
-        private bool SocketConnected(Socket clientSocket)
-        {
-            return !(clientSocket.Poll(5000000, SelectMode.SelectRead) & (clientSocket.Available == 0));
-        }
-
-        private void ListeningThread()
+        private void WaitForConnection()
         {
             try
             {
-                LogFile.Network("Waiting for valid IP address...");
-
-                NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()[0];
-
-                while (networkInterface.IPAddress.ToString() == "0.0.0.0")
+                while (true)
                 {
-                    Thread.Sleep(1000);
-                }
+                    LogFile.Network("Waiting for connection...");
 
-                LogFile.Network("IP address: " + networkInterface.IPAddress.ToString());
+                    Socket clientSocket = _socketListener.Accept();
 
-                using (Socket socketListener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-                {
-                    socketListener.Bind(new IPEndPoint(IPAddress.Any, 11000));
-                    socketListener.Listen(1);
+                    string[] remoteEndPoint = clientSocket.RemoteEndPoint.ToString().Split(':');
+                    NetworkCommunication.Instance.RemoteAddress = remoteEndPoint[0];
 
-                    while (true)
-                    {
-                        LogFile.Network("Listening for connection...");
+                    LogFile.Network("Connection Accepted from " + NetworkCommunication.Instance.RemoteAddress);
 
-                        using (Socket clientSocket = socketListener.Accept())
-                        {
-                            string[] remoteEndPoint = clientSocket.RemoteEndPoint.ToString().Split(':');
-                            NetworkCommunication.GetInstance().RemoteAddress = remoteEndPoint[0];
-
-                            LogFile.Network("Connection Accept from " + NetworkCommunication.GetInstance().RemoteAddress);
-
-                            if (SocketConnected(clientSocket))
-                            {
-                                byte[] buffer = new byte[clientSocket.Available];
-
-                                clientSocket.Receive(buffer);
-
-                                if (buffer.Length > 0)
-                                {
-                                    _commandReceivedCount++;
-
-                                    String command = new String(Encoding.UTF8.GetChars(buffer));
-
-                                    LogFile.Network("Message Received: " + _commandReceivedCount.ToString() + ", Size: " + buffer.Length.ToString() + ", Value: " + command);
-
-                                    if (CommandReceived != null)
-                                    {
-                                        CommandReceived(command);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    ProcessClientRequest(clientSocket);
                 }
             }
             catch (SocketException se)
@@ -231,24 +210,59 @@ namespace NetduinoPlus.Controler
                 LogFile.Network(ex.ToString());
             }
         }
+
+        private void ProcessClientRequest(Socket clientSocket)
+        {
+            using (clientSocket)
+            {
+                if (SocketConnected(clientSocket))
+                {
+                    byte[] buffer = new byte[clientSocket.Available];
+
+                    clientSocket.Receive(buffer);
+
+                    if (buffer.Length > 0)
+                    {
+                        _commandReceivedCount++;
+
+                        String command = new String(Encoding.UTF8.GetChars(buffer));
+
+                        LogFile.Network("Message Received: " + _commandReceivedCount.ToString() + ", Size: " + buffer.Length.ToString() + ", Value: " + command);
+
+                        if (CommandReceived != null)
+                        {
+                            CommandReceived(command);
+                        }
+                    }
+
+                    clientSocket.Close();
+                }
+            }
+        }
+
+        private bool SocketConnected(Socket clientSocket)
+        {
+            return !(clientSocket.Poll(5000000, SelectMode.SelectRead) & (clientSocket.Available == 0));
+        }
         #endregion
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
 
     class SenderThread
     {
         #region Private Variables
-        private Thread _currentThread = null;
         private int _dataSentCount = 0;
+        private Thread _currentThread = null;
         private static ManualResetEvent _manualResetEvent = new ManualResetEvent(false);
         private SimpleSocket _clientSocket = null;
-
         private bool _cancelSender = false;
         #endregion
 
 
         #region Constructors
-        public SenderThread() { }
         #endregion
 
 
@@ -301,7 +315,7 @@ namespace NetduinoPlus.Controler
         {
             try
             {
-                String remoteAddress = NetworkCommunication.GetInstance().RemoteAddress;
+                String remoteAddress = NetworkCommunication.Instance.RemoteAddress;
                 LogFile.Network("Connecting to " + remoteAddress.ToString());
 
                 _clientSocket = new IntegratedSocket(remoteAddress, 11000);

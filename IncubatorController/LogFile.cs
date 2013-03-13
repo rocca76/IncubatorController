@@ -23,7 +23,6 @@ namespace NetduinoPlus.Controler
 
 
         #region Constructors
-        private LogFile() { }
         #endregion
 
 
@@ -32,15 +31,21 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Properties
-        public bool SDCardAvailable
-        {
-            get { return _sdCardAvailable; }
-        }
         #endregion
 
 
         #region Public Static Methods
-        public static void InitInstance()
+        public static LogFile GetInstance()
+        {
+            if (_instance == null)
+            {
+                _instance = new LogFile();
+            }
+
+            return _instance;
+        }
+
+        public void Initialize()
         {
             if (_instance == null)
             {

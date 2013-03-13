@@ -26,9 +26,8 @@ namespace NetduinoPlus.Controler
 
         private void Run()
         {
-            LogFile.InitInstance();
+            LogFile.GetInstance().Initialize();
             ProcessControl.GetInstance().LoadConfiguration();
-            NetworkCommunication.InitInstance();
 
             _processTimer = new Timer(new TimerCallback(OnProcessTimer), null, 0, 1000);
         }
@@ -40,7 +39,7 @@ namespace NetduinoPlus.Controler
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             ProcessControl.GetInstance().ProcessData();
-            NetworkCommunication.GetInstance().NotifySender();
+            NetworkCommunication.Instance.NotifySender();
 
             stopwatch.Stop();
             LogFile.Application("Process duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");

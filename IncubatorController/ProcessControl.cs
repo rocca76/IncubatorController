@@ -156,7 +156,7 @@ namespace NetduinoPlus.Controler
                 DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
                 Utility.SetLocalTime(presentTime);
 
-                NetworkCommunication.GetInstance().InitializeSender();
+                NetworkCommunication.Instance.StartSender();
             }
             else if (parts[0] == "TARGET_TEMPERATURE")
             {
