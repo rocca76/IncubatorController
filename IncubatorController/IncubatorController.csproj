@@ -34,8 +34,10 @@
   <Import Project="$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets" />
   <ItemGroup>
     <Compile Include="HeatingControl.cs" />
+    <Compile Include="Communication\ListenerThread.cs" />
     <Compile Include="MovingAverage.cs" />
     <Compile Include="PumpControl.cs" />
+    <Compile Include="Communication\SenderThread.cs" />
     <Compile Include="Stopwatch.cs" />
     <Compile Include="VentilationControl.cs" />
     <Compile Include="ConfigurationManager.cs" />
@@ -43,7 +45,7 @@
     <Compile Include="K30Sensor.cs" />
     <Compile Include="ProcessControl.cs" />
     <Compile Include="SHT11\ISHT11_IOProvider.cs" />
-    <Compile Include="NetworkCommunication.cs" />
+    <Compile Include="Communication\NetworkCommunication.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="SHT11\SHT11Sensor.cs" />
