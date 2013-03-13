@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Threading;
-using Microsoft.SPOT.Hardware;
-using SecretLabs.NETMF.Hardware.NetduinoPlus;
-using System.Text;
-using System.Net.Sockets;
 using System.Diagnostics;
 
 //Smart Personal Object Technology

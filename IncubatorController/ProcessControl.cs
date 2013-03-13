@@ -2,7 +2,6 @@ using System;
 using Sensirion.SHT11;
 using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
-using System.Net.Sockets;
 using System.Text;
 
 namespace NetduinoPlus.Controler

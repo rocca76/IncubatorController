@@ -1,6 +1,4 @@
 using System;
-using Microsoft.SPOT;
-using System.Threading;
 using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 

@@ -2,7 +2,6 @@ using System.Threading;
 using System.Net.Sockets;
 using System.Net;
 using Microsoft.SPOT.Net.NetworkInformation;
-using Microsoft.SPOT;
 using System;
 using System.Text;
 using System.Diagnostics;

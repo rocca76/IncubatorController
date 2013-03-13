@@ -33,6 +33,7 @@
   </PropertyGroup>
   <Import Project="$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets" />
   <ItemGroup>
+    <Compile Include="HeatingControl.cs" />
     <Compile Include="MovingAverage.cs" />
     <Compile Include="PumpControl.cs" />
     <Compile Include="Stopwatch.cs" />

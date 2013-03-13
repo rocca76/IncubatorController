@@ -1,9 +1,7 @@
 using System;
 using Microsoft.SPOT;
-using System.Threading;
 using System.IO;
 using Microsoft.SPOT.IO;
-using Microsoft.SPOT.Hardware;
 
 namespace NetduinoPlus.Controler
 {
