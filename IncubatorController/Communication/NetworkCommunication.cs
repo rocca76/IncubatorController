@@ -28,10 +28,10 @@ namespace NetduinoPlus.Controler
             {
                 NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
 
-                _listenerThread = new ListenerThread();
-                _listenerThread.Start();
+                //_listenerThread = new ListenerThread();
+                //_listenerThread.Start();
 
-                _senderThread = new SenderThread();
+                //_senderThread = new SenderThread();
             }
             catch (SocketException se)
             {

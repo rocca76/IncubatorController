@@ -23,21 +23,15 @@ namespace NetduinoPlus.Controler
             Thread.Sleep(Timeout.Infinite);
         }
 
-        private void Run()
-        {
-            //LogFile.GetInstance().Initialize();
-            //ProcessControl.Instance.LoadConfiguration();
-        }
-
         private static void OnProcessTimer(object state)
         {
           try
           {
             Stopwatch stopwatch = Stopwatch.StartNew();
-            //ProcessControl.Instance.ProcessData();            }
+            //ProcessControl.Instance.ProcessData();
             stopwatch.Stop();
 
-            LogFile.Application("Process duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");
+            LogFile.Application("Process data duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");
           }
           catch (Exception ex)
           {

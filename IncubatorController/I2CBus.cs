@@ -5,25 +5,9 @@ namespace NetduinoPlus.Controler
 {
     public class I2CBus : IDisposable
     {
-        private static I2CBus _instance = null;
-        private static readonly object LockObject = new object();
-
-        public static I2CBus GetInstance()
-        {
-            lock (LockObject)
-            {
-                if (_instance == null)
-                {
-                    _instance = new I2CBus();
-                }
-                return _instance;
-            }
-        }
-
-
         private I2CDevice _slaveDevice;
 
-        private I2CBus()
+        protected I2CBus()
         {
             this._slaveDevice = new I2CDevice(new I2CDevice.Configuration(0, 0));
         }

@@ -253,7 +253,7 @@ namespace NetduinoPlus.Controler
         private void ReadCO2()
         {
             int co2Data = 0;
-            K30Sensor.ECO2Result result = K30Sensor.GetInstance().ReadCO2(ref co2Data);
+            K30Sensor.ECO2Result result = K30Sensor.Instance.ReadCO2(ref co2Data);
             LogFile.Application("CO2: " + co2Data.ToString());
 
             if (result == K30Sensor.ECO2Result.ValidResult)

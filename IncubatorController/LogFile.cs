@@ -30,11 +30,11 @@ namespace NetduinoPlus.Controler
           {
             _sdCardAvailable = true;
 
-            Application("SD Detected");
+            Application("SD card detected.");
           }
           else
           {
-            Debug.Print("SD Not Detected");
+            Debug.Print("SD card not detected.");
           }
 
           RemovableMedia.Insert += new InsertEventHandler(RemovableMedia_Insert);

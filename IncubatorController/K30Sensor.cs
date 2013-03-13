@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace NetduinoPlus.Controler
 {
-    class K30Sensor
+    public sealed class K30Sensor : I2CBus
     {
         public enum ECO2Result
         {
@@ -17,8 +17,7 @@ namespace NetduinoPlus.Controler
         }
 
         #region Private Variables
-        private static K30Sensor _instance = null;
-        private static readonly object LockObject = new object();
+        private static readonly K30Sensor _instance = new K30Sensor();
         #endregion
 
 
@@ -32,22 +31,14 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Properties
+        public static K30Sensor Instance
+        {
+            get { return _instance; }
+        }
         #endregion
 
 
-        #region Public Static Methods
-        public static K30Sensor GetInstance()
-        {
-            lock (LockObject)
-            {
-                if (_instance == null)
-                {
-                    _instance = new K30Sensor();
-                }
-
-                return _instance;
-            }
-        }
+        #region Public Methods
 
         public ECO2Result ReadCO2(ref int co2Data)
         {
@@ -56,14 +47,14 @@ namespace NetduinoPlus.Controler
           I2CDevice.Configuration slaveConfig = new I2CDevice.Configuration(0x7F, 100);
 
           byte[] dataWrite = new byte[4] { 0x22, 0x00, 0x08, 0x2A };
-          int transferred = I2CBus.GetInstance().Write(slaveConfig, dataWrite, 500);
+          int transferred = Write(slaveConfig, dataWrite, 500);
 
           if (transferred > 0)
           {
               Thread.Sleep(10);
 
               byte[] dataRead = new byte[4] { 0x00, 0x00, 0x00, 0x00 };
-              transferred = I2CBus.GetInstance().Read(slaveConfig, dataRead, 500);
+              transferred = Read(slaveConfig, dataRead, 500);
 
               if (transferred > 0)
               {
