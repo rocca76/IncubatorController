@@ -2,7 +2,7 @@ using System.Collections;
 
 namespace NetduinoPlus.Controler
 {
-    class MovingAverage
+    public sealed class MovingAverage
     {
         public int Period = 5;
         private Queue Values = new Queue();

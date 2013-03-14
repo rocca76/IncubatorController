@@ -1,7 +1,8 @@
+using System;
 
-namespace System.Diagnostics
+namespace NetduinoPlus.Controler
 {
-    class Stopwatch
+    public sealed class Stopwatch
     {
         private long m_startTicks = 0;
         private long m_stopTicks = 0;
@@ -16,9 +17,7 @@ namespace System.Diagnostics
             return stopwatch;
         }
 
-        private Stopwatch()
-        {
-        }
+        private Stopwatch() {}
 
         public void Reset()
         {
@@ -30,9 +29,14 @@ namespace System.Diagnostics
         public void Start()
         {
             if (m_startTicks != 0 && m_stopTicks != 0)
+            {
                 m_startTicks = Microsoft.SPOT.Hardware.Utility.GetMachineTime().Ticks - (m_stopTicks - m_startTicks); // resume existing timer
+            }
             else
+            {
                 m_startTicks = Microsoft.SPOT.Hardware.Utility.GetMachineTime().Ticks; // start new timer
+            }
+
             m_isRunning = true;
         }
 
@@ -47,11 +51,17 @@ namespace System.Diagnostics
             get
             {
                 if (m_startTicks != 0 && m_isRunning)
+                {
                     return (Microsoft.SPOT.Hardware.Utility.GetMachineTime().Ticks - m_startTicks) / m_ticksPerMillisecond;
+                }
                 else if (m_startTicks != 0 && !m_isRunning)
+                {
                     return (m_stopTicks - m_startTicks) / m_ticksPerMillisecond;
+                }
                 else
+                {
                     throw new InvalidOperationException();
+                }
             }
         }
     }

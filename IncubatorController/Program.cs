@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using System.Diagnostics;
 
 //Smart Personal Object Technology
 
