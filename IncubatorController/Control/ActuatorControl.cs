@@ -4,18 +4,17 @@ using SecretLabs.NETMF.Hardware.NetduinoPlus;
 
 namespace NetduinoPlus.Controler
 {
-    class ActuatorControl
+    public sealed class ActuatorControl
     {
-        const int ACTUARTOR_DELAY = 12; // 12 seconds
-        const int TILT_PERIOD = 7200;   // seconds (2hr)
+        private const int ACTUARTOR_DELAY = 12; // 12 seconds
+        private const int TILT_PERIOD = 7200;   // seconds (2hr)
 
+        private static readonly ActuatorControl _instance = new ActuatorControl();
         private bool _autoModeReady = false;
         private bool _autoModeInitializing = false;
         private TimeSpan _duration = TimeSpan.Zero;
         private ActuatorMode _actuatorMode = ActuatorMode.Manual;
         private ActuatorState _actuatorState = ActuatorState.Unknown;
-        private static ActuatorControl _instance = null;
-        private static readonly object LockObject = new object();
 
         private OutputPort outOpen = new OutputPort(Pins.GPIO_PIN_D7, false);
         private OutputPort outClose = new OutputPort(Pins.GPIO_PIN_D8, false);
@@ -38,6 +37,11 @@ namespace NetduinoPlus.Controler
         }
 
         #region Public Properties
+        public static ActuatorControl Instance
+        {
+            get { return _instance; }
+        }
+
         public ActuatorControl.ActuatorMode Mode
         {
             get { return _actuatorMode; }
@@ -53,19 +57,6 @@ namespace NetduinoPlus.Controler
             get { return _duration; }
         }
         #endregion
-
-        public static ActuatorControl GetInstance()
-        {
-            lock (LockObject)
-            {
-                if (_instance == null)
-                {
-                    _instance = new ActuatorControl();
-                }
-
-                return _instance;    
-            }        
-        }
 
         public void Open(int open)
         {

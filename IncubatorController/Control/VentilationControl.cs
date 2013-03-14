@@ -4,7 +4,7 @@ using SecretLabs.NETMF.Hardware.NetduinoPlus;
 
 namespace NetduinoPlus.Controler
 {
-    class VentilationControl
+    public sealed class VentilationControl
     {
         const double RELATIVE_HUMIDITY_TRAP_DELTA = 3.0;
         const double RELATIVE_HUMIDITY_FAN_DELTA = 10.0;
@@ -28,8 +28,7 @@ namespace NetduinoPlus.Controler
         }
 
         #region Private Variables
-        private static VentilationControl _instance = null;
-        private static readonly object LockObject = new object();
+        private static VentilationControl _instance = new VentilationControl();
         private TimeSpan _duration = TimeSpan.Zero;
         private VentilationState _ventilationState = VentilationState.Stopped;
         private FanStateEnum _fanState = FanStateEnum.Stopped;
@@ -47,6 +46,11 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Properties
+        public static VentilationControl Instance
+        {
+            get { return _instance; }
+        }
+
         public VentilationControl.FanStateEnum FanState
         {
             get { return _fanState; }
@@ -93,19 +97,6 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Methods
-        public static VentilationControl GetInstance()
-        {
-            lock (LockObject)
-            {
-                if (_instance == null)
-                {
-                    _instance = new VentilationControl();
-                }
-
-                return _instance;
-            }
-        }
-
         public void ManageState()
         {
             if (_duration > TimeSpan.Zero)

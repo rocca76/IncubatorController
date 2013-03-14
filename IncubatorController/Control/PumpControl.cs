@@ -4,7 +4,7 @@ using SecretLabs.NETMF.Hardware.NetduinoPlus;
 
 namespace NetduinoPlus.Controler
 {
-    class PumpControl
+    public sealed class PumpControl
     {
         const int RUNING_DURATION = 1;   // seconds
         const int WAITING_DURATION = 600; // 10 minutes
@@ -16,8 +16,7 @@ namespace NetduinoPlus.Controler
         }
 
         #region Private Variables
-        private static PumpControl _instance = null;
-        private static readonly object LockObject = new object();
+        private static PumpControl _instance = new PumpControl();
         private TimeSpan _duration = TimeSpan.Zero;
         private DateTime _lastActivation;
         private PumpStateEnum _pumpState = PumpStateEnum.Stopped;
@@ -25,6 +24,11 @@ namespace NetduinoPlus.Controler
         #endregion
 
         #region Public Properties
+        public static PumpControl Instance
+        {
+            get { return _instance; }
+        }
+
         public PumpControl.PumpStateEnum PumpState
         {
             get { return _pumpState; }
@@ -42,19 +46,6 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Methods
-        public static PumpControl GetInstance()
-        {
-            lock (LockObject)
-            {
-                if (_instance == null)
-                {
-                    _instance = new PumpControl();
-                }
-
-                return _instance;
-            }
-        }
-
         public void ManageState()
         {
             if (_duration > TimeSpan.Zero)
