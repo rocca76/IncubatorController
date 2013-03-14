@@ -19,8 +19,10 @@ namespace NetduinoPlus.Controler
 
         public static void Main()
         {
-            _processTimer = new Timer(new TimerCallback(OnProcessTimer), null, 0, 1000);
-            Thread.Sleep(Timeout.Infinite);
+          LogFile.DetectSDCardDirectory(@"\SD");
+          NetworkCommunication.Instance.StartListener();
+          _processTimer = new Timer(new TimerCallback(OnProcessTimer), null, 0, 1000);
+          Thread.Sleep(Timeout.Infinite);
         }
 
         private static void OnProcessTimer(object state)
@@ -28,7 +30,7 @@ namespace NetduinoPlus.Controler
           try
           {
             Stopwatch stopwatch = Stopwatch.StartNew();
-            ProcessControl.Instance.ProcessData();
+            //ProcessControl.Instance.ProcessData();
             stopwatch.Stop();
 
             LogFile.Application("Process data duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");

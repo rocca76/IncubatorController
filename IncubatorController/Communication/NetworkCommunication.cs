@@ -17,28 +17,14 @@ namespace NetduinoPlus.Controler
         private ListenerThread _listenerThread = null;
         private SenderThread _senderThread = null;
         private String _remoteAddress = "";
-        private bool _networkIsAvailable = true;
+        private static bool _networkIsAvailable = false;
         #endregion
 
 
         #region Constructors
         private NetworkCommunication()
         {
-            try
-            {
-                NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
-
-                _listenerThread = new ListenerThread();
-                _listenerThread.Start();
-            }
-            catch (SocketException se)
-            {
-                LogFile.Network(se.ToString());
-            }
-            catch (Exception ex)
-            {
-                LogFile.Network(ex.ToString());
-            }
+          NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
         }
         #endregion
 
@@ -74,6 +60,12 @@ namespace NetduinoPlus.Controler
             _senderThread.Start();
         }
 
+        public void StartListener()
+        {
+          _listenerThread = new ListenerThread();
+          _listenerThread.Start();
+        }
+
         public void NotifySenderThread()
         {
             if (_senderThread != null)
@@ -101,7 +93,11 @@ namespace NetduinoPlus.Controler
                 {
                     LogFile.Network("Network Unavailable.");
 
-                    _senderThread.Stop();
+                    if (_senderThread != null)
+                    {
+                      _senderThread.Stop();
+                    }
+
                     _listenerThread.Stop();
                 }   
             }

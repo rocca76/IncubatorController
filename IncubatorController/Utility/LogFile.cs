@@ -25,29 +25,6 @@ namespace NetduinoPlus.Controler
         #region Constructors
         private LogFile()
         {
-            try
-            {
-                DirectoryInfo dirinfo = new DirectoryInfo(@"\SD");
-                if (dirinfo.Exists)
-                {
-                    _sdCardAvailable = true;
-
-                    Application("SD card detected.");
-                }
-                else
-                {
-                    Debug.Print("SD card not detected.");
-                }
-            }
-            catch (IOException ioex)
-            {
-                LogFile.Network(ioex.ToString());
-            }
-            catch (Exception ex)
-            {
-                LogFile.Network(ex.ToString());
-            }
-
             RemovableMedia.Insert += new InsertEventHandler(RemovableMedia_Insert);
             RemovableMedia.Eject += new EjectEventHandler(RemovableMedia_Eject);
         }
@@ -66,7 +43,7 @@ namespace NetduinoPlus.Controler
         private void RemovableMedia_Insert(object sender, MediaEventArgs e)
         {
             _sdCardAvailable = true;
-            Application("SD card inserted.");
+            Application("SD card detected.");
         }
         private void RemovableMedia_Eject(object sender, MediaEventArgs e)
         {
@@ -74,9 +51,25 @@ namespace NetduinoPlus.Controler
             Debug.Print("SD card ejected.");
         }
 
+        public static void DetectSDCardDirectory(String path)
+        {
+            try
+            {
+                DirectoryInfo dirinfo = new DirectoryInfo(path);
+                if (dirinfo.Exists)
+                {
+                    _sdCardAvailable = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogFile.Exception(ex.ToString());
+            }
+        }
+
         public static void Application(string log)
         {
-            //Log(ELogType.Application, log);
+            Log(ELogType.Application, log);
         }
 
         public static void Network(string log)

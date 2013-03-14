@@ -33,27 +33,59 @@ namespace NetduinoPlus.Controler
     #region Public Methods
     public void Start()
     {
-      NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()[0];
-
-      do
+      try
       {
-        LogFile.Network("Awaiting IP Address");
-        Thread.Sleep(1000);
+        NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()[0];
+
+        if (networkInterface.IsDhcpEnabled)
+        {
+          do
+          {
+            LogFile.Network("Awaiting IP Address");
+            Thread.Sleep(1000);
+          }
+          while (networkInterface.IPAddress == "0.0.0.0");
+        }
+
+        LogFile.Network("Local IP Address: " + networkInterface.IPAddress);
+
+        if (NetworkCommunication.Instance.NetworkIsAvailable == false)
+        {
+          String clientAddress = "192.168.0.100";
+          LogFile.Network("Ping Address: " + clientAddress);
+          NetworkCommunication.Instance.NetworkIsAvailable = Ping.PingHost(clientAddress);
+        }
+
+        _socketListener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        _socketListener.Bind(new IPEndPoint(IPAddress.Any, 11000));
+        _socketListener.Listen(1);
+
+        _commandReceivedCount = 0;
+
+        _listenerThread = new Thread(WaitForConnection);
+        _listenerThread.Start();
       }
-      while (networkInterface.IPAddress == "0.0.0.0");
-
-      LogFile.Network("IP Address Granted: " + networkInterface.IPAddress);
-
-      bool ping = Ping.PingHost("192.168.0.100");
-
-      _socketListener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-      _socketListener.Bind(new IPEndPoint(IPAddress.Any, 11000));
-      _socketListener.Listen(1);
-
-      _commandReceivedCount = 0;
-
-      _listenerThread = new Thread(WaitForConnection);
-      _listenerThread.Start();
+      catch (SocketException se)
+      {
+        if (se.ErrorCode == 10050)
+        {
+          NetworkCommunication.Instance.NetworkIsAvailable = false;
+          LogFile.Network("Network is down.");
+        }
+        else if (se.ErrorCode == 10060)
+        {
+          NetworkCommunication.Instance.NetworkIsAvailable = false;
+          LogFile.Network("Connection timed out.");
+        }
+        else
+        {
+          LogFile.Network("SocketException Error Code: " + se.ErrorCode.ToString());            
+        }
+      }
+      catch (Exception ex)
+      {
+        LogFile.Exception(ex.ToString());
+      }
     }
 
     public void Stop()

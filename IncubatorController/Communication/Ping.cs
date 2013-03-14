@@ -111,7 +111,7 @@ namespace MyNetduino.ICMP
                 }
 
                 dwStart = DateTime.Now.Ticks; // Start timing and send the Pack over the socket
-                socket.SendTimeout = 1000;
+                socket.SendTimeout = 5000;
                 if ((nBytes = socket.SendTo(sendbuf, PacketSize, 0, epServer)) == SOCKET_ERROR)
                 {
                     return false;
@@ -123,7 +123,7 @@ namespace MyNetduino.ICMP
                 nBytes = 0;
                 long timeout = 0;
 
-                socket.ReceiveTimeout = 1000;
+                socket.ReceiveTimeout = 5000;
 
                 while (true)
                 {
