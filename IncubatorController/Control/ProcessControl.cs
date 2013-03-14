@@ -3,6 +3,7 @@ using Sensirion.SHT11;
 using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using System.Text;
+using System.Runtime.CompilerServices;
 
 namespace NetduinoPlus.Controler
 {
@@ -13,7 +14,7 @@ namespace NetduinoPlus.Controler
 
         #region Private Variables
         private static readonly ProcessControl _instance = new ProcessControl();
-        private static readonly object _lockObject = new object();
+        private String _lockObject = "";
         
         private MovingAverage _temperatureAverage = new MovingAverage();
         private MovingAverage _relativeHumidityAverage = new MovingAverage();
@@ -84,6 +85,11 @@ namespace NetduinoPlus.Controler
             get { return _targetCO2; }
             set { _targetCO2 = value; }
         }
+
+        public String DataOutput
+        {
+            get { return _lockObject; }
+        }
         #endregion
 
         #region Events
@@ -97,6 +103,7 @@ namespace NetduinoPlus.Controler
         #endregion
 
         #region Public Methods
+        //[MethodImpl(MethodImplOptions.Synchronized)]
         public void ProcessData()
         {
           lock(_lockObject)
@@ -107,9 +114,11 @@ namespace NetduinoPlus.Controler
             PumpControl.Instance.ManageState();
             VentilationControl.Instance.ManageState();
             ActuatorControl.Instance.ManageState();
+
+            _lockObject = BuildDataOutput();
           }
 
-          //NetworkCommunication.Instance.NotifySender();
+          NetworkCommunication.Instance.NotifySenderThread();
         }
         #endregion
 
@@ -123,7 +132,7 @@ namespace NetduinoPlus.Controler
                 DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
                 Utility.SetLocalTime(presentTime);
 
-                NetworkCommunication.Instance.StartSender();
+                //NetworkCommunication.Instance.StartSender();
             }
             else if (parts[0] == "TARGET_TEMPERATURE")
             {
@@ -216,11 +225,10 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        public String BuildStateOutput()
+        public String BuildDataOutput()
         {
             StringBuilder xmlBuilder = new StringBuilder();
 
-            
             xmlBuilder.Append("<netduino>");
             xmlBuilder.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
 
@@ -293,7 +301,6 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("</actuatorduration>");
             xmlBuilder.Append("</data>");
             xmlBuilder.Append("</netduino>");
-
 
             return xmlBuilder.ToString();
         }

@@ -27,10 +27,8 @@ namespace NetduinoPlus.Controler
             {
                 NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
 
-                //_listenerThread = new ListenerThread();
-                //_listenerThread.Start();
-
-                //_senderThread = new SenderThread();
+                _listenerThread = new ListenerThread();
+                _listenerThread.Start();
             }
             catch (SocketException se)
             {
@@ -62,33 +60,37 @@ namespace NetduinoPlus.Controler
         #endregion
 
 
-        #region Public Static Methods
+        #region Public Methods
         public void StartSender()
         {
+            _senderThread = new SenderThread();
             _senderThread.Start();
         }
 
-        public void NotifySender()
+        public void NotifySenderThread()
         {
-          _senderThread.Notify.Set();
+            if (_senderThread != null)
+            {
+                _senderThread.ResetEvent.Set();
+            }
         }
         #endregion
 
 
-        #region Private Static Methods
+        #region Private Methods
         private void NetworkChange_NetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs network)
         {
             try
             {
                 if (network.IsAvailable)
                 {
-                    LogFile.Network("Network Available");
+                    LogFile.Network("Network Available.");
 
                     _listenerThread.Start();
                 }
                 else
                 {
-                    LogFile.Network("Network Unavailable");
+                    LogFile.Network("Network Unavailable.");
 
                     _listenerThread.Stop();
                 }   
@@ -102,10 +104,6 @@ namespace NetduinoPlus.Controler
                 LogFile.Network(ex.ToString());
             }
         }
-        #endregion
-
-
-        #region Private Methods
         #endregion
     }
 }

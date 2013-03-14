@@ -25,20 +25,31 @@ namespace NetduinoPlus.Controler
         #region Constructors
         private LogFile()
         {
-          DirectoryInfo dirinfo = new DirectoryInfo(@"\SD");
-          if (dirinfo.Exists)
-          {
-            _sdCardAvailable = true;
+            try
+            {
+                DirectoryInfo dirinfo = new DirectoryInfo(@"\SD");
+                if (dirinfo.Exists)
+                {
+                    _sdCardAvailable = true;
 
-            Application("SD card detected.");
-          }
-          else
-          {
-            Debug.Print("SD card not detected.");
-          }
+                    Application("SD card detected.");
+                }
+                else
+                {
+                    Debug.Print("SD card not detected.");
+                }
+            }
+            catch (IOException ioex)
+            {
+                LogFile.Network(ioex.ToString());
+            }
+            catch (Exception ex)
+            {
+                LogFile.Network(ex.ToString());
+            }
 
-          RemovableMedia.Insert += new InsertEventHandler(RemovableMedia_Insert);
-          RemovableMedia.Eject += new EjectEventHandler(RemovableMedia_Eject);
+            RemovableMedia.Insert += new InsertEventHandler(RemovableMedia_Insert);
+            RemovableMedia.Eject += new EjectEventHandler(RemovableMedia_Eject);
         }
         #endregion
 
@@ -65,7 +76,7 @@ namespace NetduinoPlus.Controler
 
         public static void Application(string log)
         {
-            Log(ELogType.Application, log);
+            //Log(ELogType.Application, log);
         }
 
         public static void Network(string log)
@@ -109,7 +120,7 @@ namespace NetduinoPlus.Controler
                           break;
                   }
 
-                  lock (_lockObject)
+                  lock(_lockObject)
                   {
                     using (StreamWriter streamWriter = new StreamWriter(path, true))
                     {

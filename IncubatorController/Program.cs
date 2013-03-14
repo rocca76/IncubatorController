@@ -8,6 +8,7 @@ namespace NetduinoPlus.Controler
     public class Program
     {
         #region Private Variables
+        private static Timer _processTimer = null;
         #endregion
 
         #region Public Properties
@@ -18,7 +19,7 @@ namespace NetduinoPlus.Controler
 
         public static void Main()
         {
-            new Timer(new TimerCallback(OnProcessTimer), null, 0, 1000);
+            _processTimer = new Timer(new TimerCallback(OnProcessTimer), null, 0, 1000);
             Thread.Sleep(Timeout.Infinite);
         }
 

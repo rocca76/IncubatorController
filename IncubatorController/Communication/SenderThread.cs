@@ -5,7 +5,7 @@ using System.Net.Sockets;
 
 namespace NetduinoPlus.Controler
 {
-  class SenderThread
+  public sealed class SenderThread
   {
     #region Private Variables
     private int _dataSentCount = 0;
@@ -25,9 +25,9 @@ namespace NetduinoPlus.Controler
 
 
     #region Public Properties
-    public ManualResetEvent Notify
+    public ManualResetEvent ResetEvent
     {
-      get { return _manualResetEvent; }
+        get { return _manualResetEvent; }
     }
     #endregion
 
@@ -81,7 +81,7 @@ namespace NetduinoPlus.Controler
 
           _manualResetEvent.WaitOne();
 
-          String stateOutput = ProcessControl.Instance.BuildStateOutput();
+          String stateOutput = ProcessControl.Instance.DataOutput;
 
           _clientSocket.Send(stateOutput);
           _dataSentCount++;

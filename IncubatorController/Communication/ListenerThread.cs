@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NetduinoPlus.Controler
 {
-  class ListenerThread
+  public sealed class ListenerThread
   {
     #region Private Variables
     private Thread _listenerThread = null;
@@ -57,22 +57,8 @@ namespace NetduinoPlus.Controler
     {
       if (_socketListener != null)
       {
-        using (_socketListener)
-        {
-          _socketListener.Close();
-        }
-
-        _socketListener = null; ////?????
-      }
-
-      if (_listenerThread != null)
-      {
-        if (_listenerThread.IsAlive)
-        {
-          _listenerThread.Abort();
-        }
-
-        _listenerThread = null;
+        _socketListener.Close();
+        _socketListener = null;
       }
     }
     #endregion
@@ -81,30 +67,38 @@ namespace NetduinoPlus.Controler
     #region Private Methods
     private void WaitForConnection()
     {
-      try
-      {
-        while (true)
+        try
         {
-          LogFile.Network("Waiting for connection...");
+            while (_socketListener != null)
+            {
+                LogFile.Network("Waiting for connection...");
 
-          Socket clientSocket = _socketListener.Accept();
+                Socket clientSocket = _socketListener.Accept();
 
-          string[] remoteEndPoint = clientSocket.RemoteEndPoint.ToString().Split(':');
-          NetworkCommunication.Instance.RemoteAddress = remoteEndPoint[0];
+                string[] remoteEndPoint = clientSocket.RemoteEndPoint.ToString().Split(':');
+                NetworkCommunication.Instance.RemoteAddress = remoteEndPoint[0];
 
-          LogFile.Network("Connection Accepted from " + NetworkCommunication.Instance.RemoteAddress);
+                LogFile.Network("Connection Accepted from " + NetworkCommunication.Instance.RemoteAddress);
 
-          ProcessClientRequest(clientSocket);
+                ProcessClientRequest(clientSocket);
+            }
         }
-      }
-      catch (SocketException se)
-      {
-        LogFile.Network(se.ToString());
-      }
-      catch (Exception ex)
-      {
-        LogFile.Network(ex.ToString());
-      }
+        catch (SocketException se)
+        {
+            if (se.ErrorCode == 10050)
+            {
+                LogFile.Network("Network is down.");
+                Stop();
+            }
+            else
+            {
+                LogFile.Network(se.ToString());
+            }
+        }
+        catch (Exception ex)
+        {
+            LogFile.Network(ex.ToString());
+        }
     }
 
     private void ProcessClientRequest(Socket clientSocket)
