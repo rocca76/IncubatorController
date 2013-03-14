@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,6 +34,9 @@
   </PropertyGroup>
   <Import Project="$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets" />
   <ItemGroup>
+    <Compile Include="Communication\BitConverter.cs" />
+    <Compile Include="Communication\IcmpPacket.cs" />
+    <Compile Include="Communication\Ping.cs" />
     <Compile Include="Control\HeatingControl.cs" />
     <Compile Include="Communication\ListenerThread.cs" />
     <Compile Include="Utility\MovingAverage.cs" />

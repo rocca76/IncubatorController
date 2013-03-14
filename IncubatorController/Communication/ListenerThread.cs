@@ -4,6 +4,7 @@ using Microsoft.SPOT.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Net;
 using System.Text;
+using MyNetduino.ICMP;
 
 namespace NetduinoPlus.Controler
 {
@@ -42,6 +43,8 @@ namespace NetduinoPlus.Controler
       while (networkInterface.IPAddress == "0.0.0.0");
 
       LogFile.Network("IP Address Granted: " + networkInterface.IPAddress);
+
+      bool ping = Ping.PingHost("192.168.0.100");
 
       _socketListener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
       _socketListener.Bind(new IPEndPoint(IPAddress.Any, 11000));
