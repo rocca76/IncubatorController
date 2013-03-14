@@ -17,6 +17,7 @@ namespace NetduinoPlus.Controler
         private ListenerThread _listenerThread = null;
         private SenderThread _senderThread = null;
         private String _remoteAddress = "";
+        private bool _networkIsAvailable = true;
         #endregion
 
 
@@ -52,6 +53,12 @@ namespace NetduinoPlus.Controler
             get { return _instance; }
         }
 
+        public bool NetworkIsAvailable
+        {
+            get { return _networkIsAvailable; }
+            set { _networkIsAvailable = value; }
+        }
+
         public String RemoteAddress
         {
             get { return _remoteAddress; }
@@ -82,7 +89,9 @@ namespace NetduinoPlus.Controler
         {
             try
             {
-                if (network.IsAvailable)
+                _networkIsAvailable = network.IsAvailable;
+
+                if (_networkIsAvailable)
                 {
                     LogFile.Network("Network Available.");
 
@@ -92,6 +101,7 @@ namespace NetduinoPlus.Controler
                 {
                     LogFile.Network("Network Unavailable.");
 
+                    _senderThread.Stop();
                     _listenerThread.Stop();
                 }   
             }
