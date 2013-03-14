@@ -9,7 +9,7 @@ namespace Sensirion.SHT11
     public sealed class SHT11Sensor
     {
         #region Private Variables
-        private static SHT11 _sht11 = new SHT11(new SHT11_GPIO_IOProvider(Pins.GPIO_PIN_D1, Pins.GPIO_PIN_D2) );
+        private static SHT11 _sht11 = new SHT11(new SHT11_GPIO_IOProvider(Pins.GPIO_PIN_D0, Pins.GPIO_PIN_D1) );
         private static readonly SHT11Sensor _instance = new SHT11Sensor();
         private bool _sht11Ready = false;
         #endregion

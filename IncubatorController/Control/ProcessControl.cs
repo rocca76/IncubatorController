@@ -172,6 +172,8 @@ namespace NetduinoPlus.Controler
             ReadTemperature();
             ReadRelativeHumidity();
             ReadCO2();
+
+            LogFile.Application("T:" + _temperature.ToString("F2") + ",RH:" + _relativeHumidity.ToString("F2") + ",CO2:" + _CO2.ToString());
         }
 
         private void ReadTemperature()
@@ -179,8 +181,6 @@ namespace NetduinoPlus.Controler
             double temperature = SHT11Sensor.Instance.ReadTemperature();
             _temperatureAverage.Push(temperature);
             _temperature = _temperatureAverage.Average;
-
-            LogFile.Application("Temperature: RAW = " + temperature.ToString("F2") + "  Average = " + _temperature.ToString("F2"));
         }
 
         private void ReadRelativeHumidity()
@@ -188,8 +188,6 @@ namespace NetduinoPlus.Controler
             double relativeHumidity = SHT11Sensor.Instance.ReadRelativeHumidity();
             _relativeHumidityAverage.Push(relativeHumidity);
             _relativeHumidity = _relativeHumidityAverage.Average;
-
-            LogFile.Application("HR: RAW = " + relativeHumidity.ToString("F2") + "  Average = " + _relativeHumidity.ToString("F2"));
         }
 
         private void ReadCO2()
@@ -200,7 +198,6 @@ namespace NetduinoPlus.Controler
             if (result == K30Sensor.ECO2Result.ValidResult)
             {
                 _CO2 = co2Data;
-                LogFile.Application("CO2: " + _CO2.ToString());
             }
             else
             {
