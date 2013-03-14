@@ -27,7 +27,7 @@ namespace NetduinoPlus.Controler
           try
           {
             Stopwatch stopwatch = Stopwatch.StartNew();
-            //ProcessControl.Instance.ProcessData();
+            ProcessControl.Instance.ProcessData();
             stopwatch.Stop();
 
             LogFile.Application("Process data duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");

@@ -21,7 +21,6 @@ namespace NetduinoPlus.Controler
         private TimeSpan _duration = TimeSpan.Zero;
         private DateTime _lastActivation;
         private PumpStateEnum _pumpState = PumpStateEnum.Stopped;
-
         private OutputPort outPump = new OutputPort(Pins.GPIO_PIN_D6, false);  //Pump
         #endregion
 
@@ -63,11 +62,11 @@ namespace NetduinoPlus.Controler
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
-            if (ProcessControl.Instance.CurrentRelativeHumidity > 0)
+            if (ProcessControl.Instance.RelativeHumidity > 0)
             {
-              double temperatureDelta = Abs( ProcessControl.Instance.TargetTemperature - ProcessControl.Instance.CurrentTemperature );
+              double temperatureDelta = Abs( ProcessControl.Instance.TargetTemperature - ProcessControl.Instance.Temperature );
 
-              if ((ProcessControl.Instance.CurrentRelativeHumidity < ProcessControl.Instance.TargetRelativeHumidity) && (temperatureDelta <= 1))
+              if ((ProcessControl.Instance.RelativeHumidity < ProcessControl.Instance.TargetRelativeHumidity) && (temperatureDelta <= 1))
               {
                 if (_duration == TimeSpan.Zero)
                 {

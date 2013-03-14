@@ -47,14 +47,14 @@ namespace NetduinoPlus.Controler
           I2CDevice.Configuration slaveConfig = new I2CDevice.Configuration(0x7F, 100);
 
           byte[] dataWrite = new byte[4] { 0x22, 0x00, 0x08, 0x2A };
-          int transferred = Write(slaveConfig, dataWrite, 500);
+          int transferred = Write(slaveConfig, dataWrite, 100);
 
           if (transferred > 0)
           {
               Thread.Sleep(10);
 
               byte[] dataRead = new byte[4] { 0x00, 0x00, 0x00, 0x00 };
-              transferred = Read(slaveConfig, dataRead, 500);
+              transferred = Read(slaveConfig, dataRead, 100);
 
               if (transferred > 0)
               {

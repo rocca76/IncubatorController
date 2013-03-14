@@ -113,10 +113,10 @@ namespace NetduinoPlus.Controler
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
-            if (ProcessControl.Instance.CurrentCO2 > 0 && ProcessControl.Instance.TargetCO2 != ProcessControl.CO2_DISABLE)
+            if (ProcessControl.Instance.CO2 > 0 && ProcessControl.Instance.TargetCO2 != ProcessControl.CO2_DISABLE)
             {
                 //Sensor control
-                if (ProcessControl.Instance.CurrentCO2 > ProcessControl.Instance.TargetCO2)
+                if (ProcessControl.Instance.CO2 > ProcessControl.Instance.TargetCO2)
                 {
                     if (_fanEnabled == 1)
                     {
@@ -174,13 +174,13 @@ namespace NetduinoPlus.Controler
 
             bool openTrapForced = false;
 
-            if (ProcessControl.Instance.MaxTemperatureLimitReached == 1)
+            if (ProcessControl.Instance.TemperatureMaxReached)
             {
                 openTrapForced = true;
             }
 
             double limitMax = ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA;
-            if ( (ProcessControl.Instance.CurrentRelativeHumidity > limitMax) && ProcessControl.Instance.TargetRelativeHumidity > 0 )
+            if ( (ProcessControl.Instance.RelativeHumidity > limitMax) && ProcessControl.Instance.TargetRelativeHumidity > 0 )
             {
                 openTrapForced = true;
             }
@@ -212,7 +212,7 @@ namespace NetduinoPlus.Controler
             //////// Protection by fan
 
             limitMax = ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_FAN_DELTA;
-            if ( (ProcessControl.Instance.CurrentRelativeHumidity > limitMax) && ProcessControl.Instance.TargetRelativeHumidity > 0 )
+            if ((ProcessControl.Instance.RelativeHumidity > limitMax) && ProcessControl.Instance.TargetRelativeHumidity > 0)
             {
                 _fanForced = true;
             }

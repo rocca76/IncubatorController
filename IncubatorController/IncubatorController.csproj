@@ -33,25 +33,25 @@
   </PropertyGroup>
   <Import Project="$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets" />
   <ItemGroup>
-    <Compile Include="HeatingControl.cs" />
+    <Compile Include="Control\HeatingControl.cs" />
     <Compile Include="Communication\ListenerThread.cs" />
     <Compile Include="Utility\MovingAverage.cs" />
-    <Compile Include="PumpControl.cs" />
+    <Compile Include="Control\PumpControl.cs" />
     <Compile Include="Communication\SenderThread.cs" />
     <Compile Include="Utility\Stopwatch.cs" />
-    <Compile Include="VentilationControl.cs" />
+    <Compile Include="Control\VentilationControl.cs" />
     <Compile Include="ConfigurationManager.cs" />
-    <Compile Include="I2CBus.cs" />
-    <Compile Include="K30Sensor.cs" />
-    <Compile Include="ProcessControl.cs" />
-    <Compile Include="SHT11\ISHT11_IOProvider.cs" />
+    <Compile Include="Sensors\I2CBus.cs" />
+    <Compile Include="Sensors\K30Sensor.cs" />
+    <Compile Include="Control\ProcessControl.cs" />
+    <Compile Include="Sensors\SHT11\ISHT11_IOProvider.cs" />
     <Compile Include="Communication\NetworkCommunication.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="SHT11\SHT11Sensor.cs" />
-    <Compile Include="SHT11\SHT11.cs" />
-    <Compile Include="SHT11\SHT11_GPIO_IOProvider.cs" />
-    <Compile Include="ActuatorControl.cs" />
+    <Compile Include="Sensors\SHT11\SHT11Sensor.cs" />
+    <Compile Include="Sensors\SHT11\SHT11.cs" />
+    <Compile Include="Sensors\SHT11\SHT11_GPIO_IOProvider.cs" />
+    <Compile Include="Control\ActuatorControl.cs" />
     <Compile Include="Utility\LogFile.cs" />
   </ItemGroup>
   <ItemGroup>
