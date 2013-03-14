@@ -97,7 +97,14 @@ namespace NetduinoPlus.Controler
       }
       catch (SocketException se)
       {
-        LogFile.Network(se.ToString());
+          if (se.ErrorCode == 10054)
+          {
+              LogFile.Network("Connection reset by peer.");
+          }
+          else
+          {
+              LogFile.Network(se.ToString());
+          }
       }
       catch (Exception ex)
       {

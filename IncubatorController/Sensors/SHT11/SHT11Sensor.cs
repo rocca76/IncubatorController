@@ -11,6 +11,7 @@ namespace Sensirion.SHT11
         #region Private Variables
         private static SHT11 _sht11 = new SHT11(new SHT11_GPIO_IOProvider(Pins.GPIO_PIN_D1, Pins.GPIO_PIN_D2) );
         private static readonly SHT11Sensor _instance = new SHT11Sensor();
+        private bool _sht11Ready = false;
         #endregion
 
 
@@ -23,6 +24,10 @@ namespace Sensirion.SHT11
                 if (_sht11.WriteStatusRegister((SHT11.SHT11Settings.NullFlag)))
                 {
                     LogFile.Error("Error while writing status register SHT11");
+                }
+                else
+                {
+                    _sht11Ready = true;
                 }
             }
             else
@@ -38,18 +43,36 @@ namespace Sensirion.SHT11
 
 
         #region Public Properties
+        public static SHT11Sensor Instance
+        {
+            get { return _instance; }
+        }
         #endregion
 
 
         #region Public Methods
-        public static double ReadTemperature()
+        public double ReadTemperature()
         {
-            return _sht11.ReadTemperature(SHT11.SHT11VDD_Voltages.VDD_3_5V, SHT11.SHT11TemperatureUnits.Celcius);
+            double temperature = 0.0;
+
+            if (_sht11Ready)
+            {
+                temperature = _sht11.ReadTemperature(SHT11.SHT11VDD_Voltages.VDD_3_5V, SHT11.SHT11TemperatureUnits.Celcius);
+            }
+
+            return temperature;
         }
 
-        public static double ReadRelativeHumidity()
+        public double ReadRelativeHumidity()
         {
-            return _sht11.ReadRelativeHumidity(SHT11.SHT11VDD_Voltages.VDD_3_5V);
+            double relativeHumidity = 0.0;
+
+            if (_sht11Ready)
+            {
+                relativeHumidity = _sht11.ReadRelativeHumidity(SHT11.SHT11VDD_Voltages.VDD_3_5V);
+            }
+
+            return relativeHumidity;
         }
         #endregion
 
