@@ -23,11 +23,7 @@ namespace NetduinoPlus.Controler
 
 
         #region Constructors
-        private LogFile()
-        {
-            RemovableMedia.Insert += new InsertEventHandler(RemovableMedia_Insert);
-            RemovableMedia.Eject += new EjectEventHandler(RemovableMedia_Eject);
-        }
+        private LogFile(){}
         #endregion
 
 
@@ -40,26 +36,38 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Methods
-        private void RemovableMedia_Insert(object sender, MediaEventArgs e)
+        private static void RemovableMedia_Insert(object sender, MediaEventArgs e)
         {
             _sdCardAvailable = true;
             Application("SD card detected.");
         }
-        private void RemovableMedia_Eject(object sender, MediaEventArgs e)
+        private static void RemovableMedia_Eject(object sender, MediaEventArgs e)
         {
             _sdCardAvailable = false;
             Debug.Print("SD card ejected.");
         }
 
-        public static void DetectSDCardDirectory(String path)
+        public static void Init()
         {
             try
             {
-                DirectoryInfo dirinfo = new DirectoryInfo(path);
+                DirectoryInfo dirinfo = new DirectoryInfo(@"\SD");
+
                 if (dirinfo.Exists)
                 {
+                  if (_sdCardAvailable == false)
+                  {
+                    Application("SD card detected.");
                     _sdCardAvailable = true;
+                  }
                 }
+                else
+                {
+                  Application("SD card not detected.");
+                }
+
+                RemovableMedia.Insert += new InsertEventHandler(RemovableMedia_Insert);
+                RemovableMedia.Eject += new EjectEventHandler(RemovableMedia_Eject);
             }
             catch (Exception ex)
             {

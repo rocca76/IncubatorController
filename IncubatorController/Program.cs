@@ -19,7 +19,7 @@ namespace NetduinoPlus.Controler
 
         public static void Main()
         {
-          LogFile.DetectSDCardDirectory(@"\SD");
+          LogFile.Init();
           NetworkCommunication.Instance.StartListener();
           _processTimer = new Timer(new TimerCallback(OnProcessTimer), null, 0, 1000);
           Thread.Sleep(Timeout.Infinite);
