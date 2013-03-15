@@ -1,5 +1,7 @@
 using System;
 using Microsoft.SPOT;
+using System.Net;
+using System.Net.Sockets;
 
 namespace MyNetduino.ICMP
 {
