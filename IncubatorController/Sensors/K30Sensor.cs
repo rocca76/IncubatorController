@@ -44,17 +44,17 @@ namespace NetduinoPlus.Controler
         {
           co2Data = 0;
           ECO2Result result = ECO2Result.UnknownResult;
-          I2CDevice.Configuration slaveConfig = new I2CDevice.Configuration(0x7F, 100);
+          I2CDevice.Configuration slaveConfig = new I2CDevice.Configuration(0x7F, 10);
 
           byte[] dataWrite = new byte[4] { 0x22, 0x00, 0x08, 0x2A };
-          int transferred = Write(slaveConfig, dataWrite, 100);
+          int transferred = Write(slaveConfig, dataWrite, 5000);
 
           if (transferred > 0)
           {
-              Thread.Sleep(10);
+              Thread.Sleep(50);
 
               byte[] dataRead = new byte[4] { 0x00, 0x00, 0x00, 0x00 };
-              transferred = Read(slaveConfig, dataRead, 100);
+              transferred = Read(slaveConfig, dataRead, 5000);
 
               if (transferred > 0)
               {

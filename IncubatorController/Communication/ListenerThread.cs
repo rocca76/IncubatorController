@@ -51,7 +51,7 @@ namespace NetduinoPlus.Controler
 
         if (NetworkCommunication.Instance.NetworkIsAvailable == false)
         {
-          String clientAddress = "192.168.0.100";
+          String clientAddress = "192.168.10.100";
           LogFile.Network("Ping Address: " + clientAddress);
           NetworkCommunication.Instance.NetworkIsAvailable = Ping.PingHost(clientAddress);
         }

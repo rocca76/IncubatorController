@@ -99,7 +99,7 @@ namespace NetduinoPlus.Controler
         {
             try
             {
-              Debug.Print(log);
+              Debug.Print(DateTime.Now.ToString("T") + ": " + log);
 
               if (_sdCardAvailable)
               {
