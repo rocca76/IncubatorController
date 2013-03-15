@@ -3,10 +3,6 @@ using Microsoft.SPOT;
 
 namespace MyNetduino.ICMP
 {
-    using System;
-    using System.Net;
-    using System.Net.Sockets;
-
     /// <summary>
     ///	 The Main Ping Class
     /// </summary>
@@ -83,7 +79,7 @@ namespace MyNetduino.ICMP
 
                 //Get the Half size of the Packet
                 Double double_length = (double)Index;
-                Double dtemp = Math.Ceiling(double_length / 2);
+                Double dtemp = System.Math.Ceiling(double_length / 2);
                 int cksum_buffer_length = (int)dtemp;
                 //Create a Byte Array
                 UInt16[] cksum_buffer = new UInt16[cksum_buffer_length];

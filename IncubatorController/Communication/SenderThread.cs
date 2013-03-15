@@ -1,7 +1,8 @@
 using System;
 using System.Threading;
-using Toolbox.NETMF.NET;
 using System.Net.Sockets;
+using System.Net;
+using System.Text;
 
 namespace NetduinoPlus.Controler
 {
@@ -11,7 +12,7 @@ namespace NetduinoPlus.Controler
     private int _dataSentCount = 0;
     private Thread _currentThread = null;
     private static ManualResetEvent _manualResetEvent = new ManualResetEvent(false);
-    private SimpleSocket _clientSocket = null;
+    private Socket _clientSocket = null;
     #endregion
 
 
@@ -59,18 +60,22 @@ namespace NetduinoPlus.Controler
             String remoteAddress = NetworkCommunication.Instance.RemoteAddress;
             LogFile.Network("Connecting to " + remoteAddress.ToString());
 
-            _clientSocket = new IntegratedSocket(remoteAddress, 11000);
-            _clientSocket.Connect();
+            IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse("192.168.0.100"), 11000);
 
-            while (_clientSocket.IsConnected)
+            using (_clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
             {
+              _clientSocket.Connect(endpoint);
+
+              while (_clientSocket != null)
+              {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 _manualResetEvent.WaitOne();
 
                 String stateOutput = ProcessControl.Instance.DataOutput;
 
-                _clientSocket.Send(stateOutput);
+                int size = _clientSocket.Send(Encoding.UTF8.GetBytes(stateOutput));
+
                 _dataSentCount++;
 
                 _manualResetEvent.Reset();
@@ -78,9 +83,8 @@ namespace NetduinoPlus.Controler
                 stopwatch.Stop();
 
                 LogFile.Network("Message Sent: " + stopwatch.ElapsedMilliseconds.ToString() + "ms, " + _dataSentCount.ToString() + ", Size: " + stateOutput.Length.ToString() + ", Value: " + stateOutput);
+              }
             }
-
-            _clientSocket.Close();
         }
         catch (SocketException se)
         {
@@ -99,7 +103,8 @@ namespace NetduinoPlus.Controler
         }
         finally
         {
-            _manualResetEvent.Reset();
+          Stop();
+          _manualResetEvent.Reset();
         }
     }
     #endregion

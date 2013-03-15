@@ -4,7 +4,6 @@ using System.Net;
 using Microsoft.SPOT.Net.NetworkInformation;
 using System;
 using System.Text;
-using Toolbox.NETMF.NET;
 
 namespace NetduinoPlus.Controler
 {

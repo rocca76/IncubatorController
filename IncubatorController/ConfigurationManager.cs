@@ -92,14 +92,14 @@ namespace NetduinoPlus.Controler
 
             //string[] parts = message.Split(' ');
 
-            StringBuilder data = new StringBuilder();
-            data.Append(DateTime.Now.ToString());
-            data.Append(";");
-            data.Append(ProcessControl.Instance.TargetTemperature.ToString("F2"));
-            data.Append(";");
-            data.Append(ProcessControl.Instance.TargetRelativeHumidity.ToString("F2"));
-            data.Append(";");
-            data.Append(ProcessControl.Instance.TargetCO2.ToString());
+            String data;
+            data = DateTime.Now.ToString();
+            data += ";";
+            data += ProcessControl.Instance.TargetTemperature.ToString("F2");
+            data += ";";
+            data += ProcessControl.Instance.TargetRelativeHumidity.ToString("F2");
+            data += ";";
+            data += ProcessControl.Instance.TargetCO2.ToString();
         }
     }
 }

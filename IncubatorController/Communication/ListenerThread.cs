@@ -123,7 +123,6 @@ namespace NetduinoPlus.Controler
             if (se.ErrorCode == 10050)
             {
                 LogFile.Network("Network is down.");
-                Stop();
             }
             else
             {
@@ -133,6 +132,10 @@ namespace NetduinoPlus.Controler
         catch (Exception ex)
         {
             LogFile.Network(ex.ToString());
+        }
+        finally
+        {
+          Stop();
         }
     }
 
