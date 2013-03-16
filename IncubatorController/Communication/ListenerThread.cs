@@ -35,27 +35,6 @@ namespace NetduinoPlus.Controler
     {
       try
       {
-        NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()[0];
-
-        if (networkInterface.IsDhcpEnabled)
-        {
-          do
-          {
-            LogFile.Network("Awaiting IP Address");
-            Thread.Sleep(1000);
-          }
-          while (networkInterface.IPAddress == "0.0.0.0");
-        }
-
-        LogFile.Network("Local IP Address: " + networkInterface.IPAddress);
-
-        if (NetworkCommunication.Instance.NetworkIsAvailable == false)
-        {
-          String clientAddress = "192.168.10.100";
-          LogFile.Network("Ping Address: " + clientAddress);
-          NetworkCommunication.Instance.NetworkIsAvailable = Ping.PingHost(clientAddress);
-        }
-
         _socketListener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         _socketListener.Bind(new IPEndPoint(IPAddress.Any, 11000));
         _socketListener.Listen(1);
@@ -120,9 +99,15 @@ namespace NetduinoPlus.Controler
         }
         catch (SocketException se)
         {
+            SocketErrorCodes errorCode = (SocketErrorCodes)se.ErrorCode;
+
             if (se.ErrorCode == 10050)
             {
                 LogFile.Network("Network is down.");
+            }
+            else if (se.ErrorCode == -1728053248)
+            {
+                LogFile.Network("Socket accept exit.");
             }
             else
             {
@@ -132,10 +117,6 @@ namespace NetduinoPlus.Controler
         catch (Exception ex)
         {
             LogFile.Network(ex.ToString());
-        }
-        finally
-        {
-          Stop();
         }
     }
 

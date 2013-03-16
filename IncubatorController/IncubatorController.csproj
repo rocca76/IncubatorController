@@ -35,6 +35,7 @@
   <Import Project="$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets" />
   <ItemGroup>
     <Compile Include="Communication\BitConverter.cs" />
+    <Compile Include="Communication\Enum.cs" />
     <Compile Include="Communication\IcmpPacket.cs" />
     <Compile Include="Communication\Ping.cs" />
     <Compile Include="Control\HeatingControl.cs" />
