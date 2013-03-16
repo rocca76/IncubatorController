@@ -2,6 +2,7 @@
 using System.Threading;
 using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
+using IncubatorController.Utility;
 
 //Smart Personal Object Technology
 
@@ -22,6 +23,7 @@ namespace NetduinoPlus.Controler
 
         public static void Main()
         {
+          DateTime dt = NTPTime.GetTime();
           LogFile.Init();
           NetworkCommunication.Instance.StartListener();
 

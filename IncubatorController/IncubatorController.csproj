@@ -42,6 +42,7 @@
     <Compile Include="Utility\MovingAverage.cs" />
     <Compile Include="Control\PumpControl.cs" />
     <Compile Include="Communication\SenderThread.cs" />
+    <Compile Include="Utility\NTPTime.cs" />
     <Compile Include="Utility\Stopwatch.cs" />
     <Compile Include="Control\VentilationControl.cs" />
     <Compile Include="ConfigurationManager.cs" />
