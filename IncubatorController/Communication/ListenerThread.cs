@@ -105,10 +105,6 @@ namespace NetduinoPlus.Controler
             {
                 LogFile.Network("Network is down.");
             }
-            else if (se.ErrorCode == -1728053248)
-            {
-                LogFile.Network("Socket accept exit.");
-            }
             else
             {
                 LogFile.Network(se.ToString());
@@ -117,6 +113,10 @@ namespace NetduinoPlus.Controler
         catch (Exception ex)
         {
             LogFile.Network(ex.ToString());
+        }
+        finally
+        {
+            _socketListener = null;
         }
     }
 

@@ -115,7 +115,8 @@ namespace NetduinoPlus.Controler
             VentilationControl.Instance.ManageState();
             ActuatorControl.Instance.ManageState();
 
-            _lockObject = BuildDataOutput();
+            //_lockObject = BuildDataOutput();
+            _lockObject = DateTime.Now.ToString() + ": " + _temperature.ToString("F2") + ";" + _relativeHumidity.ToString("F2") + ";" + _CO2.ToString();
           }
 
           NetworkCommunication.Instance.NotifySenderThread();
