@@ -69,7 +69,9 @@ namespace NetduinoPlus.Controler
 
             LogFile.Network("Local IP Address: " + networkInterface.IPAddress);
 
-            _networkIsAvailable = true; //Ping.PingHost("192.168.10.100");
+            //_networkIsAvailable = Ping.PingHost("192.168.10.100");
+            //NTPTime.SetLocalTime();
+            _networkIsAvailable = true;
             NetworkAvailability(_networkIsAvailable);
         }
 

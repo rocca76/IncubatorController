@@ -23,7 +23,11 @@ namespace NetduinoPlus.Controler
 
 
         #region Constructors
-        private LogFile(){}
+        private LogFile() 
+        {
+            RemovableMedia.Insert += new InsertEventHandler(RemovableMedia_Insert);
+            RemovableMedia.Eject += new EjectEventHandler(RemovableMedia_Eject);
+        }
         #endregion
 
 
@@ -45,34 +49,6 @@ namespace NetduinoPlus.Controler
         {
             _sdCardAvailable = false;
             Debug.Print("SD card ejected.");
-        }
-
-        public static void Init()
-        {
-            try
-            {
-                DirectoryInfo dirinfo = new DirectoryInfo(@"\SD");
-
-                if (dirinfo.Exists)
-                {
-                  if (_sdCardAvailable == false)
-                  {
-                    Application("SD card detected.");
-                    _sdCardAvailable = true;
-                  }
-                }
-                else
-                {
-                  Application("SD card not detected.");
-                }
-
-                RemovableMedia.Insert += new InsertEventHandler(RemovableMedia_Insert);
-                RemovableMedia.Eject += new EjectEventHandler(RemovableMedia_Eject);
-            }
-            catch (Exception ex)
-            {
-                LogFile.Exception(ex.ToString());
-            }
         }
 
         public static void Application(string log)
@@ -121,12 +97,12 @@ namespace NetduinoPlus.Controler
                           break;
                   }
 
-                  lock(_lockObject)
+                  lock (_lockObject)
                   {
-                    using (StreamWriter streamWriter = new StreamWriter(path, true))
-                    {
-                      streamWriter.WriteLine(DateTime.Now.ToString() + ": " + log.Trim());
-                    }
+                      using (StreamWriter streamWriter = new StreamWriter(path, true))
+                      {
+                          streamWriter.WriteLine(DateTime.Now.ToString() + ": " + log.Trim());
+                      }
                   }
                 }
             }

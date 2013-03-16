@@ -23,9 +23,7 @@ namespace NetduinoPlus.Controler
 
         public static void Main()
         {
-          LogFile.Init();
           NetworkCommunication.Instance.DetectAvailability();
-          //NTPTime.SetLocalTime();
 
           _onBoardButton.OnInterrupt += new NativeEventHandler(button_OnInterrupt);
           _processTimer = new Timer(new TimerCallback(OnProcessTimer), null, 0, 1000);
