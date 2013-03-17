@@ -57,10 +57,8 @@ namespace NetduinoPlus.Controler
         {
             try
             {
-                String remoteAddress = "192.168.250.100";
-                IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse(remoteAddress), 11000);
-
-                LogFile.Network("Connecting to " + remoteAddress.ToString());
+                LogFile.Network("Connecting to " + NetworkCommunication.Instance.RemoteAddress);
+                IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse(NetworkCommunication.Instance.RemoteAddress), 11000);
 
                 _clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 _clientSocket.Connect(endpoint);
