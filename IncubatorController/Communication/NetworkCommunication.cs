@@ -85,7 +85,6 @@ namespace NetduinoPlus.Controler
                 {
                     LogFile.Network("Network Available.");
                     StartListener();
-                    StartSender();
                 }
                 else
                 {

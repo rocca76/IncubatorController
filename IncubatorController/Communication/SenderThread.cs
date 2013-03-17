@@ -12,7 +12,7 @@ namespace NetduinoPlus.Controler
         private int _dataSentCount = 0;
         private Thread _currentThread = null;
         private static ManualResetEvent _manualResetEvent = new ManualResetEvent(false);
-        private Socket _clientSocket = null;
+        private static Socket _clientSocket = null;
         #endregion
 
 
@@ -55,43 +55,17 @@ namespace NetduinoPlus.Controler
         #region Private Methods
         private void SendingThread()
         {
-            String remoteAddress = NetworkCommunication.Instance.RemoteAddress;
-            LogFile.Network("Connecting to " + remoteAddress.ToString());
-
-            IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse("192.168.10.100"), 11000);
-
-            while (true)
-            {
-                using (Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-                {
-                    clientSocket.Connect(endpoint);
-                    ProcessClient(clientSocket);
-                }
-            }
-        }
-
-        private void ProcessClient(Socket clientSocket)
-        {
             try
             {
-                while (true)
-                {
-                    Stopwatch stopwatch = Stopwatch.StartNew();
+                String remoteAddress = "192.168.250.100";
+                IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse(remoteAddress), 11000);
 
-                    _manualResetEvent.WaitOne();
+                LogFile.Network("Connecting to " + remoteAddress.ToString());
 
-                    String stateOutput = ProcessControl.Instance.DataOutput;
+                _clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                _clientSocket.Connect(endpoint);
 
-                    int size = clientSocket.Send(Encoding.UTF8.GetBytes(stateOutput));
-
-                    _dataSentCount++;
-
-                    _manualResetEvent.Reset();
-
-                    stopwatch.Stop();
-
-                    LogFile.Network("Message Sent: " + stopwatch.ElapsedMilliseconds.ToString() + "ms, " + _dataSentCount.ToString() + ", Size: " + stateOutput.Length.ToString() + ", Value: " + stateOutput);
-                }
+                ProcessClient();
             }
             catch (SocketException se)
             {
@@ -108,8 +82,33 @@ namespace NetduinoPlus.Controler
             {
                 LogFile.Network(ex.ToString());
             }
+            finally
+            {
+                _clientSocket = null;
+                _manualResetEvent.Reset();
+            }            
+        }
 
-            _manualResetEvent.Reset();
+        private void ProcessClient()
+        {
+            while (true)
+            {
+                Stopwatch stopwatch = Stopwatch.StartNew();
+
+                _manualResetEvent.WaitOne();
+
+                String stateOutput = ProcessControl.Instance.DataOutput;
+
+                int size = _clientSocket.Send(Encoding.UTF8.GetBytes(stateOutput));
+
+                _dataSentCount++;
+
+                _manualResetEvent.Reset();
+
+                stopwatch.Stop();
+
+                LogFile.Network("Message Sent: " + stopwatch.ElapsedMilliseconds.ToString() + "ms, " + _dataSentCount.ToString() + ", Size: " + stateOutput.Length.ToString() + ", Value: " + stateOutput);
+            }
         }
         #endregion
     }
