@@ -40,14 +40,7 @@ namespace NetduinoPlus.Controler
         {
           try
           {
-            Stopwatch stopwatch = Stopwatch.StartNew();
             ProcessControl.Instance.ProcessData();
-            stopwatch.Stop();
-
-            if (stopwatch.ElapsedMilliseconds > 1000)
-            {
-                LogFile.Application("Process data duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");
-            }
           }
           catch (Exception ex)
           {
