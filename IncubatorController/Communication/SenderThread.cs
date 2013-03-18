@@ -35,10 +35,17 @@ namespace NetduinoPlus.Controler
         #region Public Methods
         public void Start()
         {
-            _dataSentCount = 0;
+            if (_currentThread != null && _currentThread.IsAlive)
+            {
+                LogFile.Error("Can not start SendingThread");
+            }
+            else
+            {
+                _dataSentCount = 0;
 
-            _currentThread = new Thread(SendingThread);
-            _currentThread.Start();
+                _currentThread = new Thread(SendingThread);
+                _currentThread.Start();
+            }
         }
 
         public void Stop()
