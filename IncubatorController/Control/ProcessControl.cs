@@ -92,7 +92,7 @@ namespace NetduinoPlus.Controler
         #region Constructors
         public ProcessControl() 
         {
-            ListenerThread.CommandReceived += new ReceivedEventHandler(OnCommandReceived);
+            ListenerThread.CommandReceived += new ReceivedEventHandler(OnParametersReceived);
         }
         #endregion
 
@@ -119,34 +119,34 @@ namespace NetduinoPlus.Controler
         #endregion
 
         #region Private Methods
-        private void OnCommandReceived(String command)
+        private void OnParametersReceived(String parameters)
         {
-            string[] parts = command.Split(' ');
+            string[] parts = parameters.Split(' ');
 
             if (parts[0] == "INIT")
             {
-                DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
-                Utility.SetLocalTime(presentTime);
+              DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
+              Utility.SetLocalTime(presentTime);
 
-                NetworkCommunication.Instance.StartSender();
+              NetworkCommunication.Instance.StartSender();
             }
             else if (parts[0] == "TEMPERATURE_PARAMETERS")
             {
-                _targetTemperature = double.Parse(parts[1]);
-                _temperatureMax = double.Parse(parts[2]);
+              _targetTemperature = double.Parse(parts[1]);
+              _temperatureMax = double.Parse(parts[2]);
             }
             else if (parts[0] == "RELATIVE_HUMIDITY_PARAMETERS")
             {
-                _targetRelativeHumidity = double.Parse(parts[1]);
-                PumpControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
-                PumpControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
+              _targetRelativeHumidity = double.Parse(parts[1]);
+              PumpControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
+              PumpControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
             }
             else if (parts[0] == "VENTILATION_PARAMETERS")
             {
-                VentilationControl.Instance.FanEnabled = int.Parse(parts[1]);
-                VentilationControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
-                VentilationControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
-                _instance.TargetCO2 = int.Parse(parts[4]);
+              _instance.TargetCO2 = int.Parse(parts[4]);
+              VentilationControl.Instance.FanEnabled = int.Parse(parts[1]);
+              VentilationControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
+              VentilationControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
             }
             else if (parts[0] == "ACTUATOR_MODE")
             {
