@@ -103,7 +103,7 @@ namespace NetduinoPlus.Controler
             ReadRelativeHumidity();
             ReadCO2();
 
-            //LogFile.Application(_temperature.ToString("F2") + ";" + _relativeHumidity.ToString("F2") + ";" + _CO2.ToString());
+            LogFile.Application(_temperature.ToString("F2") + "; " + _relativeHumidity.ToString("F2") + "; " + _CO2.ToString());
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]

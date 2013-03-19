@@ -11,7 +11,7 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private int _dataSentCount = 0;
         private Thread _currentThread = null;
-        private static ManualResetEvent _manualResetEvent = new ManualResetEvent(false);
+        private static AutoResetEvent _resetEvent = new AutoResetEvent(false);
         private static Socket _clientSocket = null;
         #endregion
 
@@ -25,9 +25,9 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Properties
-        public ManualResetEvent ResetEvent
+        public AutoResetEvent ResetEvent
         {
-            get { return _manualResetEvent; }
+            get { return _resetEvent; }
         }
         #endregion
 
@@ -90,7 +90,6 @@ namespace NetduinoPlus.Controler
             finally
             {
                 _clientSocket = null;
-                _manualResetEvent.Reset();
             }            
         }
 
@@ -98,21 +97,16 @@ namespace NetduinoPlus.Controler
         {
             while (true)
             {
-                _manualResetEvent.WaitOne();
+                _resetEvent.WaitOne();
 
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
-                String dataOutput = ProcessControl.Instance.BuildDataOutput();
-
-                int size = _clientSocket.Send(Encoding.UTF8.GetBytes(dataOutput));
-
+                int size = _clientSocket.Send(Encoding.UTF8.GetBytes(ProcessControl.Instance.BuildDataOutput()));
                 _dataSentCount++;
-
-                _manualResetEvent.Reset();
 
                 stopwatch.Stop();
 
-                LogFile.Network("ProcessClient duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");
+                //ogFile.Network("ProcessClient duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");
                 //LogFile.Network("Message Sent: " + stopwatch.ElapsedMilliseconds.ToString() + "ms, " + _dataSentCount.ToString() + ", Size: " + stateOutput.Length.ToString() + ", Value: " + stateOutput);
             }
         }

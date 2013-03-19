@@ -18,6 +18,8 @@ namespace Sensirion.SHT11
         #region Constructors
         private SHT11Sensor() 
         {
+            Thread.Sleep(500);
+
             if (_sht15.SoftReset() == false)
             {
                 // Set Temperature and Humidity to 14/12 bit
