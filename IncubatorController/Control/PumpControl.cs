@@ -55,9 +55,7 @@ namespace NetduinoPlus.Controler
 
             if (ProcessControl.Instance.RelativeHumidity > 0)
             {
-              double temperatureDelta = Abs( ProcessControl.Instance.TargetTemperature - ProcessControl.Instance.Temperature );
-
-              if ((ProcessControl.Instance.RelativeHumidity < ProcessControl.Instance.TargetRelativeHumidity) && (temperatureDelta <= 1))
+              if (ProcessControl.Instance.RelativeHumidity < ProcessControl.Instance.TargetRelativeHumidity)
               {
                 if (_duration == TimeSpan.Zero)
                 {

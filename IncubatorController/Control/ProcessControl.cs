@@ -14,7 +14,6 @@ namespace NetduinoPlus.Controler
 
         #region Private Variables
         private static readonly ProcessControl _instance = new ProcessControl();
-        private static readonly object _lockObject = new object();
         
         private MovingAverage _temperatureAverage = new MovingAverage();
         private MovingAverage _relativeHumidityAverage = new MovingAverage();
@@ -100,40 +99,22 @@ namespace NetduinoPlus.Controler
         #region Public Methods
         public void ReadSensor()
         {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-
             ReadTemperature();
             ReadRelativeHumidity();
             ReadCO2();
 
-            stopwatch.Stop();
-
-            LogFile.Sensor(_temperature.ToString("F2") + ";" + _relativeHumidity.ToString("F2") + ";" + _CO2.ToString() + ";" + stopwatch.ElapsedMilliseconds.ToString() + "ms");
+            //LogFile.Application(_temperature.ToString("F2") + ";" + _relativeHumidity.ToString("F2") + ";" + _CO2.ToString());
         }
 
-        //[MethodImpl(MethodImplOptions.Synchronized)]
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public void ProcessData()
         {
-          ReadSensor();
-
-          Stopwatch stopwatch = Stopwatch.StartNew();
-            
-          //lock(_lockObject)
-          {
-            //HeatingControl.Instance.ManageState();
-            //PumpControl.Instance.ManageState();
-            //VentilationControl.Instance.ManageState();
+            HeatingControl.Instance.ManageState();
+            PumpControl.Instance.ManageState();
+            VentilationControl.Instance.ManageState();
             ActuatorControl.Instance.ManageState();
 
             NetworkCommunication.Instance.NotifySenderThread();
-          }
-
-          stopwatch.Stop();
-
-          //if (stopwatch.ElapsedMilliseconds > 1000)
-          {
-              LogFile.Application("Process data duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");
-          }
         }
         #endregion
 
@@ -151,23 +132,12 @@ namespace NetduinoPlus.Controler
             }
             else if (parts[0] == "TARGET_TEMPERATURE")
             {
-                ProcessControl.Instance.TargetTemperature = double.Parse(parts[1]);
-            }
-            else if (parts[0] == "LIMIT_MAX_TEMPERATURE")
-            {
-                LogFile.Network("Lock Oject");
-
-                lock (_lockObject)
-                {
-                    ProcessControl.Instance.TemperatureMax = double.Parse(parts[1]);
-                    NetworkCommunication.Instance.NotifySenderThread();
-                }
-
-                LogFile.Network("Unlock Oject");
+                _targetTemperature = double.Parse(parts[1]);
+                _temperatureMax = double.Parse(parts[2]);
             }
             else if (parts[0] == "TARGET_RELATIVE_HUMIDITY")
             {
-                ProcessControl.Instance.TargetRelativeHumidity = double.Parse(parts[1]);
+                _targetRelativeHumidity = double.Parse(parts[1]);
             }
             else if (parts[0] == "TARGET_VENTILATION")
             {

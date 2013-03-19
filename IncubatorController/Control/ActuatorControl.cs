@@ -13,7 +13,6 @@ namespace NetduinoPlus.Controler
         private bool _autoModeReady = false;
         private bool _autoModeInitializing = false;
         private TimeSpan _duration = TimeSpan.Zero;
-        private TimeSpan _startTime = TimeSpan.Zero;
         private ActuatorMode _actuatorMode = ActuatorMode.Manual;
         private ActuatorState _actuatorState = ActuatorState.Unknown;
 
@@ -113,18 +112,7 @@ namespace NetduinoPlus.Controler
         {
             if (_duration > TimeSpan.Zero)
             {
-                TimeSpan diff = DateTime.Now.TimeOfDay - _startTime;
-                _startTime = DateTime.Now.TimeOfDay;
-                LogFile.Application("Actuator diff: " + diff.ToString() + "ms");
-
-                if (diff <= _duration)
-                {
-                    _duration = _duration.Subtract(diff);
-                }
-                else
-                {
-                    _duration = TimeSpan.Zero;
-                }
+                _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
             if (_actuatorMode == ActuatorMode.Manual && _actuatorState != ActuatorState.Stopped)
@@ -138,7 +126,6 @@ namespace NetduinoPlus.Controler
                 if (_actuatorState == ActuatorState.Close || _actuatorState == ActuatorState.Open)
                 {
                     _duration = new TimeSpan(0, 0, ACTUARTOR_DELAY / 2);
-                    _startTime = DateTime.Now.TimeOfDay;
 
                     if (_actuatorState == ActuatorState.Close)
                     {
@@ -173,7 +160,6 @@ namespace NetduinoPlus.Controler
                         {
                             //Start waiting period
                             _duration = new TimeSpan(0, 0, TILT_PERIOD);
-                            _startTime = DateTime.Now.TimeOfDay;
 
                             _actuatorState = ActuatorState.Close;
                             outOpen.Write(false);
@@ -186,7 +172,6 @@ namespace NetduinoPlus.Controler
                         {
                             //Start moving actuator
                             _duration = new TimeSpan(0, 0, ACTUARTOR_DELAY);
-                            _startTime = DateTime.Now.TimeOfDay;
 
                             if (_actuatorState == ActuatorState.Open)
                             {
@@ -208,7 +193,6 @@ namespace NetduinoPlus.Controler
                         {
                             //Start waiting period
                             _duration = new TimeSpan(0, 0, TILT_PERIOD);
-                            _startTime = DateTime.Now.TimeOfDay;
 
                             _actuatorState = ActuatorState.Open;
                             outOpen.Write(false);
@@ -230,7 +214,6 @@ namespace NetduinoPlus.Controler
                         {
                             //Start initializing actuator
                             _duration = new TimeSpan(0, 0, ACTUARTOR_DELAY);
-                            _startTime = DateTime.Now.TimeOfDay;
 
                             _autoModeInitializing = true;
                             _actuatorState = ActuatorState.Closing;

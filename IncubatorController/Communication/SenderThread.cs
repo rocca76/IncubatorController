@@ -102,9 +102,9 @@ namespace NetduinoPlus.Controler
 
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
-                String stateOutput = ProcessControl.Instance.BuildDataOutput();
+                String dataOutput = ProcessControl.Instance.BuildDataOutput();
 
-                int size = _clientSocket.Send(Encoding.UTF8.GetBytes(stateOutput));
+                int size = _clientSocket.Send(Encoding.UTF8.GetBytes(dataOutput));
 
                 _dataSentCount++;
 
@@ -112,7 +112,8 @@ namespace NetduinoPlus.Controler
 
                 stopwatch.Stop();
 
-                LogFile.Network("Message Sent: " + stopwatch.ElapsedMilliseconds.ToString() + "ms, " + _dataSentCount.ToString() + ", Size: " + stateOutput.Length.ToString()); // + ", Value: " + stateOutput);
+                LogFile.Network("ProcessClient duration: " + stopwatch.ElapsedMilliseconds.ToString() + "ms");
+                //LogFile.Network("Message Sent: " + stopwatch.ElapsedMilliseconds.ToString() + "ms, " + _dataSentCount.ToString() + ", Size: " + stateOutput.Length.ToString() + ", Value: " + stateOutput);
             }
         }
         #endregion
