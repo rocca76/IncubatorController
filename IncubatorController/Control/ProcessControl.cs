@@ -123,28 +123,30 @@ namespace NetduinoPlus.Controler
         {
             string[] parts = command.Split(' ');
 
-            if (parts[0] == "TIME")
+            if (parts[0] == "INIT")
             {
                 DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
                 Utility.SetLocalTime(presentTime);
 
                 NetworkCommunication.Instance.StartSender();
             }
-            else if (parts[0] == "TARGET_TEMPERATURE")
+            else if (parts[0] == "TEMPERATURE_PARAMETERS")
             {
                 _targetTemperature = double.Parse(parts[1]);
                 _temperatureMax = double.Parse(parts[2]);
             }
-            else if (parts[0] == "TARGET_RELATIVE_HUMIDITY")
+            else if (parts[0] == "RELATIVE_HUMIDITY_PARAMETERS")
             {
                 _targetRelativeHumidity = double.Parse(parts[1]);
+                PumpControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
+                PumpControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
             }
-            else if (parts[0] == "TARGET_VENTILATION")
+            else if (parts[0] == "VENTILATION_PARAMETERS")
             {
                 VentilationControl.Instance.FanEnabled = int.Parse(parts[1]);
                 VentilationControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
                 VentilationControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
-                ProcessControl.Instance.TargetCO2 = int.Parse(parts[4]);
+                _instance.TargetCO2 = int.Parse(parts[4]);
             }
             else if (parts[0] == "ACTUATOR_MODE")
             {
@@ -214,26 +216,26 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
 
             xmlBuilder.Append("<temperature>");
-            xmlBuilder.Append(ProcessControl.Instance.Temperature.ToString("F2"));
+            xmlBuilder.Append(_instance.Temperature.ToString("F2"));
             xmlBuilder.Append("</temperature>");
             xmlBuilder.Append("<targettemperature>");
-            xmlBuilder.Append(ProcessControl.Instance.TargetTemperature.ToString("F2"));
+            xmlBuilder.Append(_instance.TargetTemperature.ToString("F2"));
             xmlBuilder.Append("</targettemperature>");
             xmlBuilder.Append("<limitmaxtemperature>");
-            xmlBuilder.Append(ProcessControl.Instance.TemperatureMax.ToString("F2"));
+            xmlBuilder.Append(_instance.TemperatureMax.ToString("F2"));
             xmlBuilder.Append("</limitmaxtemperature>");
             xmlBuilder.Append("<maxtemperaturereached>");
-            xmlBuilder.Append(ProcessControl.Instance.TemperatureMaxReached.ToString());
+            xmlBuilder.Append(_instance.TemperatureMaxReached.ToString());
             xmlBuilder.Append("</maxtemperaturereached>");
             xmlBuilder.Append("<heatpower>");
             xmlBuilder.Append(HeatingControl.Instance.HeatPower.ToString());
             xmlBuilder.Append("</heatpower>");
 
             xmlBuilder.Append("<relativehumidity>");
-            xmlBuilder.Append(ProcessControl.Instance.RelativeHumidity.ToString("F2"));
+            xmlBuilder.Append(_instance.RelativeHumidity.ToString("F2"));
             xmlBuilder.Append("</relativehumidity>");
             xmlBuilder.Append("<targetrelativehumidity>");
-            xmlBuilder.Append(ProcessControl.Instance.TargetRelativeHumidity.ToString("F2"));
+            xmlBuilder.Append(_instance.TargetRelativeHumidity.ToString("F2"));
             xmlBuilder.Append("</targetrelativehumidity>");
             xmlBuilder.Append("<pumpstate>");
             xmlBuilder.Append(PumpControl.Instance.PumpState.ToString());
@@ -241,12 +243,18 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<pumpduration>");
             xmlBuilder.Append(PumpControl.Instance.Duration.ToString());
             xmlBuilder.Append("</pumpduration>");
+            xmlBuilder.Append("<pumpIntervaltarget>");
+            xmlBuilder.Append(PumpControl.Instance.IntervalTargetMinutes.ToString());
+            xmlBuilder.Append("</pumpIntervaltarget>");
+            xmlBuilder.Append("<pumpdurationtarget>");
+            xmlBuilder.Append(PumpControl.Instance.DurationTargetSeconds.ToString());
+            xmlBuilder.Append("</pumpdurationtarget>");
 
             xmlBuilder.Append("<co2>");
-            xmlBuilder.Append(ProcessControl.Instance.CO2.ToString());
+            xmlBuilder.Append(_instance.CO2.ToString());
             xmlBuilder.Append("</co2>");
             xmlBuilder.Append("<targetco2>");
-            xmlBuilder.Append(ProcessControl.Instance.TargetCO2.ToString());
+            xmlBuilder.Append(_instance.TargetCO2.ToString());
             xmlBuilder.Append("</targetco2>");
 
             xmlBuilder.Append("<trapstate>");
@@ -259,16 +267,16 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append(VentilationControl.Instance.Duration.ToString());
             xmlBuilder.Append("</ventilationduration>");
             xmlBuilder.Append("<ventilationfanenabled>");
-            xmlBuilder.Append(VentilationControl.Instance.FanEnabled.ToString()); // Fan used
+            xmlBuilder.Append(VentilationControl.Instance.FanEnabled.ToString());
             xmlBuilder.Append("</ventilationfanenabled>");
             xmlBuilder.Append("<ventilationIntervaltarget>");
-            xmlBuilder.Append(VentilationControl.Instance.IntervalTargetMinutes.ToString()); //minutes
+            xmlBuilder.Append(VentilationControl.Instance.IntervalTargetMinutes.ToString());
             xmlBuilder.Append("</ventilationIntervaltarget>");
             xmlBuilder.Append("<ventilationdurationtarget>");
-            xmlBuilder.Append(VentilationControl.Instance.DurationTargetSeconds.ToString()); // seconds
+            xmlBuilder.Append(VentilationControl.Instance.DurationTargetSeconds.ToString());
             xmlBuilder.Append("</ventilationdurationtarget>");
             xmlBuilder.Append("<ventilationdstate>");
-            xmlBuilder.Append(VentilationControl.Instance.State.ToString()); //Started or stopped
+            xmlBuilder.Append(VentilationControl.Instance.State.ToString());
             xmlBuilder.Append("</ventilationdstate>");
 
             xmlBuilder.Append("<actuatormode>");

@@ -40,8 +40,8 @@ namespace NetduinoPlus.Controler
         private int _durationTargetSeconds = 0;
         private bool _fanForced = false;
 
-        private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D9, false);   //Fan
-        private OutputPort outTrap = new OutputPort(Pins.GPIO_PIN_D10, false); //Trap
+        private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D9, false);
+        private OutputPort outTrap = new OutputPort(Pins.GPIO_PIN_D10, false);
         #endregion
 
 
@@ -93,6 +93,7 @@ namespace NetduinoPlus.Controler
 
 
         #region Constructors
+        private VentilationControl() { }
         #endregion
 
 

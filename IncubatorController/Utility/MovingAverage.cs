@@ -48,5 +48,10 @@ namespace NetduinoPlus.Controler
                 }
             }
         }
+
+        public double Abs(double value)
+        {
+          return (value >= 0) ? value : -value;
+        }
     }
 }

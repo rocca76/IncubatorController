@@ -6,9 +6,6 @@ namespace NetduinoPlus.Controler
 {
     public sealed class PumpControl
     {
-        const int RUNING_DURATION = 1;   // seconds
-        const int WAITING_DURATION = 600; // 10 minutes
-
         public enum PumpStateEnum
         {
             Stopped,
@@ -18,9 +15,10 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private static PumpControl _instance = new PumpControl();
         private TimeSpan _duration = TimeSpan.Zero;
-        private DateTime _lastActivation;
         private PumpStateEnum _pumpState = PumpStateEnum.Stopped;
-        private OutputPort outPump = new OutputPort(Pins.GPIO_PIN_D6, false);  //Pump
+        private int _intervalTargetMinutes = 0;
+        private int _durationTargetSeconds = 0;
+        private OutputPort _outPump = new OutputPort(Pins.GPIO_PIN_D6, false);
         #endregion
 
         #region Public Properties
@@ -38,10 +36,23 @@ namespace NetduinoPlus.Controler
         {
             get { return _duration; }
         }
+
+        public int IntervalTargetMinutes
+        {
+          get { return _intervalTargetMinutes; }
+          set { _intervalTargetMinutes = value; }
+        }
+
+        public int DurationTargetSeconds
+        {
+          get { return _durationTargetSeconds; }
+          set { _durationTargetSeconds = value; }
+        }
         #endregion
 
 
         #region Constructors
+        private PumpControl() { }
         #endregion
 
 
@@ -59,21 +70,15 @@ namespace NetduinoPlus.Controler
               {
                 if (_duration == TimeSpan.Zero)
                 {
-                  TimeSpan timeDelta = DateTime.Now.Subtract(_lastActivation);
-
-                  if (_pumpState == PumpStateEnum.Stopped && timeDelta.Minutes > 1 )
+                  if ( _pumpState == PumpStateEnum.Stopped && IsValidTarget() )
                   {
                     _pumpState = PumpStateEnum.Running;
-                    _duration = new TimeSpan(0, 0, RUNING_DURATION);
-                    outPump.Write(true);
-
-                    _lastActivation = DateTime.Now;
+                    _duration = new TimeSpan(0, 0, _durationTargetSeconds);
                   }
-                  else if (_pumpState == PumpStateEnum.Running)
+                  else if ( _pumpState == PumpStateEnum.Running && IsValidTarget() )
                   {
                     _pumpState = PumpStateEnum.Stopped;
-                    _duration = new TimeSpan(0, 0, WAITING_DURATION);
-                    outPump.Write(false);
+                    _duration = new TimeSpan(0, 0, _intervalTargetMinutes);
                   }
                 }
               }
@@ -81,23 +86,35 @@ namespace NetduinoPlus.Controler
               {
                 _pumpState = PumpStateEnum.Stopped;
                 _duration = TimeSpan.Zero;
-                outPump.Write(false);
               }
           }
           else
           {
               _pumpState = PumpStateEnum.Stopped;
               _duration = TimeSpan.Zero;
-              outPump.Write(false);
           }
+
+          SetPumpState();
         }
         #endregion
 
 
         #region Private Methods
-        private static double Abs(double value)
+        private void SetPumpState()
         {
-          return (value >= 0) ? value : -value;
+          if (_pumpState == PumpStateEnum.Stopped)
+          {
+            _outPump.Write(false);
+          }
+          else if (_pumpState == PumpStateEnum.Running)
+          {
+            _outPump.Write(true);
+          }
+        }
+
+        private bool IsValidTarget()
+        {
+          return _intervalTargetMinutes > 0 && _durationTargetSeconds > 0;
         }
         #endregion
     }
