@@ -143,10 +143,10 @@ namespace NetduinoPlus.Controler
             }
             else if (parts[0] == "VENTILATION_PARAMETERS")
             {
-              _instance.TargetCO2 = int.Parse(parts[4]);
-              VentilationControl.Instance.FanEnabled = int.Parse(parts[1]);
-              VentilationControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
-              VentilationControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
+              _instance.TargetCO2 = int.Parse(parts[1]);
+              VentilationControl.Instance.FanEnabled = int.Parse(parts[2]);
+              VentilationControl.Instance.IntervalTargetMinutes = int.Parse(parts[3]);
+              VentilationControl.Instance.DurationTargetSeconds = int.Parse(parts[4]);
             }
             else if (parts[0] == "ACTUATOR_MODE")
             {
