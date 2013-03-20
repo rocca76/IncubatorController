@@ -227,18 +227,12 @@ namespace NetduinoPlus.Controler
 
           lock (_lockObject)
           {
-            dataOutput.Append("<netduino>");
-            dataOutput.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
+            dataOutput.Append("<hatcher>");
+            dataOutput.Append("<datetime" + DateTime.Now.ToString() + "/>");
 
             dataOutput.Append("<temperature>");
             dataOutput.Append(_instance.Temperature.ToString("F2"));
             dataOutput.Append("</temperature>");
-            dataOutput.Append("<targettemperature>");
-            dataOutput.Append(_instance.TargetTemperature.ToString("F2"));
-            dataOutput.Append("</targettemperature>");
-            dataOutput.Append("<limitmaxtemperature>");
-            dataOutput.Append(_instance.TemperatureMax.ToString("F2"));
-            dataOutput.Append("</limitmaxtemperature>");
             dataOutput.Append("<maxtemperaturereached>");
             dataOutput.Append(_instance.TemperatureMaxReached.ToString());
             dataOutput.Append("</maxtemperaturereached>");
@@ -249,35 +243,22 @@ namespace NetduinoPlus.Controler
             dataOutput.Append("<relativehumidity>");
             dataOutput.Append(_instance.RelativeHumidity.ToString("F2"));
             dataOutput.Append("</relativehumidity>");
-            dataOutput.Append("<targetrelativehumidity>");
-            dataOutput.Append(_instance.TargetRelativeHumidity.ToString("F2"));
-            dataOutput.Append("</targetrelativehumidity>");
             dataOutput.Append("<pumpstate>");
             dataOutput.Append(PumpControl.Instance.PumpState.ToString());
             dataOutput.Append("</pumpstate>");
             dataOutput.Append("<pumpduration>");
             dataOutput.Append(PumpControl.Instance.Duration.ToString());
             dataOutput.Append("</pumpduration>");
-            dataOutput.Append("<pumpintervaltarget>");
-            dataOutput.Append(PumpControl.Instance.IntervalTargetMinutes.ToString());
-            dataOutput.Append("</pumpintervaltarget>");
-            dataOutput.Append("<pumpdurationtarget>");
-            dataOutput.Append(PumpControl.Instance.DurationTargetSeconds.ToString());
-            dataOutput.Append("</pumpdurationtarget>");
-
-            dataOutput.Append("<co2>");
-            dataOutput.Append(_instance.CO2.ToString());
-            dataOutput.Append("</co2>");
-            dataOutput.Append("<targetco2>");
-            dataOutput.Append(_instance.TargetCO2.ToString());
-            dataOutput.Append("</targetco2>");
-
             dataOutput.Append("<trapstate>");
             dataOutput.Append(VentilationControl.Instance.TrapState.ToString());
             dataOutput.Append("</trapstate>");
             dataOutput.Append("<fanstate>");
             dataOutput.Append(VentilationControl.Instance.FanState.ToString());
             dataOutput.Append("</fanstate>");
+
+            dataOutput.Append("<co2>");
+            dataOutput.Append(_instance.CO2.ToString());
+            dataOutput.Append("</co2>");
             dataOutput.Append("<ventilationdstate>");
             dataOutput.Append(VentilationControl.Instance.State.ToString());
             dataOutput.Append("</ventilationdstate>");
@@ -291,8 +272,31 @@ namespace NetduinoPlus.Controler
             dataOutput.Append("<actuatorduration>");
             dataOutput.Append(ActuatorControl.Instance.Duration.ToString());
             dataOutput.Append("</actuatorduration>");
-            dataOutput.Append("</data>");
-            dataOutput.Append("</netduino>");
+
+            //////////////////////////////////////////////////////////////////////////
+
+            dataOutput.Append("<targettemperature>");
+            dataOutput.Append(_instance.TargetTemperature.ToString("F2"));
+            dataOutput.Append("</targettemperature>");
+            dataOutput.Append("<limitmaxtemperature>");
+            dataOutput.Append(_instance.TemperatureMax.ToString("F2"));
+            dataOutput.Append("</limitmaxtemperature>");
+
+            dataOutput.Append("<targetrelativehumidity>");
+            dataOutput.Append(_instance.TargetRelativeHumidity.ToString("F2"));
+            dataOutput.Append("</targetrelativehumidity>");
+            dataOutput.Append("<pumpintervaltarget>");
+            dataOutput.Append(PumpControl.Instance.IntervalTargetMinutes.ToString());
+            dataOutput.Append("</pumpintervaltarget>");
+            dataOutput.Append("<pumpdurationtarget>");
+            dataOutput.Append(PumpControl.Instance.DurationTargetSeconds.ToString());
+            dataOutput.Append("</pumpdurationtarget>");
+
+            dataOutput.Append("<targetco2>");
+            dataOutput.Append(_instance.TargetCO2.ToString());
+            dataOutput.Append("</targetco2>");
+            
+            dataOutput.Append("</hatcher>");
           }
 
           return dataOutput;
