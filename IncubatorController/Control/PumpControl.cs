@@ -64,43 +64,48 @@ namespace NetduinoPlus.Controler
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
-            if (ProcessControl.Instance.RelativeHumidity > 0)
+            if ((ProcessControl.Instance.RelativeHumidity > 0) && 
+                (ProcessControl.Instance.RelativeHumidity < ProcessControl.Instance.TargetRelativeHumidity))
             {
-              if (ProcessControl.Instance.RelativeHumidity < ProcessControl.Instance.TargetRelativeHumidity)
-              {
                 if (_duration == TimeSpan.Zero)
                 {
-                  if ( _pumpState == PumpStateEnum.Stopped && IsValidTarget() )
-                  {
-                    _pumpState = PumpStateEnum.Running;
-                    _duration = new TimeSpan(0, 0, _durationTargetSeconds);
-                  }
-                  else if ( _pumpState == PumpStateEnum.Running && IsValidTarget() )
-                  {
-                    _pumpState = PumpStateEnum.Stopped;
-                    _duration = new TimeSpan(0, 0, _intervalTargetMinutes);
-                  }
+                    if ( _pumpState == PumpStateEnum.Stopped && IsValidTarget() )
+                    {
+                        _pumpState = PumpStateEnum.Running;
+                        _duration = new TimeSpan(0, 0, _durationTargetSeconds);
+                    }
+                    else if ( _pumpState == PumpStateEnum.Running && IsValidTarget() )
+                    {
+                        _pumpState = PumpStateEnum.Stopped;
+                        _duration = new TimeSpan(0, _intervalTargetMinutes, 0);
+                    }
                 }
-              }
-              else
-              {
+            }
+            else
+            {
                 _pumpState = PumpStateEnum.Stopped;
                 _duration = TimeSpan.Zero;
-              }
-          }
-          else
-          {
-              _pumpState = PumpStateEnum.Stopped;
-              _duration = TimeSpan.Zero;
-          }
+            }
 
-          SetPumpState();
+            SetOutputState();
+        }
+
+        public void Activate(int activate)
+        {
+            if (activate == 0)
+            {
+                _outPump.Write(false);
+            }
+            else if (activate == 1)
+            {
+                _outPump.Write(true);
+            }
         }
         #endregion
 
 
         #region Private Methods
-        private void SetPumpState()
+        private void SetOutputState()
         {
           if (_pumpState == PumpStateEnum.Stopped)
           {

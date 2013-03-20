@@ -6,8 +6,8 @@ namespace NetduinoPlus.Controler
 {
     public sealed class ActuatorControl
     {
-        private const int ACTUARTOR_DELAY = 12; // 12 seconds
-        private const int TILT_PERIOD = 7200;   // seconds (2hr)
+        private const int ACTUARTOR_DELAY = 26; // seconds
+        private const int TILT_PERIOD = 2;      // hours
 
         private static readonly ActuatorControl _instance = new ActuatorControl();
         private bool _autoModeReady = false;
@@ -159,7 +159,7 @@ namespace NetduinoPlus.Controler
                         if (_duration == TimeSpan.Zero)
                         {
                             //Start waiting period
-                            _duration = new TimeSpan(0, 0, TILT_PERIOD);
+                            _duration = new TimeSpan(TILT_PERIOD, 0, 0);
 
                             _actuatorState = ActuatorState.Close;
                             outOpen.Write(false);
@@ -192,7 +192,7 @@ namespace NetduinoPlus.Controler
                         if (_duration == TimeSpan.Zero)
                         {
                             //Start waiting period
-                            _duration = new TimeSpan(0, 0, TILT_PERIOD);
+                            _duration = new TimeSpan(TILT_PERIOD, 0, 0);
 
                             _actuatorState = ActuatorState.Open;
                             outOpen.Write(false);

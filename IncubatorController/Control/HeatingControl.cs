@@ -66,13 +66,13 @@ namespace NetduinoPlus.Controler
 
             ProcessControl.Instance.TemperatureMaxReached = (temperature >= temperatureMax);
 
-            SetHeatPower();
+            SetOutputState();
         }
         #endregion
 
 
         #region Private Methods
-        private void SetHeatPower()
+        private void SetOutputState()
         {
             switch (_heatPower)
             {

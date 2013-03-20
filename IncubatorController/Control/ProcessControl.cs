@@ -141,12 +141,13 @@ namespace NetduinoPlus.Controler
               PumpControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
               PumpControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
             }
+            else if (parts[0] == "PUMP_ACTIVATE")
+            {
+                PumpControl.Instance.Activate(int.Parse(parts[1]));
+            }
             else if (parts[0] == "VENTILATION_PARAMETERS")
             {
               _instance.TargetCO2 = int.Parse(parts[1]);
-              VentilationControl.Instance.FanEnabled = int.Parse(parts[2]);
-              VentilationControl.Instance.IntervalTargetMinutes = int.Parse(parts[3]);
-              VentilationControl.Instance.DurationTargetSeconds = int.Parse(parts[4]);
             }
             else if (parts[0] == "ACTUATOR_MODE")
             {
@@ -243,9 +244,9 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<pumpduration>");
             xmlBuilder.Append(PumpControl.Instance.Duration.ToString());
             xmlBuilder.Append("</pumpduration>");
-            xmlBuilder.Append("<pumpIntervaltarget>");
+            xmlBuilder.Append("<pumpintervaltarget>");
             xmlBuilder.Append(PumpControl.Instance.IntervalTargetMinutes.ToString());
-            xmlBuilder.Append("</pumpIntervaltarget>");
+            xmlBuilder.Append("</pumpintervaltarget>");
             xmlBuilder.Append("<pumpdurationtarget>");
             xmlBuilder.Append(PumpControl.Instance.DurationTargetSeconds.ToString());
             xmlBuilder.Append("</pumpdurationtarget>");
@@ -263,18 +264,6 @@ namespace NetduinoPlus.Controler
             xmlBuilder.Append("<fanstate>");
             xmlBuilder.Append(VentilationControl.Instance.FanState.ToString());
             xmlBuilder.Append("</fanstate>");
-            xmlBuilder.Append("<ventilationduration>");
-            xmlBuilder.Append(VentilationControl.Instance.Duration.ToString());
-            xmlBuilder.Append("</ventilationduration>");
-            xmlBuilder.Append("<ventilationfanenabled>");
-            xmlBuilder.Append(VentilationControl.Instance.FanEnabled.ToString());
-            xmlBuilder.Append("</ventilationfanenabled>");
-            xmlBuilder.Append("<ventilationIntervaltarget>");
-            xmlBuilder.Append(VentilationControl.Instance.IntervalTargetMinutes.ToString());
-            xmlBuilder.Append("</ventilationIntervaltarget>");
-            xmlBuilder.Append("<ventilationdurationtarget>");
-            xmlBuilder.Append(VentilationControl.Instance.DurationTargetSeconds.ToString());
-            xmlBuilder.Append("</ventilationdurationtarget>");
             xmlBuilder.Append("<ventilationdstate>");
             xmlBuilder.Append(VentilationControl.Instance.State.ToString());
             xmlBuilder.Append("</ventilationdstate>");
