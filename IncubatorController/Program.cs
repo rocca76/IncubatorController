@@ -42,7 +42,6 @@ namespace NetduinoPlus.Controler
           {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            ProcessControl.Instance.ReadSensor();
             ProcessControl.Instance.ProcessData();
 
             stopwatch.Stop();

@@ -101,12 +101,8 @@ namespace NetduinoPlus.Controler
                 _resetEvent.WaitOne();
 
                 Stopwatch stopwatch = Stopwatch.StartNew();
-                StringBuilder dataOutput;
-
-                lock (ProcessControl.Instance.DataOutput)
-                {
-                  dataOutput = new StringBuilder(ProcessControl.Instance.DataOutput.ToString());
-                }
+                
+                StringBuilder dataOutput = new StringBuilder(ProcessControl.Instance.BuildDataOutput().ToString());
                 
                 int size = _clientSocket.Send(Encoding.UTF8.GetBytes(dataOutput.ToString()));                
                 _dataSentCount++;

@@ -4,6 +4,7 @@ using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using System.Text;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace NetduinoPlus.Controler
 {
@@ -14,8 +15,8 @@ namespace NetduinoPlus.Controler
 
         #region Private Variables
         private static readonly ProcessControl _instance = new ProcessControl();
+        private static readonly object _lockObject = new object();
 
-        private static StringBuilder _dataOutput = new StringBuilder();
         private MovingAverage _temperatureAverage = new MovingAverage();
         private MovingAverage _relativeHumidityAverage = new MovingAverage();
 
@@ -36,11 +37,6 @@ namespace NetduinoPlus.Controler
         public static ProcessControl Instance
         {
           get { return _instance; }
-        }
-
-        public StringBuilder DataOutput
-        {
-          get { return _dataOutput; }
         }
 
         public double Temperature
@@ -103,18 +99,12 @@ namespace NetduinoPlus.Controler
         #endregion
 
         #region Public Methods
-        public void ReadSensor()
-        {
-            ReadTemperature();
-            ReadRelativeHumidity();
-            ReadCO2();
-
-            LogFile.Application(_temperature.ToString("F2") + "; " + _relativeHumidity.ToString("F2") + "; " + _CO2.ToString());
-        }
-
-        //[MethodImpl(MethodImplOptions.Synchronized)]
         public void ProcessData()
         {
+          lock (_lockObject)
+          {
+            ReadSensor();
+
             HeatingControl.Instance.ManageState();
             PumpControl.Instance.ManageState();
             VentilationControl.Instance.ManageState();
@@ -122,15 +112,26 @@ namespace NetduinoPlus.Controler
 
             if (NetworkCommunication.Instance.IsSenderRunning)
             {
-              BuildDataOutput();      
               NetworkCommunication.Instance.NotifySenderThread();
             }
+          }
         }
         #endregion
 
         #region Private Methods
+        public void ReadSensor()
+        {
+          ReadTemperature();
+          ReadRelativeHumidity();
+          ReadCO2();
+
+          LogFile.Application(_temperature.ToString("F2") + "; " + _relativeHumidity.ToString("F2") + "; " + _CO2.ToString());
+        }
+
         private void OnParametersReceived(String parameters)
         {
+          lock (_lockObject)
+          {
             string[] parts = parameters.Split(' ');
 
             if (parts[0] == "INIT")
@@ -153,7 +154,7 @@ namespace NetduinoPlus.Controler
             }
             else if (parts[0] == "PUMP_ACTIVATE")
             {
-                PumpControl.Instance.Activate(int.Parse(parts[1]));
+              PumpControl.Instance.Activate(int.Parse(parts[1]));
             }
             else if (parts[0] == "VENTILATION_PARAMETERS")
             {
@@ -161,16 +162,17 @@ namespace NetduinoPlus.Controler
             }
             else if (parts[0] == "ACTUATOR_MODE")
             {
-                ActuatorControl.Instance.SetMode(parts[1]);
+              ActuatorControl.Instance.SetMode(parts[1]);
             }
             else if (parts[0] == "ACTUATOR_OPEN")
             {
-                ActuatorControl.Instance.Open(int.Parse(parts[1]));
+              ActuatorControl.Instance.Open(int.Parse(parts[1]));
             }
             else if (parts[0] == "ACTUATOR_CLOSE")
             {
-                ActuatorControl.Instance.Close(int.Parse(parts[1]));
+              ActuatorControl.Instance.Close(int.Parse(parts[1]));
             }
+          }
         }
 
         private void ReadTemperature()
@@ -219,79 +221,81 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        public void BuildDataOutput()
+        public StringBuilder BuildDataOutput()
         {
-          lock (_dataOutput)
+          StringBuilder dataOutput = new StringBuilder();
+
+          lock (_lockObject)
           {
-            _dataOutput.Clear();
+            dataOutput.Append("<netduino>");
+            dataOutput.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
 
-            _dataOutput.Append("<netduino>");
-            _dataOutput.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
+            dataOutput.Append("<temperature>");
+            dataOutput.Append(_instance.Temperature.ToString("F2"));
+            dataOutput.Append("</temperature>");
+            dataOutput.Append("<targettemperature>");
+            dataOutput.Append(_instance.TargetTemperature.ToString("F2"));
+            dataOutput.Append("</targettemperature>");
+            dataOutput.Append("<limitmaxtemperature>");
+            dataOutput.Append(_instance.TemperatureMax.ToString("F2"));
+            dataOutput.Append("</limitmaxtemperature>");
+            dataOutput.Append("<maxtemperaturereached>");
+            dataOutput.Append(_instance.TemperatureMaxReached.ToString());
+            dataOutput.Append("</maxtemperaturereached>");
+            dataOutput.Append("<heatpower>");
+            dataOutput.Append(HeatingControl.Instance.HeatPower.ToString());
+            dataOutput.Append("</heatpower>");
 
-            _dataOutput.Append("<temperature>");
-            _dataOutput.Append(_instance.Temperature.ToString("F2"));
-            _dataOutput.Append("</temperature>");
-            _dataOutput.Append("<targettemperature>");
-            _dataOutput.Append(_instance.TargetTemperature.ToString("F2"));
-            _dataOutput.Append("</targettemperature>");
-            _dataOutput.Append("<limitmaxtemperature>");
-            _dataOutput.Append(_instance.TemperatureMax.ToString("F2"));
-            _dataOutput.Append("</limitmaxtemperature>");
-            _dataOutput.Append("<maxtemperaturereached>");
-            _dataOutput.Append(_instance.TemperatureMaxReached.ToString());
-            _dataOutput.Append("</maxtemperaturereached>");
-            _dataOutput.Append("<heatpower>");
-            _dataOutput.Append(HeatingControl.Instance.HeatPower.ToString());
-            _dataOutput.Append("</heatpower>");
+            dataOutput.Append("<relativehumidity>");
+            dataOutput.Append(_instance.RelativeHumidity.ToString("F2"));
+            dataOutput.Append("</relativehumidity>");
+            dataOutput.Append("<targetrelativehumidity>");
+            dataOutput.Append(_instance.TargetRelativeHumidity.ToString("F2"));
+            dataOutput.Append("</targetrelativehumidity>");
+            dataOutput.Append("<pumpstate>");
+            dataOutput.Append(PumpControl.Instance.PumpState.ToString());
+            dataOutput.Append("</pumpstate>");
+            dataOutput.Append("<pumpduration>");
+            dataOutput.Append(PumpControl.Instance.Duration.ToString());
+            dataOutput.Append("</pumpduration>");
+            dataOutput.Append("<pumpintervaltarget>");
+            dataOutput.Append(PumpControl.Instance.IntervalTargetMinutes.ToString());
+            dataOutput.Append("</pumpintervaltarget>");
+            dataOutput.Append("<pumpdurationtarget>");
+            dataOutput.Append(PumpControl.Instance.DurationTargetSeconds.ToString());
+            dataOutput.Append("</pumpdurationtarget>");
 
-            _dataOutput.Append("<relativehumidity>");
-            _dataOutput.Append(_instance.RelativeHumidity.ToString("F2"));
-            _dataOutput.Append("</relativehumidity>");
-            _dataOutput.Append("<targetrelativehumidity>");
-            _dataOutput.Append(_instance.TargetRelativeHumidity.ToString("F2"));
-            _dataOutput.Append("</targetrelativehumidity>");
-            _dataOutput.Append("<pumpstate>");
-            _dataOutput.Append(PumpControl.Instance.PumpState.ToString());
-            _dataOutput.Append("</pumpstate>");
-            _dataOutput.Append("<pumpduration>");
-            _dataOutput.Append(PumpControl.Instance.Duration.ToString());
-            _dataOutput.Append("</pumpduration>");
-            _dataOutput.Append("<pumpintervaltarget>");
-            _dataOutput.Append(PumpControl.Instance.IntervalTargetMinutes.ToString());
-            _dataOutput.Append("</pumpintervaltarget>");
-            _dataOutput.Append("<pumpdurationtarget>");
-            _dataOutput.Append(PumpControl.Instance.DurationTargetSeconds.ToString());
-            _dataOutput.Append("</pumpdurationtarget>");
+            dataOutput.Append("<co2>");
+            dataOutput.Append(_instance.CO2.ToString());
+            dataOutput.Append("</co2>");
+            dataOutput.Append("<targetco2>");
+            dataOutput.Append(_instance.TargetCO2.ToString());
+            dataOutput.Append("</targetco2>");
 
-            _dataOutput.Append("<co2>");
-            _dataOutput.Append(_instance.CO2.ToString());
-            _dataOutput.Append("</co2>");
-            _dataOutput.Append("<targetco2>");
-            _dataOutput.Append(_instance.TargetCO2.ToString());
-            _dataOutput.Append("</targetco2>");
+            dataOutput.Append("<trapstate>");
+            dataOutput.Append(VentilationControl.Instance.TrapState.ToString());
+            dataOutput.Append("</trapstate>");
+            dataOutput.Append("<fanstate>");
+            dataOutput.Append(VentilationControl.Instance.FanState.ToString());
+            dataOutput.Append("</fanstate>");
+            dataOutput.Append("<ventilationdstate>");
+            dataOutput.Append(VentilationControl.Instance.State.ToString());
+            dataOutput.Append("</ventilationdstate>");
 
-            _dataOutput.Append("<trapstate>");
-            _dataOutput.Append(VentilationControl.Instance.TrapState.ToString());
-            _dataOutput.Append("</trapstate>");
-            _dataOutput.Append("<fanstate>");
-            _dataOutput.Append(VentilationControl.Instance.FanState.ToString());
-            _dataOutput.Append("</fanstate>");
-            _dataOutput.Append("<ventilationdstate>");
-            _dataOutput.Append(VentilationControl.Instance.State.ToString());
-            _dataOutput.Append("</ventilationdstate>");
-
-            _dataOutput.Append("<actuatormode>");
-            _dataOutput.Append(ActuatorControl.Instance.Mode.ToString());
-            _dataOutput.Append("</actuatormode>");
-            _dataOutput.Append("<actuatorstate>");
-            _dataOutput.Append(ActuatorControl.Instance.State.ToString());
-            _dataOutput.Append("</actuatorstate>");
-            _dataOutput.Append("<actuatorduration>");
-            _dataOutput.Append(ActuatorControl.Instance.Duration.ToString());
-            _dataOutput.Append("</actuatorduration>");
-            _dataOutput.Append("</data>");
-            _dataOutput.Append("</netduino>");
+            dataOutput.Append("<actuatormode>");
+            dataOutput.Append(ActuatorControl.Instance.Mode.ToString());
+            dataOutput.Append("</actuatormode>");
+            dataOutput.Append("<actuatorstate>");
+            dataOutput.Append(ActuatorControl.Instance.State.ToString());
+            dataOutput.Append("</actuatorstate>");
+            dataOutput.Append("<actuatorduration>");
+            dataOutput.Append(ActuatorControl.Instance.Duration.ToString());
+            dataOutput.Append("</actuatorduration>");
+            dataOutput.Append("</data>");
+            dataOutput.Append("</netduino>");
           }
+
+          return dataOutput;
         }
         #endregion
     }
