@@ -14,7 +14,8 @@ namespace NetduinoPlus.Controler
 
         #region Private Variables
         private static readonly ProcessControl _instance = new ProcessControl();
-        
+
+        private static StringBuilder _dataOutput = new StringBuilder();
         private MovingAverage _temperatureAverage = new MovingAverage();
         private MovingAverage _relativeHumidityAverage = new MovingAverage();
 
@@ -35,6 +36,11 @@ namespace NetduinoPlus.Controler
         public static ProcessControl Instance
         {
           get { return _instance; }
+        }
+
+        public StringBuilder DataOutput
+        {
+          get { return _dataOutput; }
         }
 
         public double Temperature
@@ -106,7 +112,7 @@ namespace NetduinoPlus.Controler
             LogFile.Application(_temperature.ToString("F2") + "; " + _relativeHumidity.ToString("F2") + "; " + _CO2.ToString());
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
+        //[MethodImpl(MethodImplOptions.Synchronized)]
         public void ProcessData()
         {
             HeatingControl.Instance.ManageState();
@@ -114,7 +120,11 @@ namespace NetduinoPlus.Controler
             VentilationControl.Instance.ManageState();
             ActuatorControl.Instance.ManageState();
 
-            NetworkCommunication.Instance.NotifySenderThread();
+            if (NetworkCommunication.Instance.IsSenderRunning)
+            {
+              BuildDataOutput();      
+              NetworkCommunication.Instance.NotifySenderThread();
+            }
         }
         #endregion
 
@@ -209,78 +219,79 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        public String BuildDataOutput()
+        public void BuildDataOutput()
         {
-            StringBuilder xmlBuilder = new StringBuilder();
+          lock (_dataOutput)
+          {
+            _dataOutput.Clear();
 
-            xmlBuilder.Append("<netduino>");
-            xmlBuilder.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
+            _dataOutput.Append("<netduino>");
+            _dataOutput.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
 
-            xmlBuilder.Append("<temperature>");
-            xmlBuilder.Append(_instance.Temperature.ToString("F2"));
-            xmlBuilder.Append("</temperature>");
-            xmlBuilder.Append("<targettemperature>");
-            xmlBuilder.Append(_instance.TargetTemperature.ToString("F2"));
-            xmlBuilder.Append("</targettemperature>");
-            xmlBuilder.Append("<limitmaxtemperature>");
-            xmlBuilder.Append(_instance.TemperatureMax.ToString("F2"));
-            xmlBuilder.Append("</limitmaxtemperature>");
-            xmlBuilder.Append("<maxtemperaturereached>");
-            xmlBuilder.Append(_instance.TemperatureMaxReached.ToString());
-            xmlBuilder.Append("</maxtemperaturereached>");
-            xmlBuilder.Append("<heatpower>");
-            xmlBuilder.Append(HeatingControl.Instance.HeatPower.ToString());
-            xmlBuilder.Append("</heatpower>");
+            _dataOutput.Append("<temperature>");
+            _dataOutput.Append(_instance.Temperature.ToString("F2"));
+            _dataOutput.Append("</temperature>");
+            _dataOutput.Append("<targettemperature>");
+            _dataOutput.Append(_instance.TargetTemperature.ToString("F2"));
+            _dataOutput.Append("</targettemperature>");
+            _dataOutput.Append("<limitmaxtemperature>");
+            _dataOutput.Append(_instance.TemperatureMax.ToString("F2"));
+            _dataOutput.Append("</limitmaxtemperature>");
+            _dataOutput.Append("<maxtemperaturereached>");
+            _dataOutput.Append(_instance.TemperatureMaxReached.ToString());
+            _dataOutput.Append("</maxtemperaturereached>");
+            _dataOutput.Append("<heatpower>");
+            _dataOutput.Append(HeatingControl.Instance.HeatPower.ToString());
+            _dataOutput.Append("</heatpower>");
 
-            xmlBuilder.Append("<relativehumidity>");
-            xmlBuilder.Append(_instance.RelativeHumidity.ToString("F2"));
-            xmlBuilder.Append("</relativehumidity>");
-            xmlBuilder.Append("<targetrelativehumidity>");
-            xmlBuilder.Append(_instance.TargetRelativeHumidity.ToString("F2"));
-            xmlBuilder.Append("</targetrelativehumidity>");
-            xmlBuilder.Append("<pumpstate>");
-            xmlBuilder.Append(PumpControl.Instance.PumpState.ToString());
-            xmlBuilder.Append("</pumpstate>");
-            xmlBuilder.Append("<pumpduration>");
-            xmlBuilder.Append(PumpControl.Instance.Duration.ToString());
-            xmlBuilder.Append("</pumpduration>");
-            xmlBuilder.Append("<pumpintervaltarget>");
-            xmlBuilder.Append(PumpControl.Instance.IntervalTargetMinutes.ToString());
-            xmlBuilder.Append("</pumpintervaltarget>");
-            xmlBuilder.Append("<pumpdurationtarget>");
-            xmlBuilder.Append(PumpControl.Instance.DurationTargetSeconds.ToString());
-            xmlBuilder.Append("</pumpdurationtarget>");
+            _dataOutput.Append("<relativehumidity>");
+            _dataOutput.Append(_instance.RelativeHumidity.ToString("F2"));
+            _dataOutput.Append("</relativehumidity>");
+            _dataOutput.Append("<targetrelativehumidity>");
+            _dataOutput.Append(_instance.TargetRelativeHumidity.ToString("F2"));
+            _dataOutput.Append("</targetrelativehumidity>");
+            _dataOutput.Append("<pumpstate>");
+            _dataOutput.Append(PumpControl.Instance.PumpState.ToString());
+            _dataOutput.Append("</pumpstate>");
+            _dataOutput.Append("<pumpduration>");
+            _dataOutput.Append(PumpControl.Instance.Duration.ToString());
+            _dataOutput.Append("</pumpduration>");
+            _dataOutput.Append("<pumpintervaltarget>");
+            _dataOutput.Append(PumpControl.Instance.IntervalTargetMinutes.ToString());
+            _dataOutput.Append("</pumpintervaltarget>");
+            _dataOutput.Append("<pumpdurationtarget>");
+            _dataOutput.Append(PumpControl.Instance.DurationTargetSeconds.ToString());
+            _dataOutput.Append("</pumpdurationtarget>");
 
-            xmlBuilder.Append("<co2>");
-            xmlBuilder.Append(_instance.CO2.ToString());
-            xmlBuilder.Append("</co2>");
-            xmlBuilder.Append("<targetco2>");
-            xmlBuilder.Append(_instance.TargetCO2.ToString());
-            xmlBuilder.Append("</targetco2>");
+            _dataOutput.Append("<co2>");
+            _dataOutput.Append(_instance.CO2.ToString());
+            _dataOutput.Append("</co2>");
+            _dataOutput.Append("<targetco2>");
+            _dataOutput.Append(_instance.TargetCO2.ToString());
+            _dataOutput.Append("</targetco2>");
 
-            xmlBuilder.Append("<trapstate>");
-            xmlBuilder.Append(VentilationControl.Instance.TrapState.ToString());
-            xmlBuilder.Append("</trapstate>");
-            xmlBuilder.Append("<fanstate>");
-            xmlBuilder.Append(VentilationControl.Instance.FanState.ToString());
-            xmlBuilder.Append("</fanstate>");
-            xmlBuilder.Append("<ventilationdstate>");
-            xmlBuilder.Append(VentilationControl.Instance.State.ToString());
-            xmlBuilder.Append("</ventilationdstate>");
+            _dataOutput.Append("<trapstate>");
+            _dataOutput.Append(VentilationControl.Instance.TrapState.ToString());
+            _dataOutput.Append("</trapstate>");
+            _dataOutput.Append("<fanstate>");
+            _dataOutput.Append(VentilationControl.Instance.FanState.ToString());
+            _dataOutput.Append("</fanstate>");
+            _dataOutput.Append("<ventilationdstate>");
+            _dataOutput.Append(VentilationControl.Instance.State.ToString());
+            _dataOutput.Append("</ventilationdstate>");
 
-            xmlBuilder.Append("<actuatormode>");
-            xmlBuilder.Append(ActuatorControl.Instance.Mode.ToString());
-            xmlBuilder.Append("</actuatormode>");
-            xmlBuilder.Append("<actuatorstate>");
-            xmlBuilder.Append(ActuatorControl.Instance.State.ToString());
-            xmlBuilder.Append("</actuatorstate>");
-            xmlBuilder.Append("<actuatorduration>");
-            xmlBuilder.Append(ActuatorControl.Instance.Duration.ToString());
-            xmlBuilder.Append("</actuatorduration>");
-            xmlBuilder.Append("</data>");
-            xmlBuilder.Append("</netduino>");
-
-            return xmlBuilder.ToString();
+            _dataOutput.Append("<actuatormode>");
+            _dataOutput.Append(ActuatorControl.Instance.Mode.ToString());
+            _dataOutput.Append("</actuatormode>");
+            _dataOutput.Append("<actuatorstate>");
+            _dataOutput.Append(ActuatorControl.Instance.State.ToString());
+            _dataOutput.Append("</actuatorstate>");
+            _dataOutput.Append("<actuatorduration>");
+            _dataOutput.Append(ActuatorControl.Instance.Duration.ToString());
+            _dataOutput.Append("</actuatorduration>");
+            _dataOutput.Append("</data>");
+            _dataOutput.Append("</netduino>");
+          }
         }
         #endregion
     }

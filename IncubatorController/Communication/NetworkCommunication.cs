@@ -50,6 +50,11 @@ namespace NetduinoPlus.Controler
             get { return _remoteAddress; }
             set { _remoteAddress = value; }
         }
+
+        public bool IsSenderRunning
+        {
+            get { return _senderThread != null; }
+        }
         #endregion
 
 
@@ -115,8 +120,8 @@ namespace NetduinoPlus.Controler
 
         public void StartSender()
         {
-            _senderThread = new SenderThread();
-            _senderThread.Start();
+          _senderThread = new SenderThread();
+          _senderThread.Start();
         }
 
         public void StartListener()

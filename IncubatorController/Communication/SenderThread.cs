@@ -11,12 +11,13 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private int _dataSentCount = 0;
         private Thread _currentThread = null;
-        private static AutoResetEvent _resetEvent = new AutoResetEvent(false);
-        private static Socket _clientSocket = null;
+        private AutoResetEvent _resetEvent = new AutoResetEvent(false);
+        private Socket _clientSocket = null;
         #endregion
 
 
         #region Constructors
+        public SenderThread() {}
         #endregion
 
 
@@ -100,8 +101,14 @@ namespace NetduinoPlus.Controler
                 _resetEvent.WaitOne();
 
                 Stopwatch stopwatch = Stopwatch.StartNew();
+                StringBuilder dataOutput;
 
-                int size = _clientSocket.Send(Encoding.UTF8.GetBytes(ProcessControl.Instance.BuildDataOutput()));
+                lock (ProcessControl.Instance.DataOutput)
+                {
+                  dataOutput = new StringBuilder(ProcessControl.Instance.DataOutput.ToString());
+                }
+                
+                int size = _clientSocket.Send(Encoding.UTF8.GetBytes(dataOutput.ToString()));                
                 _dataSentCount++;
 
                 stopwatch.Stop();
