@@ -162,6 +162,8 @@ namespace NetduinoPlus.Controler
             else if (parts[0] == "VENTILATION_PARAMETERS")
             {
               _instance.TargetCO2 = int.Parse(parts[1]);
+              VentilationControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
+              VentilationControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
             }
             else if (parts[0] == "ACTUATOR_COMMAND")
             {
@@ -298,6 +300,12 @@ namespace NetduinoPlus.Controler
             dataOutput.Append("<targetco2>");
             dataOutput.Append(_instance.TargetCO2.ToString());
             dataOutput.Append("</targetco2>");
+            dataOutput.Append("<ventilationintervaltarget>");
+            dataOutput.Append(PumpControl.Instance.IntervalTargetMinutes.ToString());
+            dataOutput.Append("</ventilationintervaltarget>");
+            dataOutput.Append("<ventilationdurationtarget>");
+            dataOutput.Append(PumpControl.Instance.DurationTargetSeconds.ToString());
+            dataOutput.Append("</ventilationdurationtarget>");
 
             dataOutput.Append("</data>");
             dataOutput.Append("</hatcher>");

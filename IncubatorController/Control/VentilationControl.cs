@@ -33,6 +33,8 @@ namespace NetduinoPlus.Controler
         private VentilationState _ventilationState = VentilationState.Stopped;
         private FanStateEnum _fanState = FanStateEnum.Stopped;
         private TrapStateEnum _trapState = TrapStateEnum.Closed;
+        private int _intervalTargetMinutes = 0;
+        private int _durationTargetSeconds = 0;
 
         private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D9, false);
         private OutputPort outTrap = new OutputPort(Pins.GPIO_PIN_D10, false);
@@ -58,6 +60,18 @@ namespace NetduinoPlus.Controler
         public VentilationControl.VentilationState State
         {
             get { return _ventilationState; }
+        }
+
+        public int IntervalTargetMinutes
+        {
+            get { return _intervalTargetMinutes; }
+            set { _intervalTargetMinutes = value; }
+        }
+
+        public int DurationTargetSeconds
+        {
+            get { return _durationTargetSeconds; }
+            set { _durationTargetSeconds = value; }
         }
         #endregion
 
@@ -192,6 +206,11 @@ namespace NetduinoPlus.Controler
         private bool IsValidTarget()
         {
             return ProcessControl.Instance.TargetRelativeHumidity > 0 && ProcessControl.Instance.TargetCO2 > 0;
+        }
+
+        private bool IsValidDelay()
+        {
+            return _intervalTargetMinutes > 0 && _durationTargetSeconds > 0;
         }
         #endregion
     }
