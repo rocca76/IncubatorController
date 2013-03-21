@@ -163,9 +163,9 @@ namespace NetduinoPlus.Controler
             {
               _instance.TargetCO2 = int.Parse(parts[1]);
             }
-            else if (parts[0] == "ACTUATOR_MODE")
+            else if (parts[0] == "ACTUATOR_COMMAND")
             {
-              ActuatorControl.Instance.SetMode(parts[1]);
+              ActuatorControl.Instance.SetCommand((ActuatorControl.ActuatorCommand)int.Parse(parts[1]));
             }
             else if (parts[0] == "ACTUATOR_OPEN")
             {
@@ -266,9 +266,9 @@ namespace NetduinoPlus.Controler
             dataOutput.Append(VentilationControl.Instance.State.ToString());
             dataOutput.Append("</ventilationdstate>");
 
-            dataOutput.Append("<actuatormode>");
-            dataOutput.Append(ActuatorControl.Instance.Mode.ToString());
-            dataOutput.Append("</actuatormode>");
+            dataOutput.Append("<actuatorcommand>");
+            dataOutput.Append(ActuatorControl.Instance.Command.ToString());
+            dataOutput.Append("</actuatorcommand>");
             dataOutput.Append("<actuatorstate>");
             dataOutput.Append(ActuatorControl.Instance.State.ToString());
             dataOutput.Append("</actuatorstate>");

@@ -6,24 +6,12 @@ namespace NetduinoPlus.Controler
 {
     public sealed class ActuatorControl
     {
-        private const int ACTUARTOR_DELAY = 26; // seconds
-        private const int TILT_PERIOD = 2;      // hours
-
-        private static readonly ActuatorControl _instance = new ActuatorControl();
-        private bool _autoModeReady = false;
-        private bool _autoModeInitializing = false;
-        private TimeSpan _duration = TimeSpan.Zero;
-        private ActuatorMode _actuatorMode = ActuatorMode.Manual;
-        private ActuatorState _actuatorState = ActuatorState.Unknown;
-
-        private OutputPort outOpen = new OutputPort(Pins.GPIO_PIN_D7, false);
-        private OutputPort outClose = new OutputPort(Pins.GPIO_PIN_D8, false);
-
-        public enum ActuatorMode
+        public enum ActuatorCommand
         {
-            Manual,
-            ManualCentered,
-            Auto
+            Start,
+            Stop,
+            Pause,
+            Unknown
         }
 
         public enum ActuatorState
@@ -33,8 +21,25 @@ namespace NetduinoPlus.Controler
             Close,
             Closing,
             Stopped,
+            Paused,
             Unknown
         }
+
+        #region Private Variables
+        private const int ACTUARTOR_DELAY = 26; // seconds
+        private const int TILT_PERIOD = 2;      // hours
+
+        private static readonly ActuatorControl _instance = new ActuatorControl();
+        private bool _autoModeReady = false;
+        private bool _autoModeInitializing = false;
+        private TimeSpan _duration = TimeSpan.Zero;
+        private ActuatorCommand _actuatorCommand = ActuatorCommand.Unknown;
+        private ActuatorState _actuatorState = ActuatorState.Unknown;
+
+        private OutputPort outOpen = new OutputPort(Pins.GPIO_PIN_D7, false);
+        private OutputPort outClose = new OutputPort(Pins.GPIO_PIN_D8, false);
+        #endregion
+
 
         #region Public Properties
         public static ActuatorControl Instance
@@ -42,9 +47,9 @@ namespace NetduinoPlus.Controler
             get { return _instance; }
         }
 
-        public ActuatorControl.ActuatorMode Mode
+        public ActuatorControl.ActuatorCommand Command
         {
-            get { return _actuatorMode; }
+            get { return _actuatorCommand; }
         }
 
         public ActuatorControl.ActuatorState State
@@ -58,6 +63,13 @@ namespace NetduinoPlus.Controler
         }
         #endregion
 
+
+        #region Constructors
+        private ActuatorControl() { }
+        #endregion
+
+
+        #region Public Methods
         public void Open(int open)
         {
             if (open == 0)
@@ -82,35 +94,27 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        public void SetMode(String mode)
+        public void SetCommand(ActuatorCommand command)
         {
-            outOpen.Write(false);
-            outClose.Write(false);
+            if (command == ActuatorCommand.Start)
+            {
 
-            if (mode == "MANUAL" || mode =="MANUAL_CENTERED")
+            }
+            else if (command == ActuatorCommand.Stop)
             {
                 _autoModeReady = false;
                 _autoModeInitializing = false;
-                _duration = TimeSpan.Zero;
-
-                if (mode == "MANUAL")
-                {
-                    _actuatorMode = ActuatorMode.Manual;
-                }
-                else if (mode == "MANUAL_CENTERED")
-                {
-                    _actuatorMode = ActuatorMode.ManualCentered;
-                }
+                _duration = TimeSpan.Zero;                
             }
-            else if (mode == "AUTO")
+            else if (command == ActuatorCommand.Pause)
             {
-                _actuatorMode = ActuatorMode.Auto;
+
             }
         }
 
         public void ManageState()
         {
-            if (_duration > TimeSpan.Zero)
+            /*if (_duration > TimeSpan.Zero)
             {
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
@@ -222,7 +226,19 @@ namespace NetduinoPlus.Controler
                         }
                     }
                 }
-            }
+            }*/
+
+            SetOutputState();
         }
+        #endregion
+
+
+        #region Private Methods
+        private void SetOutputState()
+        {
+            outOpen.Write(false);
+            outClose.Write(false);
+        }
+        #endregion
     }
 }
