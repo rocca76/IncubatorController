@@ -35,6 +35,9 @@ namespace NetduinoPlus.Controler
         private TrapStateEnum _trapState = TrapStateEnum.Closed;
         private int _intervalTargetMinutes = 0;
         private int _durationTargetSeconds = 0;
+        private TimeSpan _duration = TimeSpan.Zero;
+        private bool _toggleVentilationState = false;
+        private bool _ventilationStandby = false;
 
         private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D9, false);
         private OutputPort outTrap = new OutputPort(Pins.GPIO_PIN_D10, false);
@@ -73,6 +76,16 @@ namespace NetduinoPlus.Controler
             get { return _durationTargetSeconds; }
             set { _durationTargetSeconds = value; }
         }
+
+        public TimeSpan Duration
+        {
+            get { return _duration; }
+        }
+
+        public bool Standby
+        {
+            get { return _ventilationStandby; }
+        }
         #endregion
 
 
@@ -84,6 +97,11 @@ namespace NetduinoPlus.Controler
         #region Public Methods
         public void ManageState()
         {
+            if (_duration > TimeSpan.Zero)
+            {
+                _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
+            }
+
             if (ProcessControl.Instance.CO2 > 0)
             {
                 if (_ventilationState == VentilationState.Stopped)
@@ -103,14 +121,45 @@ namespace NetduinoPlus.Controler
                     if (ProcessControl.Instance.CO2 <= ProcessControl.Instance.TargetCO2)
                     {
                         _ventilationState = VentilationState.Stopped;
+                        _duration = TimeSpan.Zero;
+                        _toggleVentilationState = false;
+                        _ventilationStandby = false;
                     }
                 }
             }
             else
             {
                 _ventilationState = VentilationState.Stopped;
+                _duration = TimeSpan.Zero;
+                _toggleVentilationState = false;
+                _ventilationStandby = false;
             }
 
+            //////////////////////////////////////////////////////////////////
+
+            if (_ventilationState == VentilationState.Started)
+            {
+                if (_duration == TimeSpan.Zero)
+                {
+                    if (_toggleVentilationState)
+                    {
+                        _duration = new TimeSpan(0, _intervalTargetMinutes, 0);
+                        _ventilationStandby = true;
+
+                        _trapState = TrapStateEnum.Closed;
+                        _fanState = FanStateEnum.Stopped;
+                    }
+                    else
+                    {
+                        _duration = new TimeSpan(0, 0, _durationTargetSeconds);
+                        _ventilationStandby = false;
+                    }
+
+                    _toggleVentilationState = !_toggleVentilationState;
+                }
+            }
+
+            //////////////////////////////////////////////////////////////////
 
             if (ProcessControl.Instance.RelativeHumidity > 0)
             {
@@ -118,10 +167,14 @@ namespace NetduinoPlus.Controler
                 {
                     if (ProcessControl.Instance.RelativeHumidity >= (ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA))
                     {
-                        if (ProcessControl.Instance.TargetRelativeHumidity > 0 || _ventilationState == VentilationState.Started)
+                        if (ProcessControl.Instance.TargetRelativeHumidity > 0 || (_ventilationState == VentilationState.Started && _ventilationStandby == false))
                         {
                             _trapState = TrapStateEnum.Opened;
                         }
+                    }
+                    else if (_ventilationState == VentilationState.Started && _ventilationStandby == false)
+                    {
+                        _trapState = TrapStateEnum.Opened;
                     }
                 }
                 else if (_trapState == TrapStateEnum.Opened)
@@ -136,14 +189,19 @@ namespace NetduinoPlus.Controler
                     }
                 }
 
+
                 if (_fanState == FanStateEnum.Stopped)
                 {
                     if (ProcessControl.Instance.RelativeHumidity >= (ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_FAN_DELTA))
                     {
-                        if (ProcessControl.Instance.TargetRelativeHumidity > 0 || _ventilationState == VentilationState.Started)
+                        if (ProcessControl.Instance.TargetRelativeHumidity > 0 || (_ventilationState == VentilationState.Started && _ventilationStandby == false))
                         {
                             _fanState = FanStateEnum.Running;
                         }
+                    }
+                    else if (_ventilationState == VentilationState.Started && _ventilationStandby == false)
+                    {
+                        _fanState = FanStateEnum.Running;                            
                     }
                 }
                 else if (_fanState == FanStateEnum.Running)
@@ -151,7 +209,7 @@ namespace NetduinoPlus.Controler
                     if (_ventilationState != VentilationState.Started)
                     {
                         if ((ProcessControl.Instance.RelativeHumidity < (ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA))
-                        || ProcessControl.Instance.TargetRelativeHumidity == 0)
+                            || ProcessControl.Instance.TargetRelativeHumidity == 0)
                         {
                             _fanState = FanStateEnum.Stopped;
                         }
@@ -164,10 +222,12 @@ namespace NetduinoPlus.Controler
                 _fanState = FanStateEnum.Stopped;
             }
 
-
             if (ProcessControl.Instance.TargetCO2 == 0)
             {
                 _ventilationState = VentilationState.Stopped;
+                _duration = TimeSpan.Zero;
+                _toggleVentilationState = false;
+                _ventilationStandby = false;
             }
 
             if (ProcessControl.Instance.TargetRelativeHumidity == 0 && ProcessControl.Instance.TargetCO2 == 0)

@@ -74,12 +74,12 @@ namespace NetduinoPlus.Controler
                 {
                     if (_duration == TimeSpan.Zero)
                     {
-                        if (_pumpState == PumpStateEnum.Stopped && IsValidTarget())
+                        if (_pumpState == PumpStateEnum.Stopped && IsValidDelay())
                         {
                             _pumpState = PumpStateEnum.Running;
                             _duration = new TimeSpan(0, 0, _durationTargetSeconds);
                         }
-                        else if (_pumpState == PumpStateEnum.Running && IsValidTarget())
+                        else if (_pumpState == PumpStateEnum.Running && IsValidDelay())
                         {
                             _pumpState = PumpStateEnum.Stopped;
                             _duration = new TimeSpan(0, _intervalTargetMinutes, 0);
@@ -128,7 +128,7 @@ namespace NetduinoPlus.Controler
           }
         }
 
-        private bool IsValidTarget()
+        private bool IsValidDelay()
         {
           return _intervalTargetMinutes > 0 && _durationTargetSeconds > 0;
         }

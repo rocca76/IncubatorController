@@ -301,11 +301,17 @@ namespace NetduinoPlus.Controler
             dataOutput.Append(_instance.TargetCO2.ToString());
             dataOutput.Append("</targetco2>");
             dataOutput.Append("<ventilationintervaltarget>");
-            dataOutput.Append(PumpControl.Instance.IntervalTargetMinutes.ToString());
+            dataOutput.Append(VentilationControl.Instance.IntervalTargetMinutes.ToString());
             dataOutput.Append("</ventilationintervaltarget>");
             dataOutput.Append("<ventilationdurationtarget>");
-            dataOutput.Append(PumpControl.Instance.DurationTargetSeconds.ToString());
+            dataOutput.Append(VentilationControl.Instance.DurationTargetSeconds.ToString());
             dataOutput.Append("</ventilationdurationtarget>");
+            dataOutput.Append("<ventilationduration>");
+            dataOutput.Append(VentilationControl.Instance.Duration.ToString());
+            dataOutput.Append("</ventilationduration>");
+            dataOutput.Append("<ventilationstandby>");
+            dataOutput.Append(VentilationControl.Instance.Standby.ToString());
+            dataOutput.Append("</ventilationstandby>");
 
             dataOutput.Append("</data>");
             dataOutput.Append("</hatcher>");
