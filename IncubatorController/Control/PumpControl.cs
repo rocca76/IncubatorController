@@ -18,6 +18,7 @@ namespace NetduinoPlus.Controler
         private PumpStateEnum _pumpState = PumpStateEnum.Stopped;
         private int _intervalTargetMinutes = 0;
         private int _durationTargetSeconds = 0;
+        private bool _forcePump = false;
         private OutputPort _outPump = new OutputPort(Pins.GPIO_PIN_D6, false);
         #endregion
 
@@ -30,11 +31,13 @@ namespace NetduinoPlus.Controler
         public PumpControl.PumpStateEnum PumpState
         {
             get { return _pumpState; }
+            set { _pumpState = value; }
         }
 
         public TimeSpan Duration
         {
             get { return _duration; }
+            set { _duration = value; }
         }
 
         public int IntervalTargetMinutes
@@ -59,46 +62,54 @@ namespace NetduinoPlus.Controler
         #region Public Methods
         public void ManageState()
         {
-            if (_duration > TimeSpan.Zero)
+            if (_forcePump == false)
             {
-                _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
-            }
-
-            if ((ProcessControl.Instance.RelativeHumidity > 0) && 
-                (ProcessControl.Instance.RelativeHumidity < ProcessControl.Instance.TargetRelativeHumidity))
-            {
-                if (_duration == TimeSpan.Zero)
+                if (_duration > TimeSpan.Zero)
                 {
-                    if ( _pumpState == PumpStateEnum.Stopped && IsValidTarget() )
+                    _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
+                }
+
+                if ((ProcessControl.Instance.RelativeHumidity > 0) &&
+                    (ProcessControl.Instance.RelativeHumidity < ProcessControl.Instance.TargetRelativeHumidity))
+                {
+                    if (_duration == TimeSpan.Zero)
                     {
-                        _pumpState = PumpStateEnum.Running;
-                        _duration = new TimeSpan(0, 0, _durationTargetSeconds);
-                    }
-                    else if ( _pumpState == PumpStateEnum.Running && IsValidTarget() )
-                    {
-                        _pumpState = PumpStateEnum.Stopped;
-                        _duration = new TimeSpan(0, _intervalTargetMinutes, 0);
+                        if (_pumpState == PumpStateEnum.Stopped && IsValidTarget())
+                        {
+                            _pumpState = PumpStateEnum.Running;
+                            _duration = new TimeSpan(0, 0, _durationTargetSeconds);
+                        }
+                        else if (_pumpState == PumpStateEnum.Running && IsValidTarget())
+                        {
+                            _pumpState = PumpStateEnum.Stopped;
+                            _duration = new TimeSpan(0, _intervalTargetMinutes, 0);
+                        }
                     }
                 }
-            }
-            else
-            {
-                _pumpState = PumpStateEnum.Stopped;
-                _duration = TimeSpan.Zero;
-            }
+                else
+                {
+                    _pumpState = PumpStateEnum.Stopped;
+                    _duration = TimeSpan.Zero;
+                }
 
-            SetOutputState();
+                SetOutputState();
+            }
         }
 
         public void Activate(int activate)
         {
-            if (activate == 0)
+            _duration = TimeSpan.Zero;
+            _forcePump = activate == 1;
+
+            if (_forcePump)
             {
-                _outPump.Write(false);
-            }
-            else if (activate == 1)
-            {
+                _pumpState = PumpControl.PumpStateEnum.Running;
                 _outPump.Write(true);
+            }
+            else if (_forcePump)
+            {
+                _pumpState = PumpControl.PumpStateEnum.Stopped;
+                _outPump.Write(false);
             }
         }
         #endregion

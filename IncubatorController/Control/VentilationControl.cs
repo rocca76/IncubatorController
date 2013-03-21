@@ -76,9 +76,12 @@ namespace NetduinoPlus.Controler
                 {
                     if (ProcessControl.Instance.CO2 > (ProcessControl.Instance.TargetCO2 + CO2_TOLERANCE))
                     {
-                        _ventilationState = VentilationState.Started;
-                        _trapState = TrapStateEnum.Opened;
-                        _fanState = FanStateEnum.Running;
+                        if (ProcessControl.Instance.TargetCO2 > 0)
+                        {
+                            _ventilationState = VentilationState.Started;
+                            _trapState = TrapStateEnum.Opened;
+                            _fanState = FanStateEnum.Running;
+                        }
                     }
                 }
                 else if (_ventilationState == VentilationState.Started)
@@ -86,17 +89,14 @@ namespace NetduinoPlus.Controler
                     if (ProcessControl.Instance.CO2 <= ProcessControl.Instance.TargetCO2)
                     {
                         _ventilationState = VentilationState.Stopped;
-                        _trapState = TrapStateEnum.Closed;
-                        _fanState = FanStateEnum.Stopped;
                     }
                 }
             }
             else
             {
                 _ventilationState = VentilationState.Stopped;
-                _trapState = TrapStateEnum.Closed;
-                _fanState = FanStateEnum.Stopped;
             }
+
 
             if (ProcessControl.Instance.RelativeHumidity > 0)
             {
@@ -104,15 +104,21 @@ namespace NetduinoPlus.Controler
                 {
                     if (ProcessControl.Instance.RelativeHumidity >= (ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA))
                     {
-                        _trapState = TrapStateEnum.Opened;
+                        if (ProcessControl.Instance.TargetRelativeHumidity > 0 || _ventilationState == VentilationState.Started)
+                        {
+                            _trapState = TrapStateEnum.Opened;
+                        }
                     }
                 }
                 else if (_trapState == TrapStateEnum.Opened)
                 {
-                    if ((ProcessControl.Instance.RelativeHumidity < ProcessControl.Instance.TargetRelativeHumidity) &&
-                        (_ventilationState == VentilationState.Stopped))
+                    if (_ventilationState != VentilationState.Started)
                     {
-                        _trapState = TrapStateEnum.Closed;
+                        if ((ProcessControl.Instance.RelativeHumidity < ProcessControl.Instance.TargetRelativeHumidity)
+                            || ProcessControl.Instance.TargetRelativeHumidity == 0)
+                        {
+                            _trapState = TrapStateEnum.Closed;
+                        }
                     }
                 }
 
@@ -120,17 +126,40 @@ namespace NetduinoPlus.Controler
                 {
                     if (ProcessControl.Instance.RelativeHumidity >= (ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_FAN_DELTA))
                     {
-                        _fanState = FanStateEnum.Running;
+                        if (ProcessControl.Instance.TargetRelativeHumidity > 0 || _ventilationState == VentilationState.Started)
+                        {
+                            _fanState = FanStateEnum.Running;
+                        }
                     }
                 }
                 else if (_fanState == FanStateEnum.Running)
                 {
-                    if ((ProcessControl.Instance.RelativeHumidity < (ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA)) &&
-                        (_ventilationState == VentilationState.Stopped))
+                    if (_ventilationState != VentilationState.Started)
                     {
-                        _fanState = FanStateEnum.Stopped;
+                        if ((ProcessControl.Instance.RelativeHumidity < (ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA))
+                        || ProcessControl.Instance.TargetRelativeHumidity == 0)
+                        {
+                            _fanState = FanStateEnum.Stopped;
+                        }
                     }
                 }
+            }
+            else
+            {
+                _trapState = TrapStateEnum.Closed;
+                _fanState = FanStateEnum.Stopped;
+            }
+
+
+            if (ProcessControl.Instance.TargetCO2 == 0)
+            {
+                _ventilationState = VentilationState.Stopped;
+            }
+
+            if (ProcessControl.Instance.TargetRelativeHumidity == 0 && ProcessControl.Instance.TargetCO2 == 0)
+            {
+                _trapState = TrapStateEnum.Closed;
+                _fanState = FanStateEnum.Stopped;
             }
 
             SetOutputState();
@@ -141,16 +170,28 @@ namespace NetduinoPlus.Controler
         #region Private Methods
         private void SetOutputState()
         {
-            if (_ventilationState == VentilationState.Stopped)
-            {
-                outTrap.Write(false);
-                outFan.Write(false);
-            }
-            else if (_ventilationState == VentilationState.Started)
+            if (_trapState == TrapStateEnum.Opened)
             {
                 outTrap.Write(true);
+            }
+            else
+            {
+                outTrap.Write(false);
+            }
+
+            if (_fanState == FanStateEnum.Running)
+            {
                 outFan.Write(true);
             }
+            else
+            {
+                outFan.Write(false);
+            }
+        }
+
+        private bool IsValidTarget()
+        {
+            return ProcessControl.Instance.TargetRelativeHumidity > 0 && ProcessControl.Instance.TargetCO2 > 0;
         }
         #endregion
     }

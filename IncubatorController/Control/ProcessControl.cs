@@ -10,7 +10,6 @@ namespace NetduinoPlus.Controler
 {
     public sealed class ProcessControl
     {
-        public static readonly int CO2_DISABLE = 9999;
         private static readonly double TEMPERATURE_MAX = 39.5;
 
         #region Private Variables
@@ -30,7 +29,7 @@ namespace NetduinoPlus.Controler
         private double _targetRelativeHumidity = 0.0;
 
         private int _CO2 = 0;
-        private int _targetCO2 = CO2_DISABLE;
+        private int _targetCO2 = 0;
         #endregion
         
         #region Public Properties
@@ -151,10 +150,14 @@ namespace NetduinoPlus.Controler
               _targetRelativeHumidity = double.Parse(parts[1]);
               PumpControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
               PumpControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
+
+              PumpControl.Instance.Duration = TimeSpan.Zero;
+              PumpControl.Instance.PumpState = PumpControl.PumpStateEnum.Stopped;
             }
             else if (parts[0] == "PUMP_ACTIVATE")
             {
               PumpControl.Instance.Activate(int.Parse(parts[1]));
+              PumpControl.Instance.Duration = TimeSpan.Zero;
             }
             else if (parts[0] == "VENTILATION_PARAMETERS")
             {
@@ -228,7 +231,7 @@ namespace NetduinoPlus.Controler
           lock (_lockObject)
           {
             dataOutput.Append("<hatcher>");
-            dataOutput.Append("<datetime" + DateTime.Now.ToString() + "/>");
+            dataOutput.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
 
             dataOutput.Append("<temperature>");
             dataOutput.Append(_instance.Temperature.ToString("F2"));
@@ -295,7 +298,8 @@ namespace NetduinoPlus.Controler
             dataOutput.Append("<targetco2>");
             dataOutput.Append(_instance.TargetCO2.ToString());
             dataOutput.Append("</targetco2>");
-            
+
+            dataOutput.Append("</data>");
             dataOutput.Append("</hatcher>");
           }
 
