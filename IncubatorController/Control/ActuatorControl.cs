@@ -26,8 +26,8 @@ namespace NetduinoPlus.Controler
         }
 
         #region Private Variables
-        private const int TILT_INTERVAL = 0;//2;    // hours
-        private const int ACTUARTOR_DELAY = 5;//26; // seconds
+        private const int TILT_INTERVAL = 2;    // hours
+        private const int ACTUARTOR_DELAY = 26; // seconds
 
         private static readonly ActuatorControl _instance = new ActuatorControl();
         private bool _autoModeReady = false;
@@ -112,7 +112,7 @@ namespace NetduinoPlus.Controler
                         if (_duration == TimeSpan.Zero)
                         {
                             //Start waiting period
-                            _duration = new TimeSpan(TILT_INTERVAL, 0, 10);
+                            _duration = new TimeSpan(TILT_INTERVAL, 0, 0);
                             _actuatorState = ActuatorState.Close;
                         }
                     }
@@ -138,7 +138,7 @@ namespace NetduinoPlus.Controler
                         if (_duration == TimeSpan.Zero)
                         {
                             //Start waiting period
-                            _duration = new TimeSpan(TILT_INTERVAL, 0, 10);
+                            _duration = new TimeSpan(TILT_INTERVAL, 0, 0);
                             _actuatorState = ActuatorState.Open;
                         }
                     }
