@@ -165,7 +165,7 @@ namespace NetduinoPlus.Controler
             }
             else if (parts[0] == "ACTUATOR_COMMAND")
             {
-              ActuatorControl.Instance.SetCommand((ActuatorControl.ActuatorCommand)int.Parse(parts[1]));
+                ActuatorControl.Instance.Command = (ActuatorControl.ActuatorCommand)int.Parse(parts[1]);
             }
             else if (parts[0] == "ACTUATOR_OPEN")
             {
