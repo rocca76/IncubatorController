@@ -35,7 +35,7 @@ namespace NetduinoPlus.Controler
         private TimeSpan _duration = TimeSpan.Zero;
         private ActuatorCommand _actuatorCommand = ActuatorCommand.Unknown;
         private ActuatorState _actuatorState = ActuatorState.Unknown;
-        private ActuatorState _actuatorStatePaused = ActuatorState.Unknown;
+        private ActuatorState _actuatorPreviousState = ActuatorState.Unknown;
 
         private OutputPort outOpen = new OutputPort(Pins.GPIO_PIN_D7, false);
         private OutputPort outClose = new OutputPort(Pins.GPIO_PIN_D8, false);
@@ -103,55 +103,10 @@ namespace NetduinoPlus.Controler
                 _duration = _duration.Subtract(new TimeSpan(0, 0, 1));
             }
 
-            /*if (_actuatorMode == ActuatorMode.Manual && _actuatorState != ActuatorState.Stopped)
-            {
-                _actuatorState = ActuatorState.Stopped;
-                outOpen.Write(false);
-                outClose.Write(false);
-            }
-            
-            
-            
-            else if (_actuatorMode == ActuatorMode.ManualCentered)
-            {
-                if (_actuatorState == ActuatorState.Close || _actuatorState == ActuatorState.Open)
-                {
-                    _duration = new TimeSpan(0, 0, ACTUARTOR_DELAY / 2);
-
-                    if (_actuatorState == ActuatorState.Close)
-                    {
-                        _actuatorState = ActuatorState.Opening;
-                        outOpen.Write(true);
-                        outClose.Write(false);
-                    }
-                    else if (_actuatorState == ActuatorState.Open)
-                    {
-                        _actuatorState = ActuatorState.Closing;
-                        outOpen.Write(false);
-                        outClose.Write(true);
-                    }
-                }
-                else if (_actuatorState == ActuatorState.Closing || _actuatorState == ActuatorState.Opening)
-                {
-                    if (_duration == TimeSpan.Zero)
-                    {
-                        _actuatorState = ActuatorState.Stopped;
-                        outOpen.Write(false);
-                        outClose.Write(false);
-                    }
-                }
-            }*/
-
-
             if (_actuatorCommand == ActuatorCommand.Start)
             {
                 if (_autoModeReady)
                 {
-                    if (_actuatorState == ActuatorState.Paused)
-                    {
-                        _actuatorState = _actuatorStatePaused;
-                    }
-
                     if (_actuatorState == ActuatorState.Closing)
                     {
                         if (_duration == TimeSpan.Zero)
@@ -187,6 +142,10 @@ namespace NetduinoPlus.Controler
                             _actuatorState = ActuatorState.Open;
                         }
                     }
+                    else if (_actuatorState == ActuatorState.Paused)
+                    {
+                        _actuatorState = _actuatorPreviousState;
+                    }
                 }
                 else
                 {
@@ -218,11 +177,18 @@ namespace NetduinoPlus.Controler
             }
             else if (_actuatorCommand == ActuatorCommand.Pause)
             {
-                _actuatorStatePaused = _actuatorState;
                 _actuatorState = ActuatorState.Paused;
             }
 
-            SetOutputState();
+            if (_actuatorPreviousState != _actuatorState)
+            {
+                SetOutputState();
+
+                if (_actuatorState != ActuatorState.Paused)
+                {
+                    _actuatorPreviousState = _actuatorState;
+                }
+            }
         }
         #endregion
 
@@ -235,7 +201,8 @@ namespace NetduinoPlus.Controler
                 outOpen.Write(false);
                 outClose.Write(true);
             }
-            else if (_actuatorState == ActuatorState.Close || _actuatorState == ActuatorState.Open || _actuatorState == ActuatorState.Stopped)
+            else if (_actuatorState == ActuatorState.Close || _actuatorState == ActuatorState.Open || 
+                     _actuatorState == ActuatorState.Stopped || _actuatorState == ActuatorState.Paused)
             {
                 outOpen.Write(false);
                 outClose.Write(false);
