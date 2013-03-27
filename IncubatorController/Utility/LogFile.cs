@@ -17,7 +17,6 @@ namespace NetduinoPlus.Controler
         }
 
         #region Private Variables
-        private static readonly LogFile _instance = new LogFile();
         private static bool _sdCardAvailable = false;
         #endregion
 
@@ -36,6 +35,10 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Properties
+        public static bool SDCardAvailable
+        {
+            get { return _sdCardAvailable; }
+        }
         #endregion
 
 

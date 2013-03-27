@@ -41,7 +41,7 @@
     <Compile Include="Communication\Ping.cs" />
     <Compile Include="Control\HeatingControl.cs" />
     <Compile Include="Communication\ListenerThread.cs" />
-    <Compile Include="Utility\CIni.cs" />
+    <Compile Include="Utility\ConfigFile.cs" />
     <Compile Include="Utility\MovingAverage.cs" />
     <Compile Include="Control\PumpControl.cs" />
     <Compile Include="Communication\SenderThread.cs" />

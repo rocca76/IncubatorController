@@ -15,7 +15,6 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private static readonly ProcessControl _instance = new ProcessControl();
         private static readonly object _lockObject = new object();
-        private CIni _config = new CIni();
 
         private MovingAverage _temperatureAverage = new MovingAverage();
         private MovingAverage _relativeHumidityAverage = new MovingAverage();
@@ -91,9 +90,7 @@ namespace NetduinoPlus.Controler
         #region Constructors
         public ProcessControl() 
         {
-            _config.Load("Configuration.ini", false);
-            _targetTemperature = _config.GetValue("Temperature", "TargetTemperature", 0);    
-
+            InitFromConfigFile();
             ListenerThread.CommandReceived += new ReceivedEventHandler(OnParametersReceived);
         }
         #endregion
@@ -146,15 +143,26 @@ namespace NetduinoPlus.Controler
                     _targetTemperature = double.Parse(parts[1]);
                     _temperatureMax = double.Parse(parts[2]);
 
-                    _config.SetValue("Temperature", "TargetTemperature", _targetTemperature);
-                    _config.Save("Configuration.ini");
-
+                    if (LogFile.SDCardAvailable)
+                    {
+                        ConfigFile.Instance.SetValue("Temperature", "Target", _targetTemperature);
+                        ConfigFile.Instance.SetValue("Temperature", "Max", _targetTemperature);
+                        ConfigFile.Instance.Save();
+                    }
                 }
                 else if (parts[0] == "RELATIVE_HUMIDITY_PARAMETERS")
                 {
                     _targetRelativeHumidity = double.Parse(parts[1]);
                     PumpControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
                     PumpControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
+
+                    if (LogFile.SDCardAvailable)
+                    {
+                        ConfigFile.Instance.SetValue("RelativeHumidity", "Target", _targetRelativeHumidity);
+                        ConfigFile.Instance.SetValue("RelativeHumidity", "IntervalMinutes", PumpControl.Instance.IntervalTargetMinutes);
+                        ConfigFile.Instance.SetValue("RelativeHumidity", "DurationSeconds", PumpControl.Instance.DurationTargetSeconds);
+                        ConfigFile.Instance.Save();
+                    }
 
                     PumpControl.Instance.Duration = TimeSpan.Zero;
                     PumpControl.Instance.PumpState = PumpControl.PumpStateEnum.Stopped;
@@ -166,9 +174,18 @@ namespace NetduinoPlus.Controler
                 }
                 else if (parts[0] == "VENTILATION_PARAMETERS")
                 {
-                    _instance.TargetCO2 = int.Parse(parts[1]);
+                    _targetCO2 = int.Parse(parts[1]);
                     VentilationControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
                     VentilationControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
+
+                    if (LogFile.SDCardAvailable)
+                    {
+                        ConfigFile.Instance.SetValue("CO2", "Target", _targetCO2);
+                        ConfigFile.Instance.SetValue("CO2", "IntervalMinutes", VentilationControl.Instance.IntervalTargetMinutes);
+                        ConfigFile.Instance.SetValue("CO2", "DurationSeconds", VentilationControl.Instance.DurationTargetSeconds);
+                        ConfigFile.Instance.Save();
+                    }
+
                 }
                 else if (parts[0] == "ACTUATOR_COMMAND")
                 {
@@ -323,6 +340,28 @@ namespace NetduinoPlus.Controler
           }
 
           return dataOutput;
+        }
+
+        private void InitFromConfigFile()
+        {
+            if (LogFile.SDCardAvailable)
+            {
+                ConfigFile.Instance.Load(false);
+
+                lock (_lockObject)
+                {
+                    _targetTemperature = ConfigFile.Instance.GetValue("Temperature", "Target", 0);
+                    _temperatureMax = ConfigFile.Instance.GetValue("Temperature", "Max", 0);
+
+                    _targetRelativeHumidity = ConfigFile.Instance.GetValue("RelativeHumidity", "Target", 0);
+                    PumpControl.Instance.IntervalTargetMinutes = ConfigFile.Instance.GetValue("RelativeHumidity", "IntervalMinutes", 0);
+                    PumpControl.Instance.DurationTargetSeconds = ConfigFile.Instance.GetValue("RelativeHumidity", "DurationSeconds", 0);
+
+                    _targetCO2 = ConfigFile.Instance.GetValue("CO2", "Target", 0);
+                    VentilationControl.Instance.IntervalTargetMinutes = ConfigFile.Instance.GetValue("CO2", "IntervalMinutes", 0);
+                    VentilationControl.Instance.DurationTargetSeconds = ConfigFile.Instance.GetValue("CO2", "DurationSeconds", 0);
+                }
+            }
         }
         #endregion
     }

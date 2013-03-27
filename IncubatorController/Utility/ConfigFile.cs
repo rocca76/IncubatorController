@@ -5,20 +5,38 @@ using System.Threading;
 
 namespace NetduinoPlus.Controler
 {
-    public class CIni
+    public sealed class ConfigFile
     {
-        private Hashtable _sections = null;
+        #region Private Variables
+        private static readonly ConfigFile _instance = new ConfigFile();
+        private Hashtable _sections = new Hashtable();
+        private String _configFileName = "Configuration.ini";
+        #endregion
 
-        public CIni()
+
+        #region Constructors
+        private ConfigFile() {}
+        #endregion
+
+
+        #region Events
+        #endregion
+
+
+        #region Public Properties
+        public static ConfigFile Instance
         {
-            _sections = new Hashtable();
+            get { return _instance; }
         }
+        #endregion
 
+
+        #region Public Methods
         /// <summary>
         /// Loads the Reads the data in the ini file into the IniFile object
         /// </summary>
         /// <param name="filename"></param>
-        public void Load(string FileName, bool append)
+        public void Load(bool append)
         {
             if (!append)
                 DeleteSections();
@@ -26,7 +44,7 @@ namespace NetduinoPlus.Controler
             string Section = "";
             string[] keyvaluepair;
 
-            using (FileStream inFileStream = new FileStream(Path.Combine("\\SD", FileName), FileMode.Open))
+            using (FileStream inFileStream = new FileStream(Path.Combine("\\SD", _configFileName), FileMode.Open))
             {
                 using (StreamReader inStreamReader = new StreamReader(inFileStream))
                 {
@@ -59,9 +77,9 @@ namespace NetduinoPlus.Controler
         /// Used to save the data back to the file or your choice
         /// </summary>
         /// <param name="FileName"></param>
-        public void Save(string FileName)
+        public void Save()
         {
-            using (FileStream outFileStream = new FileStream(Path.Combine("\\SD", FileName), FileMode.Create))
+            using (FileStream outFileStream = new FileStream(Path.Combine("\\SD", _configFileName), FileMode.Create))
             {
                 using (StreamWriter outStreamWriter = new StreamWriter(outFileStream))
                 {
@@ -215,5 +233,6 @@ namespace NetduinoPlus.Controler
         {
             _sections.Clear();
         }
+        #endregion
     }
 }
