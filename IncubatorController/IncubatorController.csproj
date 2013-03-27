@@ -41,13 +41,13 @@
     <Compile Include="Communication\Ping.cs" />
     <Compile Include="Control\HeatingControl.cs" />
     <Compile Include="Communication\ListenerThread.cs" />
+    <Compile Include="Utility\CIni.cs" />
     <Compile Include="Utility\MovingAverage.cs" />
     <Compile Include="Control\PumpControl.cs" />
     <Compile Include="Communication\SenderThread.cs" />
     <Compile Include="Utility\NTPTime.cs" />
     <Compile Include="Utility\Stopwatch.cs" />
     <Compile Include="Control\VentilationControl.cs" />
-    <Compile Include="ConfigurationManager.cs" />
     <Compile Include="Sensors\I2CBus.cs" />
     <Compile Include="Sensors\K30Sensor.cs" />
     <Compile Include="Control\ProcessControl.cs" />

@@ -15,6 +15,7 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private static readonly ProcessControl _instance = new ProcessControl();
         private static readonly object _lockObject = new object();
+        private CIni _config = new CIni();
 
         private MovingAverage _temperatureAverage = new MovingAverage();
         private MovingAverage _relativeHumidityAverage = new MovingAverage();
@@ -47,13 +48,11 @@ namespace NetduinoPlus.Controler
         public double TargetTemperature
         {
             get { return _targetTemperature; }
-            set { _targetTemperature = value; }
         }
 
         public double TemperatureMax
         {
             get { return _temperatureMax; }
-            set { _temperatureMax = value; }
         }
 
         public bool TemperatureMaxReached
@@ -71,7 +70,6 @@ namespace NetduinoPlus.Controler
         public double TargetRelativeHumidity
         {
             get { return _targetRelativeHumidity; }
-            set { _targetRelativeHumidity = value; }
         }
 
         public int CO2
@@ -93,6 +91,9 @@ namespace NetduinoPlus.Controler
         #region Constructors
         public ProcessControl() 
         {
+            _config.Load("Configuration.ini", false);
+            _targetTemperature = _config.GetValue("Temperature", "TargetTemperature", 0);    
+
             ListenerThread.CommandReceived += new ReceivedEventHandler(OnParametersReceived);
         }
         #endregion
@@ -129,55 +130,59 @@ namespace NetduinoPlus.Controler
 
         private void OnParametersReceived(String parameters)
         {
-          lock (_lockObject)
-          {
-            string[] parts = parameters.Split(' ');
+            lock (_lockObject)
+            {
+                string[] parts = parameters.Split(' ');
 
-            if (parts[0] == "INIT")
-            {
-              DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
-              Utility.SetLocalTime(presentTime);
+                if (parts[0] == "INIT")
+                {
+                    DateTime presentTime = new DateTime(int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]), int.Parse(parts[4]), int.Parse(parts[5]), int.Parse(parts[6]), int.Parse(parts[7]));
+                    Utility.SetLocalTime(presentTime);
 
-              NetworkCommunication.Instance.StartSender();
-            }
-            else if (parts[0] == "TEMPERATURE_PARAMETERS")
-            {
-              _targetTemperature = double.Parse(parts[1]);
-              _temperatureMax = double.Parse(parts[2]);
-            }
-            else if (parts[0] == "RELATIVE_HUMIDITY_PARAMETERS")
-            {
-              _targetRelativeHumidity = double.Parse(parts[1]);
-              PumpControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
-              PumpControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
+                    NetworkCommunication.Instance.StartSender();
+                }
+                else if (parts[0] == "TEMPERATURE_PARAMETERS")
+                {
+                    _targetTemperature = double.Parse(parts[1]);
+                    _temperatureMax = double.Parse(parts[2]);
 
-              PumpControl.Instance.Duration = TimeSpan.Zero;
-              PumpControl.Instance.PumpState = PumpControl.PumpStateEnum.Stopped;
+                    _config.SetValue("Temperature", "TargetTemperature", _targetTemperature);
+                    _config.Save("Configuration.ini");
+
+                }
+                else if (parts[0] == "RELATIVE_HUMIDITY_PARAMETERS")
+                {
+                    _targetRelativeHumidity = double.Parse(parts[1]);
+                    PumpControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
+                    PumpControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
+
+                    PumpControl.Instance.Duration = TimeSpan.Zero;
+                    PumpControl.Instance.PumpState = PumpControl.PumpStateEnum.Stopped;
+                }
+                else if (parts[0] == "PUMP_ACTIVATE")
+                {
+                    PumpControl.Instance.Activate(int.Parse(parts[1]));
+                    PumpControl.Instance.Duration = TimeSpan.Zero;
+                }
+                else if (parts[0] == "VENTILATION_PARAMETERS")
+                {
+                    _instance.TargetCO2 = int.Parse(parts[1]);
+                    VentilationControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
+                    VentilationControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
+                }
+                else if (parts[0] == "ACTUATOR_COMMAND")
+                {
+                    ActuatorControl.Instance.Command = (ActuatorControl.ActuatorCommand)int.Parse(parts[1]);
+                }
+                else if (parts[0] == "ACTUATOR_OPEN")
+                {
+                    ActuatorControl.Instance.Open(int.Parse(parts[1]));
+                }
+                else if (parts[0] == "ACTUATOR_CLOSE")
+                {
+                    ActuatorControl.Instance.Close(int.Parse(parts[1]));
+                }
             }
-            else if (parts[0] == "PUMP_ACTIVATE")
-            {
-              PumpControl.Instance.Activate(int.Parse(parts[1]));
-              PumpControl.Instance.Duration = TimeSpan.Zero;
-            }
-            else if (parts[0] == "VENTILATION_PARAMETERS")
-            {
-              _instance.TargetCO2 = int.Parse(parts[1]);
-              VentilationControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
-              VentilationControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
-            }
-            else if (parts[0] == "ACTUATOR_COMMAND")
-            {
-                ActuatorControl.Instance.Command = (ActuatorControl.ActuatorCommand)int.Parse(parts[1]);
-            }
-            else if (parts[0] == "ACTUATOR_OPEN")
-            {
-              ActuatorControl.Instance.Open(int.Parse(parts[1]));
-            }
-            else if (parts[0] == "ACTUATOR_CLOSE")
-            {
-              ActuatorControl.Instance.Close(int.Parse(parts[1]));
-            }
-          }
         }
 
         private void ReadTemperature()
