@@ -36,7 +36,7 @@ namespace NetduinoPlus.Controler
       try
       {
         _socketListener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        _socketListener.Bind(new IPEndPoint(IPAddress.Any, 11000));
+        _socketListener.Bind(new IPEndPoint(IPAddress.Any, NetworkCommunication.Instance.Port));
         _socketListener.Listen(1);
 
         _commandReceivedCount = 0;

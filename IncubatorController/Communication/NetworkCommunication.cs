@@ -18,6 +18,7 @@ namespace NetduinoPlus.Controler
         private SenderThread _senderThread = null;
         private String _remoteAddress = "";
         private static bool _networkIsAvailable = false;
+        private int _port = 0;
         #endregion
 
 
@@ -51,6 +52,11 @@ namespace NetduinoPlus.Controler
             set { _remoteAddress = value; }
         }
 
+        public int Port
+        {
+            get { return _port; }
+        }
+
         public bool IsSenderRunning
         {
             get { return _senderThread != null; }
@@ -72,7 +78,18 @@ namespace NetduinoPlus.Controler
                 }
             }
 
-            LogFile.Network("Local IP Address: " + networkInterface.IPAddress);
+            string[] parts = networkInterface.IPAddress.Split('.');
+
+            if (parts[3] == "200")
+            {
+                _port = 11000;
+            }
+            else if (parts[3] == "201")
+            {
+                _port = 11001;
+            }
+
+            LogFile.Network("Local Address: " + networkInterface.IPAddress + ", " + _port.ToString());
 
             //_networkIsAvailable = Ping.PingHost("192.168.10.100");
             //NTPTime.SetLocalTime();
