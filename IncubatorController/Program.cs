@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Microsoft.SPOT.Hardware;
-using SecretLabs.NETMF.Hardware.NetduinoPlus;
+using SecretLabs.NETMF.Hardware.Netduino;
 using IncubatorController.Utility;
 
 //Smart Personal Object Technology

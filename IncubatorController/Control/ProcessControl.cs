@@ -1,7 +1,7 @@
 using System;
 using Sensirion.SHT11;
 using Microsoft.SPOT.Hardware;
-using SecretLabs.NETMF.Hardware.NetduinoPlus;
+using SecretLabs.NETMF.Hardware.Netduino;
 using System.Text;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -30,6 +30,8 @@ namespace NetduinoPlus.Controler
 
         private int _CO2 = 0;
         private int _targetCO2 = 0;
+
+        private Int64 _readCount = 0;
         #endregion
         
         #region Public Properties
@@ -90,7 +92,6 @@ namespace NetduinoPlus.Controler
         #region Constructors
         public ProcessControl() 
         {
-            InitFromConfigFile();
             ListenerThread.CommandReceived += new ReceivedEventHandler(OnParametersReceived);
         }
         #endregion
@@ -143,10 +144,10 @@ namespace NetduinoPlus.Controler
                     _targetTemperature = double.Parse(parts[1]);
                     _temperatureMax = double.Parse(parts[2]);
 
-                    if (LogFile.SDCardAvailable)
+                    if (ConfigFile.Instance.SDCardAvailable)
                     {
                         ConfigFile.Instance.SetValue("Temperature", "Target", _targetTemperature);
-                        ConfigFile.Instance.SetValue("Temperature", "Max", _targetTemperature);
+                        ConfigFile.Instance.SetValue("Temperature", "Max", _temperatureMax);
                         ConfigFile.Instance.Save();
                     }
                 }
@@ -156,7 +157,7 @@ namespace NetduinoPlus.Controler
                     PumpControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
                     PumpControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
 
-                    if (LogFile.SDCardAvailable)
+                    if (ConfigFile.Instance.SDCardAvailable)
                     {
                         ConfigFile.Instance.SetValue("RelativeHumidity", "Target", _targetRelativeHumidity);
                         ConfigFile.Instance.SetValue("RelativeHumidity", "IntervalMinutes", PumpControl.Instance.IntervalTargetMinutes);
@@ -178,7 +179,7 @@ namespace NetduinoPlus.Controler
                     VentilationControl.Instance.IntervalTargetMinutes = int.Parse(parts[2]);
                     VentilationControl.Instance.DurationTargetSeconds = int.Parse(parts[3]);
 
-                    if (LogFile.SDCardAvailable)
+                    if (ConfigFile.Instance.SDCardAvailable)
                     {
                         ConfigFile.Instance.SetValue("CO2", "Target", _targetCO2);
                         ConfigFile.Instance.SetValue("CO2", "IntervalMinutes", VentilationControl.Instance.IntervalTargetMinutes);
@@ -342,16 +343,16 @@ namespace NetduinoPlus.Controler
           return dataOutput;
         }
 
-        private void InitFromConfigFile()
+        public void InitFromConfigFile()
         {
-            if (LogFile.SDCardAvailable)
+            if (ConfigFile.Instance.SDCardAvailable)
             {
                 ConfigFile.Instance.Load(false);
 
                 lock (_lockObject)
                 {
                     _targetTemperature = ConfigFile.Instance.GetValue("Temperature", "Target", 0);
-                    _temperatureMax = ConfigFile.Instance.GetValue("Temperature", "Max", 0);
+                    _temperatureMax = ConfigFile.Instance.GetValue("Temperature", "Max", TEMPERATURE_MAX);
 
                     _targetRelativeHumidity = ConfigFile.Instance.GetValue("RelativeHumidity", "Target", 0);
                     PumpControl.Instance.IntervalTargetMinutes = ConfigFile.Instance.GetValue("RelativeHumidity", "IntervalMinutes", 0);

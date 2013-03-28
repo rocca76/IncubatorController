@@ -17,16 +17,11 @@ namespace NetduinoPlus.Controler
         }
 
         #region Private Variables
-        private static bool _sdCardAvailable = false;
         #endregion
 
 
         #region Constructors
-        private LogFile() 
-        {
-            RemovableMedia.Insert += new InsertEventHandler(RemovableMedia_Insert);
-            RemovableMedia.Eject += new EjectEventHandler(RemovableMedia_Eject);
-        }
+        private LogFile() {}
         #endregion
 
 
@@ -35,32 +30,17 @@ namespace NetduinoPlus.Controler
 
 
         #region Public Properties
-        public static bool SDCardAvailable
-        {
-            get { return _sdCardAvailable; }
-        }
         #endregion
 
 
         #region Public Methods
-        private static void RemovableMedia_Insert(object sender, MediaEventArgs e)
-        {
-            _sdCardAvailable = true;
-            Application("SD card detected.");
-        }
-        private static void RemovableMedia_Eject(object sender, MediaEventArgs e)
-        {
-            _sdCardAvailable = false;
-            Debug.Print("SD card ejected.");
-        }
-
         public static void Application(string log)
         {
             try
             {
                 Debug.Print(DateTime.Now.ToString("T") + ";" + log);
 
-                if (_sdCardAvailable)
+                if (ConfigFile.Instance.SDCardAvailable)
                 {
                     using (StreamWriter streamWriter = new StreamWriter(@"SD\ApplicationLog.txt", true))
                     {
@@ -80,7 +60,7 @@ namespace NetduinoPlus.Controler
             {
                 Debug.Print(DateTime.Now.ToString("T") + ";" + log);
 
-                if (_sdCardAvailable)
+                if (ConfigFile.Instance.SDCardAvailable)
                 {
                     using (StreamWriter streamWriter = new StreamWriter(@"SD\NetworkLog.txt", true))
                     {
@@ -100,7 +80,7 @@ namespace NetduinoPlus.Controler
             {
                 Debug.Print(DateTime.Now.ToString("T") + ";" + log);
 
-                if (_sdCardAvailable)
+                if (ConfigFile.Instance.SDCardAvailable)
                 {
                     using (StreamWriter streamWriter = new StreamWriter(@"SD\SensorLog.txt", true))
                     {
@@ -120,7 +100,7 @@ namespace NetduinoPlus.Controler
             {
                 Debug.Print(DateTime.Now.ToString("T") + ";" + log);
 
-                if (_sdCardAvailable)
+                if (ConfigFile.Instance.SDCardAvailable)
                 {
                     using (StreamWriter streamWriter = new StreamWriter(@"SD\ExceptionLog.txt", true))
                     {
@@ -140,7 +120,7 @@ namespace NetduinoPlus.Controler
             {
                 Debug.Print(DateTime.Now.ToString("T") + ";" + log);
 
-                if (_sdCardAvailable)
+                if (ConfigFile.Instance.SDCardAvailable)
                 {
                     using (StreamWriter streamWriter = new StreamWriter(@"SD\ErrorLog.txt", true))
                     {

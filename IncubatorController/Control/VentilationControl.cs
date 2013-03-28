@@ -1,6 +1,6 @@
 using System;
 using Microsoft.SPOT.Hardware;
-using SecretLabs.NETMF.Hardware.NetduinoPlus;
+using SecretLabs.NETMF.Hardware.Netduino;
 
 namespace NetduinoPlus.Controler
 {
@@ -143,7 +143,7 @@ namespace NetduinoPlus.Controler
                 {
                     if (_toggleVentilationState)
                     {
-                        _duration = new TimeSpan(0, _intervalTargetMinutes, 0);
+                        _duration = new TimeSpan(0, 0, _intervalTargetMinutes);
                         _ventilationStandby = true;
 
                         _trapState = TrapStateEnum.Closed;
@@ -234,6 +234,11 @@ namespace NetduinoPlus.Controler
             {
                 _trapState = TrapStateEnum.Closed;
                 _fanState = FanStateEnum.Stopped;
+            }
+
+            if (ProcessControl.Instance.Temperature > ProcessControl.Instance.TemperatureMax)
+            {
+                _trapState = TrapStateEnum.Opened;
             }
 
             SetOutputState();

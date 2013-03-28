@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Collections;
 using System.Threading;
+using Microsoft.SPOT.IO;
+using Microsoft.SPOT;
 
 namespace NetduinoPlus.Controler
 {
@@ -11,11 +13,16 @@ namespace NetduinoPlus.Controler
         private static readonly ConfigFile _instance = new ConfigFile();
         private Hashtable _sections = new Hashtable();
         private String _configFileName = "Configuration.ini";
+        private bool _sdCardAvailable = false;
         #endregion
 
 
         #region Constructors
-        private ConfigFile() {}
+        private ConfigFile() 
+        {
+            RemovableMedia.Insert += new InsertEventHandler(RemovableMedia_Insert);
+            RemovableMedia.Eject += new EjectEventHandler(RemovableMedia_Eject);
+        }
         #endregion
 
 
@@ -28,10 +35,27 @@ namespace NetduinoPlus.Controler
         {
             get { return _instance; }
         }
+
+        public bool SDCardAvailable
+        {
+            get { return _sdCardAvailable; }
+        }
         #endregion
 
 
         #region Public Methods
+        private void RemovableMedia_Insert(object sender, MediaEventArgs e)
+        {
+            _sdCardAvailable = true;
+            LogFile.Application("SD card detected.");
+            ProcessControl.Instance.InitFromConfigFile();
+        }
+        private void RemovableMedia_Eject(object sender, MediaEventArgs e)
+        {
+            _sdCardAvailable = false;
+            Debug.Print("SD card ejected.");
+        }
+
         /// <summary>
         /// Loads the Reads the data in the ini file into the IniFile object
         /// </summary>
