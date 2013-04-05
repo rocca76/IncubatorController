@@ -42,15 +42,15 @@ namespace NetduinoPlus.Controler
 
             if (temperature > 0 && temperature < temperatureMax)
             {
-                if (temperature < (target - 0.5))
+                if (temperature < (target - 0.30))
                 {
                     _heatPower = 750;
                 }
-                else if (temperature >= (target - 0.5) && temperature < (target - 0.25))
+                else if (temperature >= (target - 0.30) && temperature < (target - 0.15))
                 {
                     _heatPower = 500;
                 }
-                else if (temperature >= (target - 0.25) && temperature < target)
+                else if (temperature >= (target - 0.15) && temperature < target)
                 {
                     _heatPower = 250;
                 }
@@ -66,6 +66,12 @@ namespace NetduinoPlus.Controler
 
             ProcessControl.Instance.TemperatureMaxReached = (temperature >= temperatureMax);
 
+            SetOutputState();
+        }
+
+        public void Pause()
+        {
+            _heatPower = 0;
             SetOutputState();
         }
         #endregion

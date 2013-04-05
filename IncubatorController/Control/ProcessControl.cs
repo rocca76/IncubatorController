@@ -15,6 +15,7 @@ namespace NetduinoPlus.Controler
         #region Private Variables
         private static readonly ProcessControl _instance = new ProcessControl();
         private static readonly object _lockObject = new object();
+        private OutputPort _outBigFan = new OutputPort(Pins.GPIO_PIN_D11, true);
 
         private MovingAverage _temperatureAverage = new MovingAverage();
         private MovingAverage _relativeHumidityAverage = new MovingAverage();
@@ -31,7 +32,10 @@ namespace NetduinoPlus.Controler
         private int _CO2 = 0;
         private int _targetCO2 = 0;
 
-        private Int64 _readCount = 0;
+        private bool _controlActivated = true;
+
+        private AnalogInput _analogInput = new AnalogInput(AnalogChannels.ANALOG_PIN_A0);
+
         #endregion
         
         #region Public Properties
@@ -84,6 +88,12 @@ namespace NetduinoPlus.Controler
             get { return _targetCO2; }
             set { _targetCO2 = value; }
         }
+
+        public bool ControlActivated
+        {
+            get { return _controlActivated; }
+            set { _controlActivated = value; }
+        }
         #endregion
 
         #region Events
@@ -103,10 +113,25 @@ namespace NetduinoPlus.Controler
           {
             ReadSensor();
 
-            HeatingControl.Instance.ManageState();
-            PumpControl.Instance.ManageState();
-            VentilationControl.Instance.ManageState();
-            ActuatorControl.Instance.ManageState();
+            if (_controlActivated)
+            {
+                _outBigFan.Write(true);
+                ActuatorControl.Instance.Continue(); 
+
+                HeatingControl.Instance.ManageState();
+                PumpControl.Instance.ManageState();
+                VentilationControl.Instance.ManageState();
+                ActuatorControl.Instance.ManageState();
+            }
+            else
+            {
+                _outBigFan.Write(false);
+
+                HeatingControl.Instance.Pause();
+                PumpControl.Instance.Pause();
+                VentilationControl.Instance.Pause();
+                ActuatorControl.Instance.Pause();
+            }
 
             if (NetworkCommunication.Instance.IsSenderRunning)
             {
@@ -122,6 +147,7 @@ namespace NetduinoPlus.Controler
           ReadTemperature();
           ReadRelativeHumidity();
           ReadCO2();
+          ReadFanMotor();
 
           LogFile.Application(_temperature.ToString("F2") + "; " + _relativeHumidity.ToString("F2") + "; " + _CO2.ToString());
         }
@@ -200,6 +226,19 @@ namespace NetduinoPlus.Controler
                 {
                     ActuatorControl.Instance.Close(int.Parse(parts[1]));
                 }
+                else if (parts[0] == "CONTROL_ACTIVATED")
+                {
+                    int activated = int.Parse(parts[1]);
+
+                    if (activated == 1)
+                    {
+                        _controlActivated = true;
+                    }
+                    else if (activated == 0)
+                    {
+                        _controlActivated = false;
+                    }
+                }
             }
         }
 
@@ -247,6 +286,13 @@ namespace NetduinoPlus.Controler
                         break;
                 }
             }
+        }
+
+        private void ReadFanMotor()
+        {
+            int rawValue = _analogInput.ReadRaw();
+            double volt = _analogInput.Read() * 3.3;
+            LogFile.Application("Analog Input: " + volt.ToString() + "volt, " + rawValue.ToString());
         }
 
         public StringBuilder BuildDataOutput()
@@ -335,6 +381,10 @@ namespace NetduinoPlus.Controler
             dataOutput.Append("<ventilationstandby>");
             dataOutput.Append(VentilationControl.Instance.Standby.ToString());
             dataOutput.Append("</ventilationstandby>");
+
+            dataOutput.Append("<controlactivated>");
+            dataOutput.Append(_instance.ControlActivated.ToString());
+            dataOutput.Append("</controlactivated>");
 
             dataOutput.Append("</data>");
             dataOutput.Append("</hatcher>");

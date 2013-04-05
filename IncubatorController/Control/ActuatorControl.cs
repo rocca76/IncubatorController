@@ -190,6 +190,20 @@ namespace NetduinoPlus.Controler
                 }
             }
         }
+
+        public void Pause()
+        {
+            _actuatorState = ActuatorState.Paused;
+            SetOutputState();
+        }
+
+        public void Continue()
+        {
+            if (_actuatorState == ActuatorState.Paused)
+            {
+                _actuatorState = _actuatorPreviousState;
+            }
+        }
         #endregion
 
 

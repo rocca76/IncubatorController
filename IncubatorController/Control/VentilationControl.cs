@@ -8,7 +8,7 @@ namespace NetduinoPlus.Controler
     {
         const int CO2_TOLERANCE = 300;
         const double RELATIVE_HUMIDITY_TRAP_DELTA = 2.0;
-        const double RELATIVE_HUMIDITY_FAN_DELTA = 6.0;
+        const double RELATIVE_HUMIDITY_FAN_DELTA = 5.0;
 
         public enum FanStateEnum
         {
@@ -38,6 +38,7 @@ namespace NetduinoPlus.Controler
         private TimeSpan _duration = TimeSpan.Zero;
         private bool _toggleVentilationState = false;
         private bool _ventilationStandby = false;
+        private bool _overHeatProtection = false;
 
         private OutputPort outFan = new OutputPort(Pins.GPIO_PIN_D9, false);
         private OutputPort outTrap = new OutputPort(Pins.GPIO_PIN_D10, false);
@@ -181,7 +182,7 @@ namespace NetduinoPlus.Controler
                 {
                     if (_ventilationState != VentilationState.Started)
                     {
-                        if ((ProcessControl.Instance.RelativeHumidity < ProcessControl.Instance.TargetRelativeHumidity)
+                        if ((ProcessControl.Instance.RelativeHumidity < (ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA))
                             || ProcessControl.Instance.TargetRelativeHumidity == 0)
                         {
                             _trapState = TrapStateEnum.Closed;
@@ -208,7 +209,7 @@ namespace NetduinoPlus.Controler
                 {
                     if (_ventilationState != VentilationState.Started)
                     {
-                        if ((ProcessControl.Instance.RelativeHumidity < (ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA))
+                        if ((ProcessControl.Instance.RelativeHumidity < (ProcessControl.Instance.TargetRelativeHumidity + RELATIVE_HUMIDITY_TRAP_DELTA + 1))
                             || ProcessControl.Instance.TargetRelativeHumidity == 0)
                         {
                             _fanState = FanStateEnum.Stopped;
@@ -241,6 +242,35 @@ namespace NetduinoPlus.Controler
                 _trapState = TrapStateEnum.Opened;
             }
 
+            if (_overHeatProtection == false)
+            {
+                if (ProcessControl.Instance.Temperature > ProcessControl.Instance.TargetTemperature + 0.2)
+                {
+                    _trapState = TrapStateEnum.Opened;
+                    _fanState = FanStateEnum.Running;
+                    _overHeatProtection = true;
+                }
+            }
+            if (_overHeatProtection)
+            {
+                if (ProcessControl.Instance.Temperature > ProcessControl.Instance.TargetTemperature + 0.1)
+                {
+                    _trapState = TrapStateEnum.Opened;
+                    _fanState = FanStateEnum.Running;
+                }
+                else
+                {
+                    _overHeatProtection = false;
+                }
+            }
+
+            SetOutputState();
+        }
+
+        public void Pause()
+        {
+            _trapState = TrapStateEnum.Closed;
+            _fanState = FanStateEnum.Stopped;
             SetOutputState();
         }
         #endregion

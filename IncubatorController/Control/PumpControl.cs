@@ -112,6 +112,12 @@ namespace NetduinoPlus.Controler
                 _outPump.Write(false);
             }
         }
+
+        public void Pause()
+        {
+            _pumpState = PumpStateEnum.Stopped;
+            SetOutputState();
+        }
         #endregion
 
 
