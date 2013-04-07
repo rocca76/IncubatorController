@@ -32,6 +32,8 @@ namespace NetduinoPlus.Controler
         private int _CO2 = 0;
         private int _targetCO2 = 0;
 
+        private double _motorCurrent = 0.0;
+
         private bool _controlActivated = true;
 
         private AnalogInput _analogInput = new AnalogInput(AnalogChannels.ANALOG_PIN_A0);
@@ -47,7 +49,6 @@ namespace NetduinoPlus.Controler
         public double Temperature
         {
             get { return _temperature; }
-            set { _temperature = value; }
         }
 
         public double TargetTemperature
@@ -69,7 +70,6 @@ namespace NetduinoPlus.Controler
         public double RelativeHumidity
         {
             get { return _relativeHumidity; }
-            set { _relativeHumidity = value; }
         }
 
         public double TargetRelativeHumidity
@@ -80,7 +80,6 @@ namespace NetduinoPlus.Controler
         public int CO2
         {
             get { return _CO2; }
-            set { _CO2 = value; }
         }
 
         public int TargetCO2
@@ -92,7 +91,6 @@ namespace NetduinoPlus.Controler
         public bool ControlActivated
         {
             get { return _controlActivated; }
-            set { _controlActivated = value; }
         }
         #endregion
 
@@ -147,7 +145,7 @@ namespace NetduinoPlus.Controler
           ReadTemperature();
           ReadRelativeHumidity();
           ReadCO2();
-          ReadFanMotor();
+          ReadMotorCurrent();
 
           LogFile.Application(_temperature.ToString("F2") + "; " + _relativeHumidity.ToString("F2") + "; " + _CO2.ToString());
         }
@@ -288,11 +286,11 @@ namespace NetduinoPlus.Controler
             }
         }
 
-        private void ReadFanMotor()
+        private void ReadMotorCurrent()
         {
-            int rawValue = _analogInput.ReadRaw();
-            double volt = _analogInput.Read() * 3.3;
-            LogFile.Application("Analog Input: " + volt.ToString() + "volt, " + rawValue.ToString());
+            //int rawValue = _analogInput.ReadRaw();
+            _motorCurrent = ((_analogInput.Read() * 3.3) - 2.5) / 0.04;
+            //LogFile.Application("Analog Input: " + volt.ToString() + "volt, " + rawValue.ToString());
         }
 
         public StringBuilder BuildDataOutput()
@@ -305,17 +303,17 @@ namespace NetduinoPlus.Controler
             dataOutput.Append("<data timestamp='" + DateTime.Now.ToString() + "'>");
 
             dataOutput.Append("<temperature>");
-            dataOutput.Append(_instance.Temperature.ToString("F2"));
+            dataOutput.Append(_temperature.ToString("F2"));
             dataOutput.Append("</temperature>");
             dataOutput.Append("<maxtemperaturereached>");
-            dataOutput.Append(_instance.TemperatureMaxReached.ToString());
+            dataOutput.Append(_temperatureMaxReached.ToString());
             dataOutput.Append("</maxtemperaturereached>");
             dataOutput.Append("<heatpower>");
             dataOutput.Append(HeatingControl.Instance.HeatPower.ToString());
             dataOutput.Append("</heatpower>");
 
             dataOutput.Append("<relativehumidity>");
-            dataOutput.Append(_instance.RelativeHumidity.ToString("F2"));
+            dataOutput.Append(_relativeHumidity.ToString("F2"));
             dataOutput.Append("</relativehumidity>");
             dataOutput.Append("<pumpstate>");
             dataOutput.Append(PumpControl.Instance.PumpState.ToString());
@@ -331,7 +329,7 @@ namespace NetduinoPlus.Controler
             dataOutput.Append("</fanstate>");
 
             dataOutput.Append("<co2>");
-            dataOutput.Append(_instance.CO2.ToString());
+            dataOutput.Append(_CO2.ToString());
             dataOutput.Append("</co2>");
             dataOutput.Append("<ventilationdstate>");
             dataOutput.Append(VentilationControl.Instance.State.ToString());
@@ -350,14 +348,14 @@ namespace NetduinoPlus.Controler
             //////////////////////////////////////////////////////////////////////////
 
             dataOutput.Append("<targettemperature>");
-            dataOutput.Append(_instance.TargetTemperature.ToString("F2"));
+            dataOutput.Append(_targetTemperature.ToString("F2"));
             dataOutput.Append("</targettemperature>");
             dataOutput.Append("<limitmaxtemperature>");
-            dataOutput.Append(_instance.TemperatureMax.ToString("F2"));
+            dataOutput.Append(_temperatureMax.ToString("F2"));
             dataOutput.Append("</limitmaxtemperature>");
 
             dataOutput.Append("<targetrelativehumidity>");
-            dataOutput.Append(_instance.TargetRelativeHumidity.ToString("F2"));
+            dataOutput.Append(_targetRelativeHumidity.ToString("F2"));
             dataOutput.Append("</targetrelativehumidity>");
             dataOutput.Append("<pumpintervaltarget>");
             dataOutput.Append(PumpControl.Instance.IntervalTargetMinutes.ToString());
@@ -367,7 +365,7 @@ namespace NetduinoPlus.Controler
             dataOutput.Append("</pumpdurationtarget>");
 
             dataOutput.Append("<targetco2>");
-            dataOutput.Append(_instance.TargetCO2.ToString());
+            dataOutput.Append(_targetCO2.ToString());
             dataOutput.Append("</targetco2>");
             dataOutput.Append("<ventilationintervaltarget>");
             dataOutput.Append(VentilationControl.Instance.IntervalTargetMinutes.ToString());
@@ -382,8 +380,12 @@ namespace NetduinoPlus.Controler
             dataOutput.Append(VentilationControl.Instance.Standby.ToString());
             dataOutput.Append("</ventilationstandby>");
 
+            dataOutput.Append("<motorcurrent>");
+            dataOutput.Append(_motorCurrent.ToString());
+            dataOutput.Append("</motorcurrent>");
+
             dataOutput.Append("<controlactivated>");
-            dataOutput.Append(_instance.ControlActivated.ToString());
+            dataOutput.Append(_controlActivated.ToString());
             dataOutput.Append("</controlactivated>");
 
             dataOutput.Append("</data>");
