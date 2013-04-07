@@ -12,7 +12,6 @@ namespace NetduinoPlus.Controler
     {
         #region Private Variables
         private static Timer _processTimer = null;
-        private static TimeSpan _processTime = Utility.GetMachineTime();
         private static InterruptPort _onBoardButton = new InterruptPort(Pins.ONBOARD_SW1, false, Port.ResistorMode.Disabled, Port.InterruptMode.InterruptEdgeLow);
         #endregion
 
@@ -41,14 +40,6 @@ namespace NetduinoPlus.Controler
         {
           try
           {
-            TimeSpan timeDiff = Utility.GetMachineTime().Subtract(_processTime);
-            _processTime = Utility.GetMachineTime();
-
-            if (timeDiff.Seconds < 1)
-            {
-                return;
-            }
-
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             ProcessControl.Instance.ProcessData();
