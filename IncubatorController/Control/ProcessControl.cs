@@ -288,8 +288,25 @@ namespace NetduinoPlus.Controler
 
         private void ReadMotorCurrent()
         {
+            _motorCurrent = 0;
+            double volt = 0;
+            double voltABS = 0;
+
+            for (int i = 0; i < 25; i++)
+            {
+                volt = (_analogInput.Read() * 3.3) - 2.5;
+                voltABS += MovingAverage.Abs(volt);
+                Thread.Sleep(2);
+            }
+
+            if (voltABS > 0)
+            {
+                _motorCurrent = voltABS / 25;
+                _motorCurrent = _motorCurrent / 0.04;
+            }
+
             //int rawValue = _analogInput.ReadRaw();
-            _motorCurrent = ((_analogInput.Read() * 3.3) - 2.5) / 0.04;
+            //volt = MovingAverage.Abs(volt);
             //LogFile.Application("Analog Input: " + volt.ToString() + "volt, " + rawValue.ToString());
         }
 
@@ -381,7 +398,7 @@ namespace NetduinoPlus.Controler
             dataOutput.Append("</ventilationstandby>");
 
             dataOutput.Append("<motorcurrent>");
-            dataOutput.Append(_motorCurrent.ToString());
+            dataOutput.Append(_motorCurrent.ToString("F2"));
             dataOutput.Append("</motorcurrent>");
 
             dataOutput.Append("<controlactivated>");
